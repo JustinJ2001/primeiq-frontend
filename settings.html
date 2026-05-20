@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Restaurant Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Lato",sans-serif;background:#faf8f4;color:#1a1208;}
+.header{background:#1a1208;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:"Playfair Display",serif;font-size:18px;color:#e8b84b;}
+.logo em{font-style:italic;color:#f5ead6;}
+.header-nav{display:flex;gap:20px;align-items:center;}
+.header-link{font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(255,255,255,0.4);text-decoration:none;letter-spacing:0.08em;}
+.header-link:hover{color:#fff;}
+.header-link.active{color:#e8b84b;}
+.main{max-width:700px;margin:0 auto;padding:40px 20px 80px;}
+.page-title{font-family:"Playfair Display",serif;font-size:26px;margin-bottom:6px;}
+.page-sub{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin-bottom:30px;letter-spacing:0.08em;}
+.section{background:#fff;border:1px solid rgba(40,25,5,0.1);border-radius:12px;padding:24px;margin-bottom:18px;}
+.section-title{font-family:"Playfair Display",serif;font-size:15px;margin-bottom:3px;}
+.section-sub{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin-bottom:20px;letter-spacing:0.06em;}
+.f-group{margin-bottom:13px;}
+.f-label{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#8a7a5a;display:block;margin-bottom:4px;}
+.f-input{width:100%;padding:10px 12px;border:1.5px solid rgba(40,25,5,0.1);border-radius:7px;font-family:"Lato",sans-serif;font-size:13px;color:#1a1208;outline:none;transition:border-color 0.15s;}
+.f-input:focus{border-color:#b8860b;}
+.f-hint{font-family:"IBM Plex Mono",monospace;font-size:8.5px;color:#8a7a5a;margin-top:3px;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.btn-gold{padding:10px 22px;border-radius:7px;border:none;background:#b8860b;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-gold:hover{background:#9a7009;}
+.btn-outline{padding:10px 18px;border-radius:7px;border:1.5px solid rgba(40,25,5,0.12);background:transparent;font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;cursor:pointer;transition:all 0.2s;}
+.btn-outline:hover{color:#1a1208;}
+.btn-danger{padding:10px 18px;border-radius:7px;border:1.5px solid rgba(192,57,43,0.2);background:transparent;font-family:"IBM Plex Mono",monospace;font-size:10px;color:#c0392b;cursor:pointer;}
+.loc-block{background:#faf8f4;border:1px solid rgba(40,25,5,0.08);border-radius:9px;padding:16px;margin-bottom:12px;}
+.loc-name{font-family:"Playfair Display",serif;font-size:13px;color:#b8860b;margin-bottom:12px;}
+.integration-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(40,25,5,0.06);}
+.integration-row:last-child{border:none;}
+.int-info{display:flex;align-items:center;gap:12px;}
+.int-icon{font-size:20px;width:36px;text-align:center;}
+.int-name{font-size:13px;font-weight:700;}
+.int-status{font-family:"IBM Plex Mono",monospace;font-size:9px;margin-top:2px;}
+.int-status.connected{color:#2d7a4f;}
+.int-status.disconnected{color:#8a7a5a;}
+.alert{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;display:none;}
+.alert.show{display:block;}
+.alert.success{background:#edf7f2;border:1px solid rgba(45,122,79,0.2);color:#2d7a4f;}
+.alert.error{background:#fdf0ee;border:1px solid rgba(192,57,43,0.2);color:#c0392b;}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,0.2);border-top-color:#b8860b;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo"><em>Restaurant</em> Dashboard</div>
+  <div class="header-nav">
+    <a class="header-link" href="/dashboard">Dashboard</a>
+    <a class="header-link active" href="/settings">Settings</a>
+    <a class="header-link" href="#" onclick="signOut()">Sign Out</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Settings</div>
+  <div class="page-sub">Update your restaurant data · Manage integrations · Billing</div>
+
+  <div id="global_alert" class="alert"></div>
+
+  <!-- LOCATIONS -->
+  <div class="section">
+    <div class="section-title">Locations & Fixed Costs</div>
+    <div class="section-sub">Update rent, utilities, and cost targets · Changes apply immediately</div>
+    <div id="locations_container"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a7a5a"><span class="spinner"></span>Loading...</div></div>
+  </div>
+
+  <!-- INTEGRATIONS -->
+  <div class="section">
+    <div class="section-title">Connected Systems</div>
+    <div class="section-sub">Your POS, payroll, and delivery platforms</div>
+    <div id="integrations_container"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a7a5a"><span class="spinner"></span>Loading...</div></div>
+  </div>
+
+  <!-- BILLING -->
+  <div class="section">
+    <div class="section-title">Billing</div>
+    <div class="section-sub">Manage your subscription, update payment method, download invoices</div>
+    <p style="font-size:13px;color:#8a7a5a;margin-bottom:16px;line-height:1.6">Your subscription is managed through Stripe. Click below to update your card, view invoices, or cancel. Changes take effect immediately.</p>
+    <button class="btn-gold" onclick="openBillingPortal()">Manage Billing →</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_HlLWG1A92TTWZC7MJAZKkA_XSfpEgju';
+const API_BASE     = 'https://restaurant-api-68re.onrender.com';
+
+const token = localStorage.getItem('rd_token');
+if (!token) window.location.href = '/login';
+
+function showAlert(msg, type) {
+  const el = document.getElementById('global_alert');
+  el.textContent = msg; el.className = 'alert show ' + type;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+async function apiFetch(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (res.status === 401) { window.location.href = '/login'; throw new Error('Session expired'); }
+  if (res.status === 403) { window.location.href = '/login?reason=suspended'; throw new Error('Access denied'); }
+  return res.json();
+}
+
+// LOAD SETTINGS
+async function loadSettings() {
+  try {
+    const data = await apiFetch('/api/settings');
+    renderLocations(data.locations);
+    renderIntegrations(data.integrations, data.locations);
+  } catch(e) {
+    showAlert('Failed to load settings: ' + e.message, 'error');
+  }
+}
+
+function renderLocations(locations) {
+  const container = document.getElementById('locations_container');
+  container.innerHTML = locations.map(loc => `
+    <div class="loc-block" id="loc_${loc.id}">
+      <div class="loc-name">${loc.name}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8a7a5a;margin-bottom:12px">${loc.address||''}</div>
+      <div class="f-row3" style="margin-bottom:10px">
+        <div class="f-group"><label class="f-label">Rent / mo</label><input class="f-input" id="rent_${loc.id}" type="number" value="${loc.rent||0}"></div>
+        <div class="f-group"><label class="f-label">Utilities / mo</label><input class="f-input" id="utilities_${loc.id}" type="number" value="${loc.utilities||0}"></div>
+        <div class="f-group"><label class="f-label">Insurance / mo</label><input class="f-input" id="insurance_${loc.id}" type="number" value="${loc.insurance||0}"></div>
+        <div class="f-group"><label class="f-label">Supplies / mo</label><input class="f-input" id="supplies_${loc.id}" type="number" value="${loc.supplies||0}"></div>
+        <div class="f-group"><label class="f-label">Marketing / mo</label><input class="f-input" id="marketing_${loc.id}" type="number" value="${loc.marketing||0}"></div>
+        <div class="f-group"><label class="f-label">Software / mo</label><input class="f-input" id="software_${loc.id}" type="number" value="${loc.software||0}"></div>
+      </div>
+      <div class="f-row3" style="margin-bottom:12px">
+        <div class="f-group"><label class="f-label">Food Cost Target %</label><input class="f-input" id="food_target_${loc.id}" type="number" step="0.1" value="${loc.food_cost_target||31}"><div class="f-hint">Industry: 28-35%</div></div>
+        <div class="f-group"><label class="f-label">Labor Cost Target %</label><input class="f-input" id="labor_target_${loc.id}" type="number" step="0.1" value="${loc.labor_cost_target||34}"><div class="f-hint">Industry: 28-35%</div></div>
+        <div class="f-group"><label class="f-label">Prime Cost Target %</label><input class="f-input" id="prime_target_${loc.id}" type="number" step="0.1" value="${loc.prime_cost_target||65}"><div class="f-hint">Food + Labor</div></div>
+      </div>
+      <button class="btn-gold" onclick="saveLocation('${loc.id}')">Save Changes</button>
+    </div>`).join('');
+}
+
+async function saveLocation(locId) {
+  const g = id => parseFloat(document.getElementById(id+'_'+locId)?.value||0);
+  try {
+    await apiFetch('/api/settings/location/'+locId, 'PUT', {
+      rent: g('rent'), utilities: g('utilities'), insurance: g('insurance'),
+      supplies: g('supplies'), marketing: g('marketing'), software: g('software'),
+      food_cost_target: g('food_target'), labor_cost_target: g('labor_target'), prime_cost_target: g('prime_target'),
+    });
+    showAlert('Location updated successfully.', 'success');
+  } catch(e) {
+    showAlert('Save failed: ' + e.message, 'error');
+  }
+}
+
+function renderIntegrations(integrations, locations) {
+  const container = document.getElementById('integrations_container');
+  const allSystems = [
+    { type:'pos', id:'toast', icon:'🍞', name:'Toast POS' },
+    { type:'pos', id:'square', icon:'⬛', name:'Square' },
+    { type:'pos', id:'clover', icon:'🍀', name:'Clover' },
+    { type:'pos', id:'lightspeed', icon:'⚡', name:'Lightspeed' },
+    { type:'delivery', id:'doordash', icon:'🔴', name:'DoorDash' },
+    { type:'delivery', id:'ubereats', icon:'🟢', name:'Uber Eats' },
+    { type:'delivery', id:'grubhub', icon:'🟠', name:'GrubHub' },
+    { type:'payroll', id:'homebase', icon:'🏠', name:'Homebase' },
+    { type:'payroll', id:'gusto', icon:'💚', name:'Gusto' },
+    { type:'payroll', id:'7shifts', icon:'7️⃣', name:'7shifts' },
+  ];
+
+  const connectedIds = integrations.map(i => i.pos_type || i.provider || i.platform);
+
+  container.innerHTML = allSystems.map(sys => {
+    const isConn = connectedIds.includes(sys.id);
+    const integ  = integrations.find(i => (i.pos_type||i.provider||i.platform) === sys.id);
+    const lastSync = integ?.last_sync_at ? new Date(integ.last_sync_at).toLocaleString() : 'Never';
+    const syncStatus = integ?.last_sync_status || '';
+    return `<div class="integration-row">
+      <div class="int-info">
+        <div class="int-icon">${sys.icon}</div>
+        <div>
+          <div class="int-name">${sys.name}</div>
+          <div class="int-status ${isConn?'connected':'disconnected'}">${isConn ? '✓ Connected · Last sync: '+lastSync+(syncStatus==='error'?' · ⚠ Error':'' ) : 'Not connected'}</div>
+        </div>
+      </div>
+      <div>
+        ${isConn
+          ? `<button class="btn-outline" onclick="reconnect('${sys.id}','${sys.type}')">Reconnect</button>`
+          : `<button class="btn-gold" onclick="connect('${sys.id}','${sys.type}')">Connect</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function connect(provider, type) {
+  window.location.href = '/onboarding?step=' + (type==='pos'?3:type==='delivery'?4:5) + '&provider=' + provider;
+}
+
+function reconnect(provider, type) {
+  connect(provider, type);
+}
+
+async function openBillingPortal() {
+  try {
+    const data = await apiFetch('/api/create-portal-session', 'POST', {});
+    window.location.href = data.url;
+  } catch(e) {
+    showAlert('Failed to open billing portal: ' + e.message, 'error');
+  }
+}
+
+function signOut() {
+  localStorage.removeItem('rd_token');
+  localStorage.removeItem('rd_refresh');
+  window.location.href = '/login';
+}
+
+loadSettings();
+</script>
+</body>
+</html>

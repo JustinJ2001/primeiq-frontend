@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Restaurant Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Lato",sans-serif;background:#1a1208;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.logo{font-family:"Playfair Display",serif;font-size:22px;color:#e8b84b;text-align:center;margin-bottom:6px;}
+.logo em{font-style:italic;color:#f5ead6;}
+.logo-sub{font-family:"IBM Plex Mono",monospace;font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:0.2em;text-transform:uppercase;text-align:center;margin-bottom:36px;}
+.card{background:#fff;border-radius:14px;padding:36px;width:100%;max-width:400px;}
+.card-title{font-family:"Playfair Display",serif;font-size:22px;color:#1a1208;margin-bottom:4px;}
+.card-sub{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin-bottom:24px;letter-spacing:0.06em;}
+.f-group{margin-bottom:14px;}
+.f-label{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#8a7a5a;display:block;margin-bottom:5px;}
+.f-input{width:100%;padding:11px 13px;border:1.5px solid rgba(40,25,5,0.12);border-radius:8px;font-family:"Lato",sans-serif;font-size:14px;color:#1a1208;outline:none;transition:border-color 0.15s;}
+.f-input:focus{border-color:#b8860b;}
+.btn{width:100%;padding:13px;border-radius:8px;border:none;background:#b8860b;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-weight:500;margin-top:6px;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.alert{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;display:none;}
+.alert.show{display:block;}
+.alert.error{background:#fdf0ee;border:1px solid rgba(192,57,43,0.2);color:#c0392b;}
+.alert.success{background:#edf7f2;border:1px solid rgba(45,122,79,0.2);color:#2d7a4f;}
+.forgot{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#b8860b;cursor:pointer;text-align:right;display:block;margin-top:6px;text-decoration:none;}
+.divider{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin:18px 0;letter-spacing:0.1em;}
+.signup-link{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin-top:18px;}
+.signup-link a{color:#b8860b;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="logo"><em>Restaurant</em> Dashboard</div>
+<div class="logo-sub">Financial Intelligence Platform</div>
+<div class="card">
+  <div class="card-title">Sign in</div>
+  <div class="card-sub">Access your restaurant dashboard</div>
+  <div id="alert" class="alert"></div>
+  <div id="reset_panel" style="display:none">
+    <div class="f-group"><label class="f-label">Your Email</label>
+      <input class="f-input" id="reset_email" type="email" placeholder="owner@yourrestaurant.com"></div>
+    <button class="btn" id="reset_btn" onclick="sendReset()">Send Reset Link</button>
+    <div class="divider">OR</div>
+    <div style="text-align:center"><span class="forgot" onclick="showLogin()">Back to sign in</span></div>
+  </div>
+  <div id="login_panel">
+    <div class="f-group"><label class="f-label">Email</label>
+      <input class="f-input" id="email" type="email" placeholder="owner@yourrestaurant.com" onkeydown="if(event.key==='Enter')signIn()"></div>
+    <div class="f-group"><label class="f-label">Password</label>
+      <input class="f-input" id="password" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter')signIn()"></div>
+    <a class="forgot" onclick="showReset()">Forgot password?</a>
+    <button class="btn" id="login_btn" onclick="signIn()">Sign In →</button>
+  </div>
+  <div class="signup-link">Don't have an account? <a href="/onboarding">Get started</a></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_HlLWG1A92TTWZC7MJAZKkA_XSfpEgju';
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alert');
+  el.textContent = msg; el.className = 'alert show ' + type;
+}
+
+function setLoading(id, on) {
+  const btn = document.getElementById(id);
+  if (on) { btn._orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Please wait...'; }
+  else { btn.disabled = false; btn.innerHTML = btn._orig; }
+}
+
+function showReset() {
+  document.getElementById('login_panel').style.display = 'none';
+  document.getElementById('reset_panel').style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('login_panel').style.display = 'block';
+  document.getElementById('reset_panel').style.display = 'none';
+}
+
+async function signIn() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  if (!email || !password) return showAlert('Please enter your email and password.', 'error');
+  setLoading('login_btn', true);
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error_description || data.error);
+    // Check subscription status
+    const clientRes = await fetch(SUPABASE_URL + '/rest/v1/clients?user_id=eq.' + data.user.id + '&select=status', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + data.access_token }
+    });
+    const clients = await clientRes.json();
+    const status = clients[0]?.status;
+    if (status === 'cancelled' || status === 'suspended') {
+      showAlert('Your subscription is not active. Please update your payment method.', 'error');
+      setLoading('login_btn', false);
+      return;
+    }
+    // Store token and redirect
+    localStorage.setItem('rd_token', data.access_token);
+    localStorage.setItem('rd_refresh', data.refresh_token);
+    window.location.href = '/dashboard';
+  } catch(e) {
+    showAlert(e.message || 'Sign in failed. Please try again.', 'error');
+  }
+  setLoading('login_btn', false);
+}
+
+async function sendReset() {
+  const email = document.getElementById('reset_email').value.trim();
+  if (!email) return showAlert('Please enter your email address.', 'error');
+  setLoading('reset_btn', true);
+  try {
+    await fetch(SUPABASE_URL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email })
+    });
+    showAlert('Check your email for a password reset link.', 'success');
+  } catch(e) {
+    showAlert('Something went wrong. Please try again.', 'error');
+  }
+  setLoading('reset_btn', false);
+}
+
+// Auto sign in if token exists and valid
+const token = localStorage.getItem('rd_token');
+if (token) window.location.href = '/dashboard';
+</script>
+</body>
+</html>

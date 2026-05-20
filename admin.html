@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Restaurant Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Lato",sans-serif;background:#0d0d0d;color:#e0d0b0;min-height:100vh;}
+.header{background:#111;border-bottom:1px solid #222;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:"IBM Plex Mono",monospace;font-size:13px;color:#e8b84b;letter-spacing:0.08em;}
+.admin-badge{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#666;letter-spacing:0.12em;}
+.main{padding:28px;}
+.login-box{max-width:360px;margin:80px auto;}
+.f-input{width:100%;padding:10px 12px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e0d0b0;font-family:"IBM Plex Mono",monospace;font-size:12px;outline:none;margin-bottom:10px;}
+.f-input:focus{border-color:#e8b84b;}
+.btn{padding:10px 20px;border-radius:6px;border:none;background:#e8b84b;color:#0d0d0d;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:0.08em;cursor:pointer;font-weight:700;}
+.btn-outline{padding:8px 14px;border-radius:6px;border:1px solid #333;background:transparent;color:#888;font-family:"IBM Plex Mono",monospace;font-size:9px;cursor:pointer;letter-spacing:0.06em;}
+.btn-outline:hover{color:#e0d0b0;border-color:#555;}
+.btn-sm{padding:5px 12px;border-radius:5px;border:none;background:#e8b84b;color:#0d0d0d;font-family:"IBM Plex Mono",monospace;font-size:9px;cursor:pointer;font-weight:700;}
+.btn-red{padding:5px 12px;border-radius:5px;border:1px solid rgba(192,57,43,0.3);background:transparent;color:#e05252;font-family:"IBM Plex Mono",monospace;font-size:9px;cursor:pointer;}
+.section-title{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#e8b84b;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #222;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:#111;border:1px solid #222;border-radius:9px;padding:16px;}
+.stat-label{font-family:"IBM Plex Mono",monospace;font-size:8px;color:#555;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.stat-val{font-family:"IBM Plex Mono",monospace;font-size:24px;color:#e8b84b;}
+.stat-sub{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#555;margin-top:4px;}
+.client-table{width:100%;border-collapse:collapse;}
+.client-table th{font-family:"IBM Plex Mono",monospace;font-size:8px;color:#555;letter-spacing:0.1em;text-transform:uppercase;text-align:left;padding:8px 12px;border-bottom:1px solid #222;}
+.client-table td{padding:12px;font-size:12px;border-bottom:1px solid #1a1a1a;vertical-align:middle;}
+.client-table tr:hover td{background:#111;}
+.status-badge{font-family:"IBM Plex Mono",monospace;font-size:8px;padding:3px 8px;border-radius:12px;letter-spacing:0.06em;}
+.status-active{background:rgba(76,175,125,0.15);color:#4caf7d;}
+.status-past_due{background:rgba(240,160,48,0.15);color:#f0a030;}
+.status-suspended,.status-cancelled{background:rgba(224,82,82,0.1);color:#e05252;}
+.status-pending_payment{background:rgba(100,100,100,0.2);color:#888;}
+.client-name{font-weight:700;color:#e0d0b0;}
+.client-email{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#555;margin-top:2px;}
+.sync-ok{color:#4caf7d;}
+.sync-err{color:#e05252;}
+.sync-never{color:#444;}
+.detail-panel{background:#111;border:1px solid #222;border-radius:9px;padding:20px;margin-top:20px;display:none;}
+.detail-panel.open{display:block;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.detail-section{margin-bottom:16px;}
+.detail-label{font-family:"IBM Plex Mono",monospace;font-size:8px;color:#555;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.detail-val{font-size:13px;color:#e0d0b0;}
+.log-row{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#555;padding:5px 0;border-bottom:1px solid #1a1a1a;display:flex;gap:12px;}
+.log-ok{color:#4caf7d;}
+.log-err{color:#e05252;}
+.alert{border-radius:7px;padding:10px 14px;margin-bottom:14px;font-family:"IBM Plex Mono",monospace;font-size:10px;display:none;}
+.alert.show{display:block;}
+.alert.success{background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.2);color:#4caf7d;}
+.alert.error{background:rgba(224,82,82,0.08);border:1px solid rgba(224,82,82,0.2);color:#e05252;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">RD Admin</div>
+  <div class="admin-badge" id="admin_user">Not logged in</div>
+</div>
+
+<div class="main">
+  <div id="alert" class="alert"></div>
+
+  <!-- LOGIN -->
+  <div id="login_view" class="login-box">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#e8b84b;margin-bottom:20px">Admin Access</div>
+    <input class="f-input" id="admin_token" type="password" placeholder="Admin token" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="btn" onclick="adminLogin()">Sign In</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard_view" style="display:none">
+    <div class="stats-grid" id="stats_grid"></div>
+    <div class="section-title">All Clients</div>
+    <table class="client-table">
+      <thead><tr><th>Client</th><th>Status</th><th>Plan</th><th>Locations</th><th>Last Sync</th><th>Actions</th></tr></thead>
+      <tbody id="clients_tbody"></tbody>
+    </table>
+    <div id="client_detail" class="detail-panel"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://restaurant-api-68re.onrender.com';
+let adminToken = '';
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alert');
+  el.textContent = msg; el.className = 'alert show ' + type;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+async function adminFetch(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json','X-Admin-Token':adminToken} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (res.status === 403) throw new Error('Invalid admin token');
+  return res.json();
+}
+
+async function adminLogin() {
+  adminToken = document.getElementById('admin_token').value.trim();
+  try {
+    await adminFetch('/admin/clients');
+    document.getElementById('login_view').style.display = 'none';
+    document.getElementById('dashboard_view').style.display = 'block';
+    document.getElementById('admin_user').textContent = 'Admin';
+    loadDashboard();
+  } catch(e) {
+    showAlert('Invalid token', 'error');
+    adminToken = '';
+  }
+}
+
+async function loadDashboard() {
+  try {
+    const data = await adminFetch('/admin/clients');
+    const clients = data.clients || [];
+    const active = clients.filter(c=>c.status==='active').length;
+    const pastDue = clients.filter(c=>c.status==='past_due').length;
+    const mrr = active * 500;
+    document.getElementById('stats_grid').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-val">${clients.length}</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card"><div class="stat-label">Active</div><div class="stat-val">${active}</div><div class="stat-sub">Paying subscribers</div></div>
+      <div class="stat-card"><div class="stat-label">MRR</div><div class="stat-val">$${mrr.toLocaleString()}</div><div class="stat-sub">Monthly recurring</div></div>
+      <div class="stat-card"><div class="stat-label">Past Due</div><div class="stat-val">${pastDue}</div><div class="stat-sub">Need attention</div></div>`;
+    const tbody = document.getElementById('clients_tbody');
+    tbody.innerHTML = clients.map(c => {
+      const locs = c.locations?.length || 0;
+      return `<tr onclick="loadClientDetail('${c.id}')" style="cursor:pointer">
+        <td><div class="client-name">${c.name}</div><div class="client-email">${c.email}</div></td>
+        <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#888">${c.plan||'starter'}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#888">${locs} location${locs!==1?'s':''}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:10px" class="sync-never">—</td>
+        <td>
+          <button class="btn-sm" onclick="event.stopPropagation();triggerSync('${c.id}','${c.name}')">Sync</button>
+          ${c.status!=='active'?`<button class="btn-sm" onclick="event.stopPropagation();setStatus('${c.id}','active')" style="margin-left:6px">Activate</button>`:''}
+          ${c.status==='active'?`<button class="btn-red" onclick="event.stopPropagation();setStatus('${c.id}','suspended')" style="margin-left:6px">Suspend</button>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    showAlert('Load failed: ' + e.message, 'error');
+  }
+}
+
+async function loadClientDetail(clientId) {
+  try {
+    const data = await adminFetch('/admin/client/' + clientId);
+    const c = data.client;
+    const panel = document.getElementById('client_detail');
+    const logRows = (data.recent_syncs||[]).slice(0,10).map(s =>
+      `<div class="log-row"><span class="${s.status==='success'?'log-ok':'log-err'}">${s.status}</span><span>${s.provider}</span><span>${s.sync_type}</span><span>${new Date(s.started_at).toLocaleString()}</span>${s.error_message?'<span class="log-err">'+s.error_message.slice(0,60)+'</span>':''}</div>`
+    ).join('');
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#e8b84b">${c.name}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm" onclick="triggerSync('${c.id}','${c.name}')">Force Sync</button>
+          <button class="btn-outline" onclick="this.closest('.detail-panel').classList.remove('open')">Close</button>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-label">Account Info</div>
+          <div class="detail-val">${c.email}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555;margin-top:4px">Status: ${c.status} · Plan: ${c.plan}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555;margin-top:2px">Created: ${new Date(c.created_at).toLocaleDateString()}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555;margin-top:2px">Stripe: ${c.stripe_customer_id||'Not linked'}</div>
+        </div>
+        <div>
+          <div class="detail-label">Locations</div>
+          ${(data.locations||[]).map(l=>`<div style="font-size:12px;color:#e0d0b0;margin-bottom:4px">${l.name} <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555">${l.address||''}</span></div>`).join('')}
+        </div>
+        <div>
+          <div class="detail-label">Integrations</div>
+          ${(data.integrations||[]).map(i=>`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 0;border-bottom:1px solid #1a1a1a"><span style="color:${i.last_sync_status==='success'?'#4caf7d':i.last_sync_status==='error'?'#e05252':'#888'}">${i.pos_type||i.provider||i.platform}</span> · ${i.last_sync_at?new Date(i.last_sync_at).toLocaleString():'never synced'}${i.last_sync_error?'<br><span style="color:#e05252">'+i.last_sync_error.slice(0,80)+'</span>':''}</div>`).join('')||'<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555">No integrations yet</div>'}
+        </div>
+        <div>
+          <div class="detail-label">Recent Sync Logs</div>
+          ${logRows||'<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555">No logs yet</div>'}
+        </div>
+      </div>`;
+    panel.classList.add('open');
+    panel.scrollIntoView({behavior:'smooth'});
+  } catch(e) {
+    showAlert('Load failed: ' + e.message, 'error');
+  }
+}
+
+async function triggerSync(clientId, name) {
+  try {
+    await adminFetch('/admin/client/'+clientId+'/sync', 'POST');
+    showAlert('Sync triggered for ' + name, 'success');
+  } catch(e) {
+    showAlert('Sync trigger failed: ' + e.message, 'error');
+  }
+}
+
+async function setStatus(clientId, status) {
+  try {
+    await adminFetch('/admin/client/'+clientId+'/status', 'PUT', {status});
+    showAlert('Status updated to ' + status, 'success');
+    loadDashboard();
+  } catch(e) {
+    showAlert('Update failed: ' + e.message, 'error');
+  }
+}
+</script>
+</body>
+</html>
