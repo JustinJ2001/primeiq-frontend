@@ -481,12 +481,20 @@ async function createAccount() {
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password });
     if (authRes.error) throw new Error(authRes.error.message || 'Signup failed');
 
-    // Handle both old and new Supabase response formats
+    // Try signup response first
     state.userId = authRes.user?.id || authRes.id || authRes?.data?.user?.id;
-    state.email  = email;
     state.token  = authRes.access_token || authRes?.data?.session?.access_token;
+    state.email  = email;
 
-    if (!state.userId) throw new Error('Account created but could not get user ID. Please try logging in.');
+    // If no user ID from signup (e.g. email already exists), try signing in instead
+    if (!state.userId || !state.token) {
+      const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password });
+      if (loginRes.error) throw new Error('Account may already exist. Try signing in at /login instead.');
+      state.userId = loginRes.user?.id || loginRes.id;
+      state.token  = loginRes.access_token;
+    }
+
+    if (!state.userId) throw new Error('Could not create account. Please try again or contact support.');
 
     // Create client record in our DB
     const clientRes = await apiFetch('/api/clients', 'POST', {
