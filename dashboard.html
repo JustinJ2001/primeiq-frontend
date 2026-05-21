@@ -356,7 +356,7 @@ body::before {
 .legend-dot { width:8px; height:8px; border-radius:2px; }
 
 /* COST TABLE */
-.cost-table { width:100%; border-collapse:collapse; }
+.cost-table { width:100%; border-collapse:collapse; min-width:320px; }
 .cost-table th {
   font-family:'IBM Plex Mono', monospace; font-size:9px;
   letter-spacing:0.1em; text-transform:uppercase;
@@ -437,7 +437,7 @@ body::before {
 .modal-overlay.open { opacity:1; pointer-events:all; }
 .modal {
   background:var(--bg); border:1px solid var(--border);
-  border-radius:16px; width:800px; max-width:95vw; max-height:90vh;
+  border-radius:16px; width:800px; max-width:95vw; box-sizing:border-box; max-height:90vh;
   overflow-y:auto; box-shadow:0 40px 100px rgba(0,0,0,0.6);
   transform:translateY(20px); transition:transform 0.25s;
 }
@@ -529,18 +529,14 @@ body::before {
 .tbl td.warn { color:var(--amber); font-weight:600; }
 .tbl tbody tr:hover { background:rgba(40,25,5,0.02); }
 
-/* ── MOBILE RESPONSIVE ────────────────────────────────────────────────────── */
-/* ── MOBILE (phones up to 480px) ─────────────────────────────────────────── */
-/* ── MOBILE: touch devices or narrow screens ─────────────────────────────── */
+/* ── MOBILE (phones & touch devices) ─────────────────────────────────────── */
 @media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
 
-
-  /* Sidebar moves to bottom as horizontal scrollable nav */
+  /* Sidebar → bottom nav */
   .sidebar {
     position:fixed; bottom:0; top:auto; left:0; right:0; width:100%;
     height:56px; flex-direction:row; border-right:none;
-    border-top:1px solid rgba(255,220,130,0.15); z-index:200;
-    overflow:hidden;
+    border-top:1px solid rgba(255,220,130,0.15); z-index:200; overflow:hidden;
   }
   .sidebar-logo, .sidebar-footer { display:none; }
   .sidebar-nav {
@@ -554,19 +550,18 @@ body::before {
     flex-shrink:0; padding:8px 14px; font-size:8px;
     white-space:nowrap; border-bottom:none;
     border-top:2px solid transparent;
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-    line-height:1.2;
+    display:flex; flex-direction:column; align-items:center; gap:2px; line-height:1.2;
   }
   .nav-item.active { border-top:2px solid var(--gold); background:rgba(184,134,11,0.08); }
   .nav-icon { font-size:13px; }
 
-  /* Main content */
+  /* Main layout */
   .main { margin-left:0 !important; padding-bottom:64px; }
-  .content { padding:12px 14px; }
+  .content { padding:12px 14px; overflow-x:hidden; }
+  body { overflow-x:hidden; }
 
   /* Topbar */
-  .topbar { flex-wrap:wrap; gap:6px; padding:12px 14px 10px; }
-  .topbar-left { width:100%; }
+  .topbar { flex-wrap:wrap; gap:6px; padding:10px 14px; }
   .topbar-right { display:none; }
   .page-title { font-size:17px; }
   .page-sub { font-size:9px; }
@@ -578,48 +573,95 @@ body::before {
   .kpi-card { padding:13px 14px; }
   .kpi-value { font-size:20px; }
   .kpi-label { font-size:7px; }
+  .kpi-sub { font-size:9px; }
 
-  /* Grids — all single column */
+  /* All grid layouts → single column */
   .grid-2 { grid-template-columns:1fr !important; }
   .grid-3-1 { grid-template-columns:1fr !important; }
   .loc-cards { grid-template-columns:1fr !important; }
 
   /* Cards */
-  .card { border-radius:10px; margin-bottom:12px; }
-  .card-header { flex-wrap:wrap; gap:6px; padding:14px 16px; }
+  .card { border-radius:10px; margin-bottom:12px; max-width:100%; }
+  .card-header { flex-wrap:wrap; gap:6px; padding:14px 16px 10px; }
   .card-title { font-size:13px; }
   .card-sub { font-size:9px; }
   .card-badge { font-size:8px; }
 
-  /* Tables — scroll horizontally */
+  /* ALL tables scroll horizontally */
+  .tbl, .cost-table {
+    display:block;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    white-space:nowrap;
+    max-width:100%;
+  }
+  .tbl th, .tbl td,
+  .cost-table th, .cost-table td { white-space:nowrap; }
   .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .tbl { font-size:8.5px; min-width:400px; }
-  .tbl th { font-size:7px; padding:5px 6px; }
-  .tbl td { padding:5px 6px; }
 
-  /* Charts */
+  /* Charts — bar rows */
   .bar-row { gap:6px; }
-  .week-row { gap:6px; }
-  .bar-label { font-size:9px; width:24px; }
+  .bar-label { font-size:9px; min-width:20px; }
   .bar-val { font-size:9px; }
+  .week-row { gap:6px; }
+  .week-day { font-size:9px; width:24px; }
+  .week-val { font-size:9px; }
 
   /* Location cards */
   .loc-prime-bar { height:6px; }
   .loc-metric-label { font-size:7px; }
   .loc-metric-val { font-size:13px; }
+  .loc-metrics { gap:8px; }
 
-  /* Alert items */
-  .alert-item { gap:10px; padding:12px 0; }
+  /* Alert / insight items */
+  .alert-item { gap:10px; padding:10px 0; }
   .alert-title { font-size:12px; }
-  .alert-desc { font-size:11px; }
+  .alert-desc { font-size:10.5px; line-height:1.5; }
+  .al-row { gap:8px; padding:8px 0; }
+  .al-title { font-size:11px; }
+  .al-desc { font-size:10px; }
+
+  /* Alerts list */
+  .alerts-list { padding:0 14px 14px; }
+
+  /* Modal */
+  .modal-overlay > div { width:95vw !important; max-width:95vw !important; }
 
   /* Demo banner */
-  #demoBanner > div { flex-direction:column; gap:4px; }
+  #demoBanner { flex-wrap:wrap; gap:4px; font-size:10px; }
 
-  .card { border-radius:10px; }
-  .tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
-  .tbl { min-width:480px; }
+  /* Inline flex items that overflow */
+  .chart-legend { flex-wrap:wrap; gap:8px; }
+  .prime-bar-section { flex-wrap:wrap; }
+}
 
+/* Fix inline grid styles in JS-rendered content */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
+  [style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  [style*="grid-template-columns:1fr 1fr 1fr"],
+  [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .form-grid, .form-grid-3, .form-grid-4 { grid-template-columns:1fr !important; }
+}
+
+@media (max-width: 400px) {
+  .kpi-strip { grid-template-columns:1fr; }
+  .nav-item { padding:8px 10px; font-size:7.5px; }
+}
+
+
+@media (max-width: 768px), (pointer: coarse) {
+  .cost-table, .tbl {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .cost-table td, .cost-table th { white-space: nowrap; }
 }
 
 @media (max-width: 400px) {
@@ -1688,10 +1730,10 @@ function renderLabor() {
         <div class="card-header"><div><div class="card-title">Actual vs Scheduled Hours · This Week</div><div class="card-sub">From ${state.payroll} · Every employee tracked</div></div><div class="card-badge">⚡ Auto</div></div>
         ${state.locations.map(l => !l.scheduledVsActual ? '' : `
         <div style="padding:0 20px 6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-top:12px">${l.name}</div>
-        <table class="cost-table" style="margin-bottom:0">
+        <table class="cost-table" style="margin-bottom:0;min-width:420px">
           <thead><tr>
             <th>Employee</th><th style="text-align:right">Role</th>
-            <th style="text-align:right">Scheduled</th><th style="text-align:right">Actual</th>
+            <th style="text-align:right">Sched</th><th style="text-align:right">Actual</th>
             <th style="text-align:right">Diff</th><th style="text-align:right">Status</th>
           </tr></thead>
           <tbody>
@@ -1704,7 +1746,7 @@ function renderLabor() {
               return '<tr><td style="color:var(--text);font-weight:600">' + s.name + '</td><td class="dim">' + s.role + '</td><td style="color:var(--text)">' + s.scheduled + 'h</td><td style="color:var(--text)">' + s.actual + 'h</td><td class="' + cls + '">' + diffStr + '</td><td><span class="pill ' + pillCls + '">' + tag + '</span></td></tr>';
             }).join('')}
           </tbody>
-        </table></div>`).join('')}
+        </table></div></div>`).join('')}
         <div style="padding:12px 20px 16px;margin-top:8px;background:var(--amber-bg);border-top:1px solid var(--border)">
           <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:3px">⚠ Overtime costs you 1.5x</div>
           <div style="font-size:10.5px;color:var(--text-dim)">Any hour worked over 40 is paid at 1.5x rate. Catching this Wednesday saves money for the rest of the week. Adjust shifts before it happens, not after.</div>
