@@ -2728,32 +2728,35 @@ function renderBenchmark() {
     ? '<div style="background:var(--red-bg);border:1.5px solid rgba(192,57,43,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (oppRows?'12':'0') + 'px"><div><div style="font-size:14px;font-weight:700;color:var(--red)">Total profitability gap vs NYC average</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">Estimated ' + periodLabel[p].toLowerCase() + ' revenue you could recover</div></div><div style="font-family:IBM Plex Mono,monospace;font-size:24px;font-weight:700;color:var(--red)">-' + fmtDollar(Math.round(totalOpp)) + '</div></div>' + (oppRows ? '<div style="border-top:1px solid rgba(192,57,43,0.15);padding-top:8px">' + oppRows + '</div>' : '') + '</div>'
     : '<div style="background:var(--green-bg);border:1.5px solid rgba(45,122,79,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="font-size:14px;font-weight:700;color:var(--green)">You are performing above the NYC average across all key metrics</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:4px">Compare to Top Quartile to find your next improvement opportunity</div></div>';
 
-  var topBg = score >= 75 ? 'var(--dark)' : 'var(--bg)';
-  var avgBg = (score >= 50 && score < 75) ? 'var(--dark)' : 'var(--bg)';
-  var belBg = score < 50 ? 'var(--dark)' : 'var(--bg)';
-  var topTxt = score >= 75 ? '#2d7a4f' : 'var(--muted)';
-  var avgTxt = (score >= 50 && score < 75) ? '#d4a017' : 'var(--muted)';
-  var belTxt = score < 50 ? '#c0392b' : 'var(--muted)';
-  var topBorder = score >= 75 ? '2px solid #2d7a4f' : '1.5px solid var(--border)';
-  var avgBorder = (score >= 50 && score < 75) ? '2px solid #d4a017' : '1.5px solid var(--border)';
-  var belBorder = score < 50 ? '2px solid #c0392b' : '1.5px solid var(--border)';
+  // Count metrics in each tier across all 8 metrics
+  var metricKeys = ['foodCost','laborCost','primeCost','netMargin','avgCheck','voidsPct','deliveryPct','fixedPct'];
+  var topCount = 0; var avgCount = 0; var belCount = 0;
+  metricKeys.forEach(function(key) {
+    if (!bm[key]) return;
+    var b = bm[key]; var y = yours[key]; var hib = b.higher_is_better;
+    var vsAvg = hib ? y - b.avg : b.avg - y;
+    var vsTop = hib ? y - b.top : b.top - y;
+    if (vsAvg >= 0 && vsTop >= 0) topCount++;
+    else if (vsAvg >= 0) avgCount++;
+    else belCount++;
+  });
 
   return '<div style="margin-bottom:20px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">'
-    + '<div style="background:' + topBg + ';border:' + topBorder + ';border-radius:12px;padding:20px;text-align:center">'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:' + (score>=75?'rgba(255,255,255,0.5)':'var(--muted)') + ';letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Top Performer</div>'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:36px;font-weight:700;color:' + topTxt + ';line-height:1">75+</div>'
-    + (score >= 75 ? '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#2d7a4f;margin-top:6px">Your score: ' + score + '</div>' : '')
+    + '<div style="background:var(--green-bg);border:2px solid rgba(45,122,79,0.3);border-radius:12px;padding:20px;text-align:center">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Top Performer</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:52px;font-weight:700;color:var(--green);line-height:1">' + topCount + '</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:6px">of 8 metrics</div>'
     + '</div>'
-    + '<div style="background:' + avgBg + ';border:' + avgBorder + ';border-radius:12px;padding:20px;text-align:center">'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:' + (score>=50&&score<75?'rgba(255,255,255,0.5)':'var(--muted)') + ';letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Average</div>'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:36px;font-weight:700;color:' + avgTxt + ';line-height:1">50-74</div>'
-    + (score >= 50 && score < 75 ? '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#d4a017;margin-top:6px">Your score: ' + score + '</div>' : '')
+    + '<div style="background:var(--amber-bg);border:2px solid rgba(192,112,0,0.3);border-radius:12px;padding:20px;text-align:center">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Average</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:52px;font-weight:700;color:var(--amber);line-height:1">' + avgCount + '</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:6px">of 8 metrics</div>'
     + '</div>'
-    + '<div style="background:' + belBg + ';border:' + belBorder + ';border-radius:12px;padding:20px;text-align:center">'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:' + (score<50?'rgba(255,255,255,0.5)':'var(--muted)') + ';letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Below Average</div>'
-    + '<div style="font-family:IBM Plex Mono,monospace;font-size:36px;font-weight:700;color:' + belTxt + ';line-height:1">0-49</div>'
-    + (score < 50 ? '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#c0392b;margin-top:6px">Your score: ' + score + '</div>' : '')
+    + '<div style="background:var(--red-bg);border:2px solid rgba(192,57,43,0.3);border-radius:12px;padding:20px;text-align:center">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--red);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Below Average</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:52px;font-weight:700;color:var(--red);line-height:1">' + belCount + '</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:6px">of 8 metrics</div>'
     + '</div>'
     + '</div>'
     + '<div style="margin-bottom:16px"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Restaurant Type</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + segButtons + '</div></div>'
