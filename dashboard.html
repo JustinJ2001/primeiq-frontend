@@ -2601,7 +2601,7 @@ function renderBenchmark() {
   };
 
   const activeSegment = window._benchSegment || 'Fast Casual';
-  const bm = benchmarks[activeSegment];
+  var bm = benchmarks[activeSegment];
 
   const yours = {
     foodCost: food, laborCost: labor, primeCost: prime,
