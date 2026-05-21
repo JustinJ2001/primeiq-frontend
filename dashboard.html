@@ -550,7 +550,7 @@ body::before {
         <div class="restaurant-locs" id="sidebarLocs">2 Locations · NYC</div>
       </div>
     </div>
-    <button class="setup-btn" onclick="window.location.href='/settings'">⚙ Settings</button>
+    <button class="setup-btn" onclick="window.location.href='/settings' + (window.location.search.includes('demo=1') ? '?demo=1' : '')">⚙ Settings</button>
     <button class="setup-btn" onclick="localStorage.removeItem('rd_token');localStorage.removeItem('rd_client_id');window.location.href='/login'" style="margin-top:6px;opacity:0.6">← Sign Out</button>
   </div>
 </aside>
@@ -2730,7 +2730,7 @@ function renderBenchmark() {
 
   return '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:14px">'
     + '<div style="background:var(--dark);border-radius:12px;padding:20px 28px;display:flex;align-items:center;gap:20px">'
-    + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">Performance Score</div><div style="font-family:IBM Plex Mono,monospace;font-size:42px;font-weight:700;color:' + scoreColor + ';line-height:1">' + score + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:' + scoreColor + ';margin-top:4px">' + scoreLabel + '</div><div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;line-height:2;color:rgba(255,255,255,0.4)"><span style="color:#2d7a4f">75-100</span> Top Performer<br><span style="color:#d4a017">50-74</span> Average<br><span style="color:#c0392b">0-49</span> Below Average</div></div></div>'
+    + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">Performance Score</div><div style="font-family:IBM Plex Mono,monospace;font-size:42px;font-weight:700;color:' + scoreColor + ';line-height:1">' + score + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:' + scoreColor + ';margin-top:4px;font-weight:600">' + scoreLabel + '</div><div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;display:flex;gap:12px"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.35)"><span style="color:#2d7a4f;font-weight:700">75+</span> Top Performer</div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.35)"><span style="color:#d4a017;font-weight:700">50+</span> Average</div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.35)"><span style="color:#c0392b;font-weight:700">&lt;50</span> Below Average</div></div></div>'
     + '<div style="width:1px;height:60px;background:rgba(255,255,255,0.1)"></div>'
     + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">vs NYC ' + activeSegment + '</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;max-width:200px">' + scoreDesc + '</div></div>'
     + '</div>'
