@@ -3197,8 +3197,30 @@ function renderForecast() {
 
     + '<div class="card mb">'
     + '<div class="card-header"><div><div class="card-title">Shift Summary · Whole Week</div><div class="card-sub">Aggregate performance by shift across all 7 days</div></div></div>'
-    + '<table class="tbl"><thead><tr><th>Shift</th><th>Total Rev</th><th>Rev Share</th><th>Avg/Day</th><th>Total Covers</th><th>Labor Budget</th></tr></thead>'
-    + '<tbody>' + summaryRows + '</tbody></table>'
+    + '<div style="padding:0 18px 18px">'
+    + Object.values(shiftNames).map(function(sn) {
+        var avgPerDay = Math.round(sn.totalRev/sn.days);
+        var revShare = Math.round(sn.totalRev/forecastTotal*100);
+        return '<div style="padding:16px 0;border-bottom:1px solid var(--border)">'
+          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+          + '<div>'
+          + '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + sn.name + '</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">' + sn.days + ' days &nbsp;·&nbsp; ' + sn.totalCovers + ' total covers &nbsp;·&nbsp; ' + fmtDollar(avgPerDay) + ' avg/day</div>'
+          + '</div>'
+          + '<div style="text-align:right">'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:16px;font-weight:700;color:var(--dark)">' + fmtDollar(sn.totalRev) + '</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-top:2px">Labor: ' + fmtDollar(sn.totalLaborBudget) + '</div>'
+          + '</div>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:10px">'
+          + '<div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden">'
+          + '<div style="height:100%;width:' + revShare + '%;background:var(--green-dim);border-radius:5px"></div>'
+          + '</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:600;color:var(--muted);width:36px;text-align:right">' + revShare + '%</div>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div>'
     + '</div>'
 
     + '<div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:9px">'
