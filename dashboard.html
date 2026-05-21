@@ -925,26 +925,19 @@ async function loadDashboardData() {
   showLoadingOverlay();
   try {
     const data = await apiFetch('/api/overview?period=week');
-    if (data.locations && data.locations.length > 0) {
+    if (data && data.locations && data.locations.length > 0) {
       state = transformAPIData(data);
       updateSidebarName(state.name);
-      // Load additional data in parallel
       await Promise.all([loadHourlyData(), loadLaborData()]);
-      hideLoadingOverlay();
-      navigate('overview');
     } else {
-      // Client exists but no data yet — show setup prompt
-      hideLoadingOverlay();
       showNoDataBanner();
-      navigate('overview');
     }
   } catch(e) {
     console.error('Failed to load dashboard data:', e);
-    hideLoadingOverlay();
-    // Fall back to demo data
     showDemoBanner();
-    navigate('overview');
   }
+  hideLoadingOverlay();
+  navigate('overview');
 }
 
 function showDemoBanner() {
