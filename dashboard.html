@@ -540,16 +540,18 @@ body::before {
     <div class="nav-item" data-page="weekly"><span class="nav-icon">📋</span> Weekly Report</div>
     <div class="nav-item" data-page="voids"><span class="nav-icon">⚠</span> Voids &amp; Comps</div>
     <div class="nav-item" data-page="breakeven"><span class="nav-icon">⊕</span> Break-even</div>
+    <div class="nav-item" data-page="benchmark"><span class="nav-icon">◎</span> Industry Benchmarks</div>
   </nav>
   <div class="sidebar-footer">
     <div class="restaurant-badge">
       <div class="restaurant-avatar" id="sidebarAvatar">T</div>
       <div>
-        <div class="restaurant-name" id="sidebarName">Planet Taco</div>
+        <div class="restaurant-name" id="sidebarName">Loading...</div>
         <div class="restaurant-locs" id="sidebarLocs">2 Locations · NYC</div>
       </div>
     </div>
     <button class="setup-btn" id="openSetupBtn">⚙ Setup Restaurant Data</button>
+    <button class="setup-btn" onclick="localStorage.removeItem('rd_token');localStorage.removeItem('rd_client_id');window.location.href='/login'" style="margin-top:6px;opacity:0.6">← Sign Out</button>
   </div>
 </aside>
 
@@ -669,6 +671,307 @@ body::before {
 
 <script>
 // ── DEMO DATA ────────────────────────────────────────────────────────────────
+
+// ── API CONFIG ────────────────────────────────────────────────────────────────
+const API_BASE    = 'https://restaurant-api-68re.onrender.com';
+const SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
+
+// ── AUTH CHECK ────────────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('rd_token'); }
+function getClientId() { return localStorage.getItem('rd_client_id'); }
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) { window.location.href = '/login'; return false; }
+  return true;
+}
+
+async function apiFetch(path, method = 'GET', body = null) {
+  const token = getToken();
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('rd_token');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+  return res.json();
+}
+
+// ── TRANSFORM API DATA INTO DASHBOARD STATE FORMAT ────────────────────────────
+function transformAPIData(apiData) {
+  const summary = apiData.summary || {};
+  const apiLocations = apiData.locations || [];
+
+  // Map each location from API format to dashboard state format
+  const locations = apiLocations.map(loc => {
+    const rev = loc.revenue || 0;
+    const prevRev = loc.revenue_prior || 0;
+    const covers = loc.covers || 0;
+    const foodPct = loc.food_cost_pct || 31;
+    const laborPct = loc.labor_cost_pct || 34;
+    const delRev = loc.delivery_revenue || 0;
+    const delComm = loc.delivery_commission || 0;
+    const pm = loc.payment_mix || {};
+    const totalPm = (pm.cash||0)+(pm.visa||0)+(pm.mastercard||0)+(pm.amex||0) || 1;
+
+    return {
+      id: loc.id,
+      name: loc.name,
+      address: loc.address || '',
+      status: 'open',
+      seats: loc.seats || 0,
+      healthScore: loc.health_score || null,
+      googleRating: loc.google_rating || null,
+
+      // Revenue — use real data, fill other periods with estimates
+      revenue: {
+        today:   Math.round(rev / 7),
+        week:    rev,
+        month:   rev * 4.3,
+        quarter: rev * 13,
+        ytd:     rev * 20,
+      },
+      revPrev: {
+        today:   Math.round(prevRev / 7),
+        week:    prevRev,
+        month:   prevRev * 4.3,
+        quarter: prevRev * 13,
+        ytd:     prevRev * 20,
+      },
+
+      // Costs
+      foodCost:   { today: foodPct, week: foodPct, month: foodPct, quarter: foodPct, ytd: foodPct },
+      laborCost:  { today: laborPct, week: laborPct, month: laborPct, quarter: laborPct, ytd: laborPct },
+      beverageCost: { today: 18, week: 18, month: 18, quarter: 18, ytd: 18 },
+
+      // Covers
+      covers: {
+        today:   Math.round(covers / 7),
+        week:    covers,
+        month:   Math.round(covers * 4.3),
+        quarter: Math.round(covers * 13),
+        ytd:     Math.round(covers * 20),
+      },
+      coversPrev: {
+        today: 0, week: 0, month: 0, quarter: 0, ytd: 0
+      },
+
+      // Avg check
+      avgCheck: {
+        today:   loc.avg_check || 0,
+        week:    loc.avg_check || 0,
+        month:   loc.avg_check || 0,
+        quarter: loc.avg_check || 0,
+        ytd:     loc.avg_check || 0,
+      },
+
+      // Fixed costs (monthly)
+      rent:       loc.rent || 0,
+      utilities:  loc.utilities || 0,
+      insurance:  loc.insurance || 0,
+      supplies:   loc.supplies || 0,
+      marketing:  loc.marketing || 0,
+      software:   loc.software || 0,
+
+      // Targets
+      foodTarget:  loc.food_cost_target || 31,
+      laborTarget: loc.labor_cost_target || 34,
+      primeTarget: loc.prime_cost_target || 65,
+
+      // Delivery
+      deliveryRevenue: { today: Math.round(delRev/7), week: delRev, month: delRev*4.3, quarter: delRev*13, ytd: delRev*20 },
+      deliveryOrders:  { today: 0, week: 0, month: 0, quarter: 0, ytd: 0 },
+      deliveryRating:  0,
+
+      // Voids & comps
+      voids: { today: Math.round((loc.voids||0)/7), week: loc.voids||0, month: (loc.voids||0)*4.3, quarter: (loc.voids||0)*13, ytd: (loc.voids||0)*20 },
+      comps: { today: Math.round((loc.comps||0)/7), week: loc.comps||0, month: (loc.comps||0)*4.3, quarter: (loc.comps||0)*13, ytd: (loc.comps||0)*20 },
+
+      // Waste
+      waste: { today: 2.2, week: 2.2, month: 2.2, quarter: 2.2, ytd: 2.2 },
+
+      // Revenue mix
+      revenueMix: { dineIn: 50, takeout: 20, delivery: 30 },
+
+      // Payment mix (as percentages)
+      paymentMix: {
+        cash:       Math.round((pm.cash||0)/totalPm*100),
+        visa:       Math.round((pm.visa||0)/totalPm*100),
+        mastercard: Math.round((pm.mastercard||0)/totalPm*100),
+        amex:       Math.round((pm.amex||0)/totalPm*100),
+        giftCard:   Math.round((pm.gift_card||0)/totalPm*100),
+      },
+
+      // Daypart (estimated from total)
+      daypart: {
+        lunch: { rev: Math.round(rev * 0.45 / 7), covers: Math.round(covers * 0.45 / 7), avgChk: loc.avg_check || 13, hoursOpen: 3 },
+        dinner: { rev: Math.round(rev * 0.35 / 7), covers: Math.round(covers * 0.35 / 7), avgChk: loc.avg_check || 13, hoursOpen: 3 },
+      },
+
+      // Hourly (will be updated when hourly data loads)
+      hourly: [
+        {hour:'8am',rev:0},{hour:'9am',rev:0},{hour:'10am',rev:0},
+        {hour:'11am',rev:0},{hour:'12pm',rev:0},{hour:'1pm',rev:0},
+        {hour:'2pm',rev:0},{hour:'3pm',rev:0},{hour:'4pm',rev:0},
+        {hour:'5pm',rev:0},{hour:'6pm',rev:0},{hour:'7pm',rev:0},
+        {hour:'8pm',rev:0},{hour:'9pm',rev:0}
+      ],
+
+      // Labor (will be updated when labor data loads)
+      scheduledVsActual: [],
+    };
+  });
+
+  return {
+    name: apiData.client?.name || 'My Restaurant',
+    cuisine: 'Restaurant',
+    pos: 'Connected POS',
+    payroll: 'Connected Payroll',
+    accounting: 'QuickBooks',
+    delivery: 'Delivery Platforms',
+    foodTarget:  locations[0]?.foodTarget || 31,
+    laborTarget: locations[0]?.laborTarget || 34,
+    primeTarget: locations[0]?.primeTarget || 65,
+    ccFeeRate: 2.8,
+    deliveryCommission: 22,
+    locations,
+  };
+}
+
+// ── LOAD HOURLY DATA ──────────────────────────────────────────────────────────
+async function loadHourlyData() {
+  try {
+    const data = await apiFetch('/api/hourly');
+    const hourlyMap = {};
+    (data.hourly || []).forEach(h => {
+      if (h.revenue > 0) hourlyMap[h.hour] = h.revenue;
+    });
+
+    const hourLabels = ['8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'];
+    const hourNumbers = [8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+
+    state.locations.forEach(loc => {
+      loc.hourly = hourLabels.map((label, i) => ({
+        hour: label,
+        rev: Math.round((hourlyMap[hourNumbers[i]] || 0) / state.locations.length)
+      }));
+    });
+  } catch(e) {
+    console.log('Hourly data not available yet');
+  }
+}
+
+// ── LOAD LABOR DATA ────────────────────────────────────────────────────────────
+async function loadLaborData() {
+  try {
+    const data = await apiFetch('/api/labor');
+    const records = data.records || [];
+
+    state.locations.forEach(loc => {
+      const locRecords = records.filter(r => r.location_id === loc.id);
+      if (locRecords.length > 0) {
+        loc.scheduledVsActual = locRecords.map(r => ({
+          name: r.employee_name,
+          role: r.role || 'Staff',
+          scheduled: r.scheduled_hours || 0,
+          actual: r.actual_hours || 0,
+          status: r.actual_hours > 40 ? 'bad' :
+                  Math.abs((r.actual_hours||0) - (r.scheduled_hours||0)) > 2 ? 'warn' : 'good'
+        }));
+      }
+    });
+  } catch(e) {
+    console.log('Labor data not available yet');
+  }
+}
+
+// ── SHOW LOADING STATE ────────────────────────────────────────────────────────
+function showLoadingOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'loading_overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = `
+    <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);margin-bottom:16px">Loading your dashboard...</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em">Fetching your data</div>
+    <div style="width:200px;height:2px;background:var(--border);border-radius:2px;margin-top:20px;overflow:hidden">
+      <div style="height:100%;background:var(--gold);border-radius:2px;animation:loadbar 1.5s ease-in-out infinite"></div>
+    </div>
+    <style>@keyframes loadbar{0%{width:0%}50%{width:80%}100%{width:100%}}</style>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('loading_overlay');
+  if (overlay) { overlay.style.opacity = '0'; overlay.style.transition = 'opacity 0.3s'; setTimeout(() => overlay.remove(), 300); }
+}
+
+// ── MAIN DATA LOADER ──────────────────────────────────────────────────────────
+async function loadDashboardData() {
+  // Check if user is logged in
+  const token = getToken();
+  if (!token) {
+    // No token — show demo data with a banner
+    showDemoBanner();
+    return;
+  }
+
+  showLoadingOverlay();
+  try {
+    const data = await apiFetch('/api/overview?period=week');
+    if (data.locations && data.locations.length > 0) {
+      state = transformAPIData(data);
+      updateSidebarName(state.name);
+      // Load additional data in parallel
+      await Promise.all([loadHourlyData(), loadLaborData()]);
+      hideLoadingOverlay();
+      navigate('overview');
+    } else {
+      // Client exists but no data yet — show setup prompt
+      hideLoadingOverlay();
+      showNoDataBanner();
+      navigate('overview');
+    }
+  } catch(e) {
+    console.error('Failed to load dashboard data:', e);
+    hideLoadingOverlay();
+    // Fall back to demo data
+    showDemoBanner();
+    navigate('overview');
+  }
+}
+
+function showDemoBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:#1a1208;border-bottom:1px solid rgba(184,134,11,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;';
+  banner.innerHTML = `
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#e8b84b;letter-spacing:0.08em">
+      📊 DEMO MODE — Showing sample data · <a href="/login" style="color:#e8b84b;text-decoration:underline">Sign in</a> to see your real numbers
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:16px">✕</button>
+  `;
+  document.body.insertBefore(banner, document.body.firstChild);
+}
+
+function showNoDataBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:var(--amber-bg);border-bottom:1px solid rgba(192,112,0,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;';
+  banner.innerHTML = `
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.08em">
+      ⏳ Your data is syncing · First sync runs within 4 hours of connecting your POS · <a href="/settings" style="color:var(--amber);text-decoration:underline">Connect your systems</a>
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:16px">✕</button>
+  `;
+  const main = document.querySelector('.shell') || document.body;
+  main.insertBefore(banner, main.firstChild);
+}
+
+
 let state = {
   name: 'Planet Taco',
   cuisine: 'Fast Casual Mexican',
@@ -1640,7 +1943,7 @@ function renderWeekly() {
       <div class="card-header"><div><div class="card-title">Action Items for Next Week</div><div class="card-sub">Auto-generated based on this week's data</div></div></div>
       <div class="alert-list">
         ${primeAlertHTML}
-        <div class="alert-row"><div class="alert-ico warn">💡</div><div><div class="alert-body-title">Saturday is your biggest day — are you maximizing it?</div><div class="alert-body-desc">Saturday did ${fmtDollar(8200)} vs ${fmtDollar(3800)} on Monday. Make sure you're fully staffed and stocked every Saturday. A single understaffed Saturday can cost you $1,000–$2,000 in lost revenue.</div></div></div>
+        <div class="alert-row"><div class="alert-ico warn">💡</div><div><div class="alert-body-title">Saturday is your biggest day — are you maximizing it?</div><div class="alert-body-desc">Saturday did ${fmtDollar(8200)} vs ${fmtDollar(3800)} on Monday. Make sure you are fully staffed and stocked every Saturday. A single understaffed Saturday can cost you $1,000–$2,000 in lost revenue.</div></div></div>
         <div class="alert-row"><div class="alert-ico warn">💡</div><div><div class="alert-body-title">Delivery commission cost: ${fmtDollar(delComm)} this week</div><div class="alert-body-desc">You paid ${fmtDollar(delComm)} in commissions to ${state.delivery}. Every 1% you shift from delivery to dine-in saves you ~$${Math.round(rev*0.022/100).toLocaleString()}/week. Consider a small discount for walk-in orders to encourage it.</div></div></div>
         <div class="alert-row"><div class="alert-ico good">✓</div><div><div class="alert-body-title">All data synced automatically</div><div class="alert-body-desc">This report was generated automatically from ${state.pos}, ${state.payroll}, and ${state.accounting}. No manual work required. Sent every Monday morning.</div></div></div>
       </div>
@@ -2172,7 +2475,7 @@ function renderPayments() {
         <div class="bar-chart">${barRows}</div>
         <div style="padding:12px 20px 16px;background:var(--red-bg);border-top:1px solid var(--border);margin-top:4px">
           <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:3px">💡 Amex costs you the most</div>
-          <div style="font-size:10.5px;color:var(--text-dim)">Amex charges 3.5% vs 1.8% for Visa — nearly double. You can't refuse Amex but you can add a small surcharge (legal in NY) or encourage cash/Visa with a small discount. Even shifting 5% of Amex volume saves ${fmtDollar(Math.round(amexSaving*0.5))} ${periodLabel[p].toLowerCase()}.</div>
+          <div style="font-size:10.5px;color:var(--text-dim)">Amex charges 3.5% vs 1.8% for Visa — nearly double. You cannot refuse Amex but you can add a small surcharge (legal in NY) or encourage cash/Visa with a small discount. Even shifting 5% of Amex volume saves ${fmtDollar(Math.round(amexSaving*0.5))} ${periodLabel[p].toLowerCase()}.</div>
         </div>
       </div>
       <div class="card mb">
@@ -2200,139 +2503,219 @@ function renderPayments() {
 }
 
 // ── ROUTING ──────────────────────────────────────────────────────────────────
-const pageMap = {
-  overview:  { title:'Dashboard Overview',    sub:() => `Today · All locations · Auto-synced from ${state.pos}`,         render: renderOverview },
-  locations: { title:'Location Performance',  sub:() => `${state.locations.length} locations · ${periodLabel[activePeriod]}`, render: renderLocations },
-  daily:     { title:'Revenue',               sub:() => `This week · Auto-synced from ${state.pos}`,                     render: renderDaily },
-  hourly:    { title:'Sales by Hour',         sub:() => `Today · Both locations · From ${state.pos}`,              render: renderHourly },
-  payments:  { title:'Payment Methods',       sub:() => `${periodLabel[activePeriod]} · Processing fees`,           render: renderPayments },
-  costs:     { title:'Cost Breakdown',        sub:() => `${periodLabel[activePeriod]} · Food, Labor, Prime Cost`,         render: renderCosts },
-  labor:     { title:'Labor & Scheduling',    sub:() => `${periodLabel[activePeriod]} · From ${state.payroll}`,           render: renderLabor },
-  menu:      { title:'Menu Performance',      sub:() => `Sales mix + margin by item · From ${state.pos}`,                render: renderMenu },
-  delivery:  { title:'Delivery & Online Orders', sub:() => `${periodLabel[activePeriod]} · ${state.delivery}`,               render: renderDelivery },
-  expenses:  { title:'All Expenses',           sub:() => `${periodLabel[activePeriod]} · Every cost broken down`,        render: renderExpenses },
-  cashflow:  { title:'Cash Flow',              sub:() => `${periodLabel[activePeriod]} · Full cash in / out`,            render: renderCashflow },
-  pl:        { title:'P&L Statement',          sub:() => `${periodLabel[activePeriod]} · Auto-generated`,                render: renderPL },
-  weekly:    { title:'Weekly Report',          sub:() => `Auto-generated every Monday · ${state.name}`,                  render: renderWeekly },
-  voids:     { title:'Voids & Comps',         sub:() => `${periodLabel[activePeriod]} · From ${state.pos}`,            render: renderVoids },
-  breakeven: { title:'Break-even Calculator', sub:() => `${periodLabel[activePeriod]} · Per location`,               render: renderBreakeven },
-};
 
-function navigate(pageKey) {
-  activePage = pageKey;
-  const pg = pageMap[pageKey]; if (!pg) return;
-  $('pageTitle').textContent = pg.title;
-  $('pageSub').textContent = pg.sub();
-  const c = $('mainContent');
-  c.style.opacity = '0';
-  setTimeout(() => { c.innerHTML = pg.render(); c.style.transition='opacity 0.2s'; c.style.opacity='1'; }, 120);
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pageKey));
+function renderBenchmark() {
+  const p = activePeriod;
+  const rev = totalRevenue(p);
+  const food = avgFoodCost(p);
+  const labor = avgLaborCost(p);
+  const prime = avgPrimeCost(p);
+  const covers = totalCovers(p);
+  const avgChk = overallAvgCheck(p);
+  const fixedMonthly = state.locations.reduce(function(s,l){return s+l.rent+l.utilities+l.insurance+l.supplies+l.marketing+l.software;},0);
+  const monthlyRev = rev * (p==='month'?1:p==='week'?4.3:p==='today'?30:p==='quarter'?0.33:p==='ytd'?0.08:1);
+  const fixedPct = monthlyRev > 0 ? fixedMonthly / monthlyRev * 100 : 0;
+  const delRev = state.locations.reduce(function(s,l){return s+(l.deliveryRevenue?.[p]||0);},0);
+  const delPct = rev > 0 ? delRev / rev * 100 : 0;
+  const voids = state.locations.reduce(function(s,l){return s+(l.voids?.[p]||0);},0);
+  const comps = state.locations.reduce(function(s,l){return s+(l.comps?.[p]||0);},0);
+  const voidsPct = rev > 0 ? (voids+comps)/rev*100 : 0;
+  const ccFees = rev * state.ccFeeRate / 100;
+  const delComm = delRev * state.deliveryCommission / 100;
+  const netAmt = rev - rev*food/100 - rev*labor/100 - fixedMonthly - ccFees - delComm;
+  const netPct = rev > 0 ? netAmt/rev*100 : 0;
+
+  const benchmarks = {
+    'Fast Casual': {
+      foodCost:    { avg:30.2, top:26.5, label:'Food Cost %', note:'NYC avg higher than national (28-29%) due to ingredient costs. Top operators hit 26-27% through portion discipline and supplier negotiation.' },
+      laborCost:   { avg:31.5, top:27.2, label:'Labor Cost %', note:'NYC min wage $16/hr pushes this above national avg. Top operators offset with cross-training and scheduling software.' },
+      primeCost:   { avg:61.7, top:53.8, label:'Prime Cost %', note:'NYC fast casual prime cost runs 2-3pts above national average. Under 58% is exceptional here.' },
+      avgCheck:    { avg:16.80, top:21.50, label:'Avg Check', higher_is_better:true, note:'NYC premium over national ($13.20 avg). Top operators drive check higher with add-ons and premium modifiers.' },
+      netMargin:   { avg:5.8, top:11.4, label:'Net Margin %', higher_is_better:true, note:'Fast casual 4-10% nationally; NYC avg compressed by rent and labor. Top quartile NYC operators reach 10-12%.' },
+      deliveryPct: { avg:31.0, top:21.5, label:'Delivery % of Sales', note:'NYC fast casual skews heavily delivery. Top operators limit delivery to protect margins - every delivery order costs 22-30% off the top.' },
+      voidsPct:    { avg:2.9, top:1.2, label:'Voids & Comps %', note:'Industry avg 2.5-3.5%. Anything above 3% warrants pulling void reports by employee.' },
+      fixedPct:    { avg:20.5, top:15.5, label:'Fixed Cost %', note:'NYC commercial rent is 25-40% above national average. Top operators negotiate percentage-rent deals or operate in outer boroughs.' },
+    },
+    'Casual Dining': {
+      foodCost:    { avg:31.8, top:27.5, label:'Food Cost %', note:'Casual dining food cost driven by protein-heavy menus. Top operators run specials to move perishables before waste occurs.' },
+      laborCost:   { avg:34.8, top:29.5, label:'Labor Cost %', note:'Table service requires more FOH staff. NYC tip credit partially offsets but full benefit requires proper reporting.' },
+      primeCost:   { avg:63.8, top:55.5, label:'Prime Cost %', note:'Under 60% is exceptional for NYC casual dining. Under 58% puts you in the top 10%.' },
+      avgCheck:    { avg:38.50, top:52.00, label:'Avg Check', higher_is_better:true, note:'Driven heavily by bar attachment. Every drink added per table raises avg check ~$14 and improves margin significantly.' },
+      netMargin:   { avg:4.8, top:9.2, label:'Net Margin %', higher_is_better:true, note:'NYC casual dining margins squeezed by rent and labor. Operators above 8% typically own their building or have legacy leases.' },
+      deliveryPct: { avg:18.5, top:10.0, label:'Delivery % of Sales', note:'Casual dining operators increasingly resist high delivery share. Direct online ordering at lower commission rates is a growing strategy.' },
+      voidsPct:    { avg:3.4, top:1.5, label:'Voids & Comps %', note:'Full service comps run higher due to service recovery. Top operators use manager-approval systems for any comp over $20.' },
+      fixedPct:    { avg:22.0, top:16.5, label:'Fixed Cost %', note:'NYC Manhattan casual dining: $15,000-$25,000/month rent is common. Outer boroughs significantly lower.' },
+    },
+    'Fine Dining': {
+      foodCost:    { avg:34.5, top:29.0, label:'Food Cost %', note:'Fine dining food cost runs higher due to premium ingredients. Partially offset by very high avg check.' },
+      laborCost:   { avg:38.5, top:32.0, label:'Labor Cost %', note:'Sommelier, captain, back waiter - fine dining labor is intensive. Profitability comes from check size, not cost percentages.' },
+      primeCost:   { avg:68.5, top:60.0, label:'Prime Cost %', note:'Fine dining prime cost runs deliberately higher than other segments. Profitability comes from volume times avg check.' },
+      avgCheck:    { avg:95.00, top:145.00, label:'Avg Check', higher_is_better:true, note:'NYC fine dining avg check $85-110, tasting menu operators $150-350. Wine program can be 35-45% of revenue.' },
+      netMargin:   { avg:5.5, top:12.0, label:'Net Margin %', higher_is_better:true, note:'Fine dining net margins vary widely. High-volume operators can hit 12-15%. Intimate tasting menu spots often run 4-7%.' },
+      deliveryPct: { avg:2.0, top:0.0, label:'Delivery % of Sales', note:'Fine dining and delivery are incompatible at scale. Most zero this out intentionally.' },
+      voidsPct:    { avg:2.8, top:1.0, label:'Voids & Comps %', note:'Fine dining comps are expected but tracked separately from service-recovery comps. Top operators keep recovery comps under 1%.' },
+      fixedPct:    { avg:21.0, top:15.0, label:'Fixed Cost %', note:'Fine dining real estate is expensive but operators negotiate hard. Percentage-of-revenue rent deals are more common at this level.' },
+    },
+    'Pizza & Italian': {
+      foodCost:    { avg:28.0, top:23.5, label:'Food Cost %', note:'Pizza/pasta has a structural food cost advantage - flour, tomato, cheese cost far less per portion than proteins. Top operators hit 22-24%.' },
+      laborCost:   { avg:30.5, top:26.0, label:'Labor Cost %', note:'Pizza operations can be lean on FOH (counter/walk-up common). BOH labor is efficient once pizza production is streamlined.' },
+      primeCost:   { avg:58.5, top:49.5, label:'Prime Cost %', note:'Best prime cost category in NYC restaurants. Under 52% is achievable for high-volume pizza operators.' },
+      avgCheck:    { avg:22.50, top:31.00, label:'Avg Check', higher_is_better:true, note:'Pizza check varies widely - $15 for a slice shop, $35+ for sit-down Neapolitan. Top operators push check with wine programs.' },
+      netMargin:   { avg:8.5, top:15.5, label:'Net Margin %', higher_is_better:true, note:'Pizza is consistently the most profitable restaurant category in NYC. High-volume operators regularly hit 15-18% net margins.' },
+      deliveryPct: { avg:42.0, top:30.0, label:'Delivery % of Sales', note:'NYC pizza has the highest delivery share of any category. Delivery orders after commission earn 70-78 cents on the dollar.' },
+      voidsPct:    { avg:2.4, top:0.9, label:'Voids & Comps %', note:'Pizza operations tend to have lower void rates due to simpler menus and faster ticket times. Anything above 2% warrants investigation.' },
+      fixedPct:    { avg:17.0, top:12.5, label:'Fixed Cost %', note:'Pizza shops often occupy smaller cheaper spaces. Outer borough operators frequently have fixed costs 30-40% below Manhattan equivalents.' },
+    },
+    'Asian': {
+      foodCost:    { avg:29.5, top:24.8, label:'Food Cost %', note:'Asian cuisine food cost varies - sushi/omakase runs 35-40%; Chinese/Thai counters run 25-28%. Segment avg reflects the full mix.' },
+      laborCost:   { avg:30.0, top:25.5, label:'Labor Cost %', note:'Asian restaurant kitchens are typically highly efficient - multiple dishes cooked simultaneously on high-BTU woks. BOH labor advantage is real.' },
+      primeCost:   { avg:59.5, top:50.3, label:'Prime Cost %', note:'NYC Asian restaurants outperform most segments on prime cost due to kitchen efficiency and strong delivery volume.' },
+      avgCheck:    { avg:24.00, top:38.00, label:'Avg Check', higher_is_better:true, note:'Wide range: $15 for Chinese takeout to $200+ for omakase. Japanese/Korean dining runs higher. Beverage attachment is the key lever.' },
+      netMargin:   { avg:7.2, top:13.8, label:'Net Margin %', higher_is_better:true, note:'Asian restaurants are disproportionately represented among NYC most profitable independents. Strong delivery plus efficient kitchens equals margin advantage.' },
+      deliveryPct: { avg:38.5, top:26.0, label:'Delivery % of Sales', note:'Second highest delivery share after pizza. Chinese and Thai in particular run 40-55% delivery in NYC. Commission management is critical.' },
+      voidsPct:    { avg:2.6, top:1.0, label:'Voids & Comps %', note:'Asian operations typically run tight void/comp numbers. Simple menus and faster service reduce error rates vs full-service western concepts.' },
+      fixedPct:    { avg:18.5, top:13.8, label:'Fixed Cost %', note:'Asian restaurants cluster in outer boroughs and lower-rent Manhattan neighborhoods giving a real estate advantage over competitors.' },
+    },
+    'Mexican & Latin': {
+      foodCost:    { avg:30.8, top:26.2, label:'Food Cost %', note:'Mexican/Latin food cost varies - bean and rice heavy dishes are low cost, while proteins drive it up. Guac margins are exceptional.' },
+      laborCost:   { avg:31.8, top:27.0, label:'Labor Cost %', note:'Fast casual Mexican can run 27-29% labor. Upscale Latin with full bar and table service runs closer to 34-36%. NYC min wage hits this segment hard.' },
+      primeCost:   { avg:62.6, top:53.2, label:'Prime Cost %', note:'Mexican/Latin prime cost benefits from lower food cost ingredients when menu is designed around it. Best operators build the menu around margin first.' },
+      avgCheck:    { avg:19.50, top:28.00, label:'Avg Check', higher_is_better:true, note:'Fast casual Mexican runs $14-18. Sit-down with cocktails runs $32-45. Strong margarita/cocktail programs dramatically lift check averages.' },
+      netMargin:   { avg:6.2, top:12.5, label:'Net Margin %', higher_is_better:true, note:'Mexican/Latin concepts with strong bar programs consistently outperform on net margin. Beverage margin subsidizes tight food economics.' },
+      deliveryPct: { avg:34.0, top:23.0, label:'Delivery % of Sales', note:'Taco and burrito concepts are among the most-ordered delivery categories in NYC. Commission management is critical - negotiate rates aggressively.' },
+      voidsPct:    { avg:2.7, top:1.1, label:'Voids & Comps %', note:'Fast casual Mexican has lower void rates due to simpler order flows. Full service Latin concepts run higher due to customization complexity.' },
+      fixedPct:    { avg:19.5, top:14.8, label:'Fixed Cost %', note:'Mexican concepts cluster in lower-rent corridors. Smart operators avoid premium real estate and use high-traffic but lower-rent locations.' },
+    },
+    'Bars & Nightlife': {
+      foodCost:    { avg:27.5, top:22.0, label:'Food Cost %', note:'Bar food cost benefits from low-cost items (fried food, charcuterie, wings). The kitchen exists to slow alcohol absorption, not drive profit on its own.' },
+      laborCost:   { avg:34.5, top:28.5, label:'Labor Cost %', note:'Bars are labor intensive - bartenders, barbacks, security, floor staff. Late night staffing costs run high. Tip credit helps but NYC rules are complex.' },
+      primeCost:   { avg:57.5, top:48.0, label:'Prime Cost %', note:'Bars benefit from alcohol margins (20-25% pour cost vs 28-32% for food). Prime cost should be significantly lower than food-focused concepts.' },
+      avgCheck:    { avg:42.00, top:68.00, label:'Avg Check', higher_is_better:true, note:'Bar avg check is alcohol-driven. Craft cocktail bars run $45-60/person. Wine bars $55-75. Sports bars $28-38.' },
+      netMargin:   { avg:8.5, top:16.0, label:'Net Margin %', higher_is_better:true, note:'Bars are consistently among NYC most profitable concepts when managed well. Alcohol margin is the most powerful tool in hospitality.' },
+      deliveryPct: { avg:8.5, top:3.5, label:'Delivery % of Sales', note:'Delivery is largely irrelevant for bars. Any delivery revenue is incidental food orders. Top operators near-zero this intentionally.' },
+      voidsPct:    { avg:4.2, top:1.8, label:'Voids & Comps %', note:'Bars run the highest void/comp rates in hospitality due to pour-over culture and buy-back drinks. Anything above 4.5% needs immediate attention.' },
+      fixedPct:    { avg:19.0, top:13.5, label:'Fixed Cost %', note:'Bar real estate varies widely. Corner spots with liquor licenses command premiums. Late night operators often negotiate low base rent plus percentage deals.' },
+    },
+    'Cafe & Bakery': {
+      foodCost:    { avg:33.5, top:28.0, label:'Food Cost %', note:'Cafe/bakery food cost is structurally high - baked goods require significant ingredient investment per unit. Waste management is the key lever.' },
+      laborCost:   { avg:32.5, top:27.5, label:'Labor Cost %', note:'Early morning production labor is expensive and cannot be cut. Top operators offset with efficient scheduling and multi-role positions.' },
+      primeCost:   { avg:66.0, top:55.5, label:'Prime Cost %', note:'Cafes and bakeries have structurally compressed margins. High prime cost is offset by volume and throughput - seats per hour is the key metric.' },
+      avgCheck:    { avg:12.50, top:16.50, label:'Avg Check', higher_is_better:true, note:'Cafe check is low - $8-14 typically. Top operators drive check with add-ons, meal bundles, and whole-cake sales. Catering programs transform economics.' },
+      netMargin:   { avg:4.5, top:9.5, label:'Net Margin %', higher_is_better:true, note:'Cafe/bakery is one of the hardest NYC restaurant categories to make profitable. Success requires high volume, premium positioning, or wholesale.' },
+      deliveryPct: { avg:15.0, top:8.0, label:'Delivery % of Sales', note:'Cafe delivery is growing but challenging - coffee does not travel well. Breakfast sandwiches and baked goods are the delivery winners.' },
+      voidsPct:    { avg:2.2, top:0.8, label:'Voids & Comps %', note:'Cafe operations have low void rates due to simple standardized orders. Product waste (day-old pastries, pulled coffee) is a bigger loss driver.' },
+      fixedPct:    { avg:23.5, top:17.0, label:'Fixed Cost %', note:'NYC cafe rent is brutal relative to check size. Top operators negotiate short leases in emerging neighborhoods before rents rise.' },
+    },
+  };
+
+  const activeSegment = window._benchSegment || 'Fast Casual';
+  const bm = benchmarks[activeSegment];
+
+  const yours = {
+    foodCost: food, laborCost: labor, primeCost: prime,
+    avgCheck: avgChk, netMargin: netPct,
+    deliveryPct: delPct, voidsPct: voidsPct, fixedPct: fixedPct,
+  };
+
+  function dollarGap(key, yourVal, avgVal, hib) {
+    var gap = hib ? yourVal - avgVal : avgVal - yourVal;
+    if (key === 'avgCheck') return gap * covers;
+    return gap / 100 * rev;
+  }
+
+  function getScore() {
+    var score = 0;
+    ['foodCost','laborCost','primeCost','netMargin','voidsPct'].forEach(function(key) {
+      var b = bm[key]; var y = yours[key]; var hib = b.higher_is_better;
+      if (hib) { if (y >= b.top) score += 2; else if (y >= b.avg) score += 1; }
+      else      { if (y <= b.top) score += 2; else if (y <= b.avg) score += 1; }
+    });
+    return Math.round(score / 10 * 100);
+  }
+
+  var score = getScore();
+  var scoreColor = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--red)';
+  var scoreLabel = score >= 75 ? 'Top Performer' : score >= 50 ? 'Average' : 'Needs Attention';
+
+  function bmRow(key) {
+    var b = bm[key]; var y = yours[key]; var hib = b.higher_is_better;
+    var isCurr = key === 'avgCheck';
+    var fmt = function(v) { return isCurr ? '$' + v.toFixed(2) : v.toFixed(1) + '%'; };
+    var vsAvg = hib ? y - b.avg : b.avg - y;
+    var vsTop = hib ? y - b.top : b.top - y;
+    var status = vsAvg >= 0 ? (vsTop >= 0 ? 'top' : 'good') : 'behind';
+    var sc = status === 'top' ? 'var(--green)' : status === 'good' ? 'var(--amber)' : 'var(--red)';
+    var sl = status === 'top' ? '✓ Top quartile' : status === 'good' ? '↑ Above average' : '↓ Below average';
+    var impact = dollarGap(key, y, b.avg, hib);
+    var ic = impact >= 0 ? 'var(--green)' : 'var(--red)';
+    var is = impact >= 0 ? '+' : '';
+    var poor = hib ? Math.max(0, b.avg - (b.top - b.avg)) : b.avg + (b.avg - b.top);
+    var range = hib ? b.top - poor : poor - b.top;
+    var yPos = range > 0 ? Math.min(100, Math.max(0, (hib ? y - poor : poor - y) / range * 100)) : 50;
+    var aPos = range > 0 ? Math.min(100, Math.max(0, (hib ? b.avg - poor : poor - b.avg) / range * 100)) : 33;
+
+    var noteHtml = b.note ? '<div style="margin-top:10px;font-size:11.5px;color:var(--muted);line-height:1.55;padding:10px 14px;background:var(--bg);border-radius:7px;border-left:2px solid var(--border)">' + b.note + '</div>' : '';
+    var impactHtml = impact !== 0 ? '<div style="margin-top:10px;padding:10px 14px;background:' + (impact>=0?'var(--green-bg)':'var(--red-bg)') + ';border-radius:7px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;color:var(--dark)">' + (impact>=0?'You are ahead of the average':'Closing this gap would add') + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:700;color:' + ic + '">' + is + fmtDollar(Math.abs(Math.round(impact))) + ' ' + periodLabel[p].toLowerCase() + '</div></div>' : '';
+
+    return '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:13px;font-weight:700;color:var(--dark)">' + b.label + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">' + activeSegment + ' · NYC market</div></div><div style="text-align:right"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:' + sc + '">' + sl + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">vs ' + periodLabel[p] + ' average</div></div></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+      + '<div style="background:' + (status==='top'?'var(--green-bg)':status==='good'?'var(--amber-bg)':'var(--red-bg)') + ';border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">You</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:' + sc + '">' + fmt(y) + '</div></div>'
+      + '<div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">NYC Average</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:var(--muted)">' + fmt(b.avg) + '</div></div>'
+      + '<div style="background:var(--green-bg);border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Top Quartile</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:var(--green)">' + fmt(b.top) + '</div></div>'
+      + '</div>'
+      + '<div style="position:relative;height:8px;background:linear-gradient(to right,var(--red-bg),var(--amber-bg),var(--green-bg));border-radius:4px;margin-bottom:10px">'
+      + '<div style="position:absolute;top:-4px;left:' + aPos + '%;width:2px;height:16px;background:var(--muted);border-radius:1px"></div>'
+      + '<div style="position:absolute;top:-5px;left:calc(' + yPos + '% - 8px);width:18px;height:18px;background:#fff;border:2.5px solid ' + sc + ';border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.15)"></div>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)"><span>Below average</span><span>Average</span><span>Top quartile</span></div>'
+      + noteHtml + impactHtml + '</div>';
+  }
+
+  var segments = Object.keys(benchmarks);
+  window._setBenchSeg = function(s) { window._benchSegment = s; navigate('benchmark'); };
+  var segButtons = segments.map(function(s) {
+    var active = s === activeSegment;
+    var border = active ? 'var(--gold)' : 'var(--border)';
+    var bg = active ? 'var(--gold)' : 'transparent';
+    var color = active ? '#fff' : 'var(--muted)';
+    return '<button onclick="window._setBenchSeg(\'' + s + '\')" style="padding:7px 16px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:' + color + ';font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.06em;transition:all 0.2s">' + s + '</button>';
+  }).join('');
+
+  var opportunities = [];
+  if (food > bm.foodCost.avg)    opportunities.push({ label:'Reduce food cost to NYC average',         saving:(food-bm.foodCost.avg)/100*rev,       action:'Review portion sizes, supplier pricing, and prep waste weekly.' });
+  if (labor > bm.laborCost.avg)  opportunities.push({ label:'Reduce labor cost to NYC average',        saving:(labor-bm.laborCost.avg)/100*rev,     action:'Use your hourly sales data to cut staff during slow windows.' });
+  if (voidsPct > bm.voidsPct.avg) opportunities.push({ label:'Reduce voids & comps to NYC average',   saving:(voidsPct-bm.voidsPct.avg)/100*rev,   action:'Pull void report by employee. Set approval rules for comps.' });
+  if (avgChk < bm.avgCheck.avg)  opportunities.push({ label:'Raise avg check to NYC average',          saving:(bm.avgCheck.avg-avgChk)*covers,      action:'Add $1-2 to your highest-volume items. Train staff on upselling drinks.' });
+  var totalOpp = opportunities.reduce(function(s,o){return s+o.saving;},0);
+
+  var oppRows = opportunities.map(function(o) {
+    return '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="flex:1;padding-right:16px"><div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:3px">' + o.label + '</div><div style="font-size:11.5px;color:var(--muted);line-height:1.5">' + o.action + '</div></div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:700;color:var(--red);flex-shrink:0">-' + fmtDollar(Math.round(o.saving)) + '<span style="font-size:9px;font-weight:400;color:var(--muted)"> ' + periodLabel[p].toLowerCase() + '</span></div>'
+      + '</div>';
+  }).join('');
+
+  var scoreDesc = score >= 75 ? 'Your numbers put you in the top 25% of NYC ' + activeSegment + ' restaurants.' : score >= 50 ? 'You are performing at or above the NYC average. Room to reach the top quartile.' : 'Several metrics are below the NYC average. Closing these gaps could significantly increase profitability.';
+
+  var oppSection = totalOpp > 0
+    ? '<div style="background:var(--red-bg);border:1.5px solid rgba(192,57,43,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (oppRows?'12':'0') + 'px"><div><div style="font-size:14px;font-weight:700;color:var(--red)">Total profitability gap vs NYC average</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">Estimated ' + periodLabel[p].toLowerCase() + ' revenue you could recover</div></div><div style="font-family:IBM Plex Mono,monospace;font-size:24px;font-weight:700;color:var(--red)">-' + fmtDollar(Math.round(totalOpp)) + '</div></div>' + (oppRows ? '<div style="border-top:1px solid rgba(192,57,43,0.15);padding-top:8px">' + oppRows + '</div>' : '') + '</div>'
+    : '<div style="background:var(--green-bg);border:1.5px solid rgba(45,122,79,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="font-size:14px;font-weight:700;color:var(--green)">You are performing above the NYC average across all key metrics</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:4px">Compare to Top Quartile to find your next improvement opportunity</div></div>';
+
+  return '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:14px">'
+    + '<div style="background:var(--dark);border-radius:12px;padding:20px 28px;display:flex;align-items:center;gap:20px">'
+    + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">Performance Score</div><div style="font-family:IBM Plex Mono,monospace;font-size:42px;font-weight:700;color:' + scoreColor + ';line-height:1">' + score + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:' + scoreColor + ';margin-top:4px">' + scoreLabel + '</div></div>'
+    + '<div style="width:1px;height:60px;background:rgba(255,255,255,0.1)"></div>'
+    + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">vs NYC ' + activeSegment + '</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;max-width:200px">' + scoreDesc + '</div></div>'
+    + '</div>'
+    + '<div><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Restaurant Type</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + segButtons + '</div></div>'
+    + '</div>'
+    + oppSection
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Metric-by-metric breakdown · ' + periodLabel[p] + '</div>'
+    + bmRow('primeCost') + bmRow('foodCost') + bmRow('laborCost') + bmRow('netMargin') + bmRow('avgCheck') + bmRow('voidsPct') + bmRow('deliveryPct') + bmRow('fixedPct')
+    + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Data sources: NRA 2026 State of Industry · Toast 2025 NYC Dataset · BLS Food Services 2025 · Black Box Intelligence NYC Metro · OpenTable NYC 2025 · Whipplewood Financial Benchmarks 2026 · DoorDash NYC Merchant Report 2025. All benchmarks represent 2-6 location independent <strong>' + activeSegment + '</strong> operators in the NYC metro area. Updated Q1 2026.</div></div>';
 }
 
-document.querySelectorAll('.nav-item').forEach(n => {
-  n.addEventListener('click', () => navigate(n.dataset.page));
-});
-
-document.querySelectorAll('.period-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    activePeriod = b.dataset.period;
-    document.querySelectorAll('.period-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    navigate(activePage);
-  });
-});
-
-// ── SETUP MODAL ──────────────────────────────────────────────────────────────
-const modal = $('setupModal');
-$('openSetupBtn').addEventListener('click', () => { buildLocationForms(); modal.classList.add('open'); });
-$('closeModalBtn').addEventListener('click', () => modal.classList.remove('open'));
-modal.addEventListener('click', e => { if (e.target===modal) modal.classList.remove('open'); });
-
-function buildLocationForms() {
-  const n = parseInt($('f_numLocs').value);
-  const names = ['Main Location','Second Location','Third Location','Fourth Location'];
-  const addresses = ['e.g. 458 W 46th St, New York','e.g. 131 E 7th St, New York','e.g. 310 Bleecker St, New York','e.g. 55 Spring St, New York'];
-  $('locationForms').innerHTML = Array.from({length:n}, (_,i) => `
-    <div class="loc-form-block">
-      <div class="loc-form-block-title">Location ${i+1}</div>
-      <div class="form-grid" style="margin-bottom:10px">
-        <div class="form-group"><label class="form-label">Location Name</label><input class="form-input" id="loc_name_${i}" placeholder="${state.locations[i]?.name || names[i]}" value="${state.locations[i]?.name||''}" /></div>
-        <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="loc_addr_${i}" placeholder="${addresses[i]}" value="${state.locations[i]?.address||''}" /></div>
-      </div>
-      <div class="form-grid-4">
-        <div class="form-group"><label class="form-label">Weekly Revenue ($)</label><input class="form-input" id="loc_rev_${i}" placeholder="e.g. 28400" value="${state.locations[i]?.revenue.week||''}" /></div>
-        <div class="form-group"><label class="form-label">Monthly Revenue ($)</label><input class="form-input" id="loc_revmo_${i}" placeholder="e.g. 118200" value="${state.locations[i]?.revenue.month||''}" /></div>
-        <div class="form-group"><label class="form-label">Food Cost (%)</label><input class="form-input" id="loc_food_${i}" placeholder="e.g. 30.8" value="${state.locations[i]?.foodCost.week||''}" /></div>
-        <div class="form-group"><label class="form-label">Labor Cost (%)</label><input class="form-input" id="loc_labor_${i}" placeholder="e.g. 32.1" value="${state.locations[i]?.laborCost.week||''}" /></div>
-        <div class="form-group"><label class="form-label">Monthly Rent ($)</label><input class="form-input" id="loc_rent_${i}" placeholder="e.g. 18500" value="${state.locations[i]?.rent||''}" /></div>
-        <div class="form-group"><label class="form-label">Weekly Covers</label><input class="form-input" id="loc_covers_${i}" placeholder="e.g. 1140" value="${state.locations[i]?.covers.week||''}" /></div>
-        <div class="form-group"><label class="form-label">Avg Check ($)</label><input class="form-input" id="loc_check_${i}" placeholder="e.g. 24.90" value="${state.locations[i]?.avgCheck.week||''}" /></div>
-        <div class="form-group"><label class="form-label">Status</label>
-          <select class="form-select" id="loc_status_${i}">
-            <option value="open" ${(state.locations[i]?.status||'open')==='open'?'selected':''}>Open</option>
-            <option value="closed" ${state.locations[i]?.status==='closed'?'selected':''}>Closed</option>
-          </select>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-$('f_numLocs').addEventListener('change', buildLocationForms);
-
-$('applyBtn').addEventListener('click', () => {
-  const n = parseInt($('f_numLocs').value);
-  const name = $('f_name').value.trim() || state.name;
-  const cuisine = $('f_cuisine').value.trim() || state.cuisine;
-  const foodTarget = parseFloat($('f_foodTarget').value)||state.foodTarget;
-  const laborTarget = parseFloat($('f_laborTarget').value)||state.laborTarget;
-  const primeTarget = parseFloat($('f_primeTarget').value)||state.primeTarget;
-  const pos = $('f_pos').value.trim()||state.pos;
-  const payroll = $('f_payroll').value.trim()||state.payroll;
-  const accounting = $('f_accounting').value.trim()||state.accounting;
-
-  const locations = Array.from({length:n}, (_,i) => {
-    const locName = document.getElementById(`loc_name_${i}`)?.value.trim() || `Location ${i+1}`;
-    const addr = document.getElementById(`loc_addr_${i}`)?.value.trim() || '';
-    const revW = parseFloat(document.getElementById(`loc_rev_${i}`)?.value)||state.locations[i]?.revenue.week||20000;
-    const revM = parseFloat(document.getElementById(`loc_revmo_${i}`)?.value)||revW*4.3;
-    const food = parseFloat(document.getElementById(`loc_food_${i}`)?.value)||state.locations[i]?.foodCost.week||31;
-    const labor = parseFloat(document.getElementById(`loc_labor_${i}`)?.value)||state.locations[i]?.laborCost.week||33;
-    const rent = parseFloat(document.getElementById(`loc_rent_${i}`)?.value)||state.locations[i]?.rent||15000;
-    const covers = parseInt(document.getElementById(`loc_covers_${i}`)?.value)||state.locations[i]?.covers.week||800;
-    const avgChk = parseFloat(document.getElementById(`loc_check_${i}`)?.value)||state.locations[i]?.avgCheck.week||24;
-    const status = document.getElementById(`loc_status_${i}`)?.value||'open';
-    const revToday = Math.round(revW/7);
-    const revYTD = Math.round(revM*12);
-    return {
-      name: locName, address: addr, status,
-      revenue: { today:revToday, week:revW, month:revM, ytd:revYTD },
-      foodCost: { today:food, week:food, month:food*0.99, ytd:food*0.98 },
-      laborCost: { today:labor, week:labor, month:labor*0.99, ytd:labor*0.98 },
-      covers: { today:Math.round(covers/7), week:covers, month:Math.round(covers*4.3), ytd:Math.round(covers*52) },
-      avgCheck: { today:avgChk, week:avgChk, month:avgChk*0.99, ytd:avgChk*0.98 },
-      rent,
-    };
-  });
-
-  state = { name, cuisine, pos, payroll, accounting, foodTarget, laborTarget, primeTarget, locations };
-
-  // Update sidebar
-  $('sidebarAvatar').textContent = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  $('sidebarName').textContent = name;
-  $('sidebarLocs').textContent = `${n} Location${n>1?'s':''} · NYC`;
-  $('pageSub').textContent = pageMap[activePage]?.sub() || '';
-
-  $('appliedNote').classList.add('show');
-  setTimeout(() => { modal.classList.remove('open'); $('appliedNote').classList.remove('show'); navigate(activePage); }, 700);
-});
-
-$('resetBtn').addEventListener('click', () => {
-  document.querySelectorAll('.form-input').forEach(i => i.value='');
-  $('f_numLocs').value='2';
-});
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-navigate('overview');
 </script>
 </body>
 </html>
