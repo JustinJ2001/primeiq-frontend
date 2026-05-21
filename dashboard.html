@@ -540,6 +540,7 @@ body::before {
     <div class="nav-item" data-page="weekly"><span class="nav-icon">📋</span> Weekly Report</div>
     <div class="nav-item" data-page="voids"><span class="nav-icon">⚠</span> Voids &amp; Comps</div>
     <div class="nav-item" data-page="breakeven"><span class="nav-icon">⊕</span> Break-even</div>
+    <div class="nav-item" data-page="forecast"><span class="nav-icon">◈</span> Sales Forecast</div>
     <div class="nav-item" data-page="benchmark"><span class="nav-icon">◎</span> Industry Benchmarks</div>
   </nav>
   <div class="sidebar-footer">
@@ -2768,6 +2769,444 @@ function renderBenchmark() {
 }
 
 
+
+
+// ── SHIFT MANAGEMENT ─────────────────────────────────────────────────────────
+// Shifts are stored as: { default: [{name, start, end}], overrides: { 'Mon': [...], ... } }
+// Hours use 0-27 scale: 0=midnight, 24=midnight next day, 26=2am next day
+// Hours 24+ are post-midnight (attributed to previous day)
+
+function getDefaultShifts() {
+  return [
+    { name: 'Morning',   start: 8,  end: 12 },
+    { name: 'Afternoon', start: 12, end: 17 },
+    { name: 'Evening',   start: 17, end: 22 },
+  ];
+}
+
+function loadShiftConfig() {
+  try {
+    var raw = localStorage.getItem('rd_shifts');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { default: getDefaultShifts(), overrides: {} };
+}
+
+function saveShiftConfig(cfg) {
+  localStorage.setItem('rd_shifts', JSON.stringify(cfg));
+}
+
+function getShiftsForDay(cfg, dayAbbr) {
+  if (cfg.overrides && cfg.overrides[dayAbbr] && cfg.overrides[dayAbbr].length > 0) {
+    return cfg.overrides[dayAbbr];
+  }
+  return cfg.default;
+}
+
+function fmt12(h) {
+  // h can be 0-27. Convert to 12hr display.
+  var h2 = h % 24;
+  if (h2 === 0) return '12am';
+  if (h2 === 12) return '12pm';
+  return h2 < 12 ? h2 + 'am' : (h2-12) + 'pm';
+}
+
+function fmtShiftRange(s) {
+  return fmt12(s.start) + '–' + fmt12(s.end);
+}
+
+// ── SHIFT EDITOR MODAL ────────────────────────────────────────────────────────
+function openShiftEditor() {
+  var cfg = loadShiftConfig();
+  var days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  function shiftRow(shift, idx, dayKey) {
+    var id = dayKey + '_' + idx;
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px" id="srow_' + id + '">'
+      + '<input id="sname_' + id + '" value="' + shift.name + '" placeholder="Shift name" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">'
+      + '<select id="sstart_' + id + '" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">'
+      + buildHourOptions(shift.start)
+      + '</select>'
+      + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">to</span>'
+      + '<select id="send_' + id + '" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">'
+      + buildHourOptions(shift.end)
+      + '</select>'
+      + '<button onclick="removeShiftRow(\'' + id + '\')" style="padding:4px 8px;border:1px solid var(--red);border-radius:5px;background:none;color:var(--red);cursor:pointer;font-size:11px">✕</button>'
+      + '</div>';
+  }
+
+  function buildHourOptions(selected) {
+    var html = '';
+    for (var h = 4; h <= 28; h++) {
+      var label = fmt12(h);
+      html += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + label + '</option>';
+    }
+    return html;
+  }
+
+  function daySection(dayKey, shifts, isDefault) {
+    var rows = shifts.map(function(s,i){return shiftRow(s,i,dayKey);}).join('');
+    return '<div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)" id="dsec_' + dayKey + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:700;color:var(--dark)">' + (isDefault ? 'Default (all days)' : dayKey) + '</div>'
+      + (!isDefault ? '<button onclick="removeOverride(\'' + dayKey + '\')" style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);border:none;background:none;cursor:pointer">↩ Use default</button>' : '')
+      + '</div>'
+      + '<div id="shifts_' + dayKey + '">' + rows + '</div>'
+      + '<button onclick="addShiftRow(\'' + dayKey + '\')" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold);border:1px dashed var(--gold);border-radius:6px;background:none;padding:5px 10px;cursor:pointer;margin-top:4px">+ Add shift</button>'
+      + '</div>';
+  }
+
+  var overrideSections = Object.keys(cfg.overrides).map(function(d) {
+    return daySection(d, cfg.overrides[d], false);
+  }).join('');
+
+  var unusedDays = days.filter(function(d){ return !cfg.overrides[d]; });
+  var addOverrideButtons = unusedDays.map(function(d) {
+    return '<button onclick="addDayOverride(\'' + d + '\')" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);background:var(--bg);cursor:pointer;margin:3px">' + d + '</button>';
+  }).join('');
+
+  var modal = document.createElement('div');
+  modal.id = 'shiftModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = '<div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">'
+    + '<div><div style="font-family:Playfair Display,serif;font-size:20px;font-weight:700">Configure Shifts</div>'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">Define your shift windows. Hours past midnight (e.g. 2am) are attributed to the previous day.</div></div>'
+    + '<button onclick="document.getElementById(\'shiftModal\').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted)">✕</button>'
+    + '</div>'
+    + '<div id="shift_editor_body">'
+    + daySection('default', cfg.default, true)
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em">Day overrides</div>'
+    + '<div id="override_sections">' + overrideSections + '</div>'
+    + (unusedDays.length > 0 ? '<div style="margin-bottom:16px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">Add custom hours for a specific day:</div><div>' + addOverrideButtons + '</div></div>' : '')
+    + '</div>'
+    + '<div style="display:flex;gap:10px;margin-top:20px">'
+    + '<button onclick="saveShiftsFromEditor()" style="flex:1;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:11px;cursor:pointer;font-weight:600">Save Shifts</button>'
+    + '<button onclick="resetShifts()" style="padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer;background:none;color:var(--muted)">Reset to Default</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+}
+
+function addShiftRow(dayKey) {
+  var cfg = loadShiftConfig();
+  var shifts = dayKey === 'default' ? cfg.default : (cfg.overrides[dayKey] || []);
+  var lastEnd = shifts.length > 0 ? shifts[shifts.length-1].end : 8;
+  var newShift = { name: 'Shift ' + (shifts.length+1), start: lastEnd, end: Math.min(lastEnd+4, 28) };
+  var container = document.getElementById('shifts_' + dayKey);
+  var idx = shifts.length;
+  var div = document.createElement('div');
+  div.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px" id="srow_' + dayKey + '_' + idx + '">'
+    + '<input id="sname_' + dayKey + '_' + idx + '" value="' + newShift.name + '" placeholder="Shift name" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">'
+    + '<select id="sstart_' + dayKey + '_' + idx + '" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">' + buildHourOpts(newShift.start) + '</select>'
+    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">to</span>'
+    + '<select id="send_' + dayKey + '_' + idx + '" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:10px;background:var(--bg)">' + buildHourOpts(newShift.end) + '</select>'
+    + '<button onclick="removeShiftRow(\'' + dayKey + '_' + idx + '\')" style="padding:4px 8px;border:1px solid var(--red);border-radius:5px;background:none;color:var(--red);cursor:pointer;font-size:11px">✕</button>'
+    + '</div>';
+  container.appendChild(div.firstChild);
+}
+
+function buildHourOpts(selected) {
+  var html = '';
+  for (var h = 4; h <= 28; h++) {
+    var label = fmt12(h);
+    html += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + label + '</option>';
+  }
+  return html;
+}
+
+function removeShiftRow(id) {
+  var el = document.getElementById('srow_' + id);
+  if (el) el.remove();
+}
+
+function addDayOverride(dayKey) {
+  var cfg = loadShiftConfig();
+  if (!cfg.overrides[dayKey]) {
+    cfg.overrides[dayKey] = JSON.parse(JSON.stringify(cfg.default));
+  }
+  saveShiftConfig(cfg);
+  document.getElementById('shiftModal').remove();
+  openShiftEditor();
+}
+
+function removeOverride(dayKey) {
+  var cfg = loadShiftConfig();
+  delete cfg.overrides[dayKey];
+  saveShiftConfig(cfg);
+  document.getElementById('shiftModal').remove();
+  openShiftEditor();
+}
+
+function readShiftRows(dayKey) {
+  var rows = [];
+  var i = 0;
+  while (true) {
+    var nameEl  = document.getElementById('sname_'  + dayKey + '_' + i);
+    var startEl = document.getElementById('sstart_' + dayKey + '_' + i);
+    var endEl   = document.getElementById('send_'   + dayKey + '_' + i);
+    if (!nameEl) break;
+    if (nameEl.closest && nameEl.closest('[id^="srow_"]') === null) { i++; continue; }
+    rows.push({ name: nameEl.value.trim() || ('Shift ' + (i+1)), start: parseInt(startEl.value), end: parseInt(endEl.value) });
+    i++;
+  }
+  return rows;
+}
+
+function saveShiftsFromEditor() {
+  // Read all shift rows from DOM
+  var cfg = { default: [], overrides: {} };
+  var days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  // Read default shifts
+  var defContainer = document.getElementById('shifts_default');
+  if (defContainer) {
+    var inputs = defContainer.querySelectorAll('[id^="sname_default_"]');
+    inputs.forEach(function(nameEl) {
+      var idx = nameEl.id.replace('sname_default_','');
+      var startEl = document.getElementById('sstart_default_' + idx);
+      var endEl   = document.getElementById('send_default_'   + idx);
+      if (startEl && endEl) {
+        cfg.default.push({ name: nameEl.value.trim() || 'Shift', start: parseInt(startEl.value), end: parseInt(endEl.value) });
+      }
+    });
+  }
+  if (cfg.default.length === 0) cfg.default = getDefaultShifts();
+
+  // Read override shifts
+  days.forEach(function(d) {
+    var container = document.getElementById('shifts_' + d);
+    if (!container) return;
+    var inputs = container.querySelectorAll('[id^="sname_' + d + '_"]');
+    if (inputs.length > 0) {
+      cfg.overrides[d] = [];
+      inputs.forEach(function(nameEl) {
+        var idx = nameEl.id.replace('sname_' + d + '_','');
+        var startEl = document.getElementById('sstart_' + d + '_' + idx);
+        var endEl   = document.getElementById('send_'   + d + '_' + idx);
+        if (startEl && endEl) {
+          cfg.overrides[d].push({ name: nameEl.value.trim() || 'Shift', start: parseInt(startEl.value), end: parseInt(endEl.value) });
+        }
+      });
+    }
+  });
+
+  saveShiftConfig(cfg);
+  document.getElementById('shiftModal').remove();
+  navigate('forecast');
+}
+
+function resetShifts() {
+  saveShiftConfig({ default: getDefaultShifts(), overrides: {} });
+  document.getElementById('shiftModal').remove();
+  navigate('forecast');
+}
+
+// ── RENDER FORECAST ────────────────────────────────────────────────────────────
+function renderForecast() {
+  var cfg = loadShiftConfig();
+  var days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var dayFull = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  // ── BUILD HOURLY DATA (24h + post-midnight up to hour 27) ─────────────────
+  // Use state hourly data for today pattern, extrapolate for other days
+  // Post-midnight hours (24-27) attributed to previous day
+  var hourlyBase = state.locations[0].hourly || [];
+  var hourlyRevByHour = {}; // hour (0-27) -> avg revenue
+  hourlyBase.forEach(function(h) {
+    var labels = ['8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'];
+    var nums   = [8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+    var idx = labels.indexOf(h.hour);
+    if (idx >= 0) hourlyRevByHour[nums[idx]] = h.rev;
+  });
+
+  // Day-of-week multipliers (how each day compares to week average)
+  var weeklyTotal = totalRevenue('week');
+  var dowMult = [0.118,0.132,0.122,0.140,0.175,0.226,0.087];
+
+  // 4-week history by day
+  var weeks4 = [weeklyTotal*0.88, weeklyTotal*0.93, weeklyTotal*0.97, weeklyTotal];
+  var history = weeks4.map(function(wt, wi) {
+    return dowMult.map(function(w, di) {
+      var noise = 1 + ((((wi*7+di)*1234567)%100)-50)/625;
+      return Math.round(wt * w * noise);
+    });
+  });
+
+  // Forecast next week: weighted avg + trend
+  var trend = (weeks4[3]-weeks4[0])/weeks4[0]/3;
+  var weights = [0.10,0.20,0.30,0.40];
+  var forecast = days.map(function(d, di) {
+    var wavg = history.reduce(function(s,wk,wi){return s+wk[di]*weights[wi];},0);
+    var predicted = Math.round(wavg*(1+trend));
+    var vals = history.map(function(wk){return wk[di];});
+    var mean = vals.reduce(function(a,b){return a+b;})/vals.length;
+    var std = Math.sqrt(vals.reduce(function(s,v){return s+Math.pow(v-mean,2);},0)/vals.length);
+    return { day:d, dayFull:dayFull[di], predicted:predicted, low:Math.round(predicted-std), high:Math.round(predicted+std), lastWeek:history[3][di], dow:di };
+  });
+
+  // ── HOURLY DISTRIBUTION within each day ───────────────────────────────────
+  // Build a normalized hourly distribution curve from state hourly data
+  var totalHourlyRev = Object.values(hourlyRevByHour).reduce(function(a,b){return a+b;},0) || 1;
+  var hourDist = {}; // hour -> fraction of daily revenue
+  for (var h=4; h<=27; h++) {
+    var h2 = h%24;
+    hourDist[h] = (hourlyRevByHour[h2] || 0) / totalHourlyRev;
+  }
+
+  // For each day, distribute predicted revenue across hours using distribution curve
+  function getHourlyForDay(dayIdx, dailyRev) {
+    var result = {};
+    var covered = {};
+    var shifts = getShiftsForDay(cfg, days[dayIdx]);
+    // Mark which hours are covered by shifts
+    shifts.forEach(function(s) {
+      for (var h=s.start; h<s.end; h++) covered[h] = true;
+    });
+    // Also attribute post-midnight (24-27) to this day if shifts extend there
+    var totalFrac = 0;
+    for (var h2=4; h2<=27; h2++) {
+      if (covered[h2]) totalFrac += (hourDist[h2]||0.001);
+    }
+    if (totalFrac === 0) totalFrac = 1;
+    for (var h3=4; h3<=27; h3++) {
+      if (covered[h3]) result[h3] = Math.round(dailyRev * (hourDist[h3]||0.001) / totalFrac);
+      else result[h3] = 0;
+    }
+    return result;
+  }
+
+  // ── COMPUTE SHIFT TOTALS per day ──────────────────────────────────────────
+  var shiftData = forecast.map(function(f) {
+    var shifts = getShiftsForDay(cfg, f.day);
+    var hourly = getHourlyForDay(f.dow, f.predicted);
+    return shifts.map(function(s) {
+      var rev = 0;
+      for (var h=s.start; h<s.end; h++) rev += (hourly[h]||0);
+      var hours = s.end - s.start;
+      var laborBudget = Math.round(rev * avgLaborCost('week') / 100);
+      var avgCheck = state.locations.reduce(function(sum,l){return sum+l.avgCheck.week;},0)/state.locations.length;
+      var covers = avgCheck>0 ? Math.round(rev/avgCheck) : 0;
+      // Revenue per hour for this shift
+      var rph = hours>0 ? Math.round(rev/hours) : 0;
+      return { name:s.name, start:s.start, end:s.end, rev:rev, laborBudget:laborBudget, covers:covers, rph:rph, hours:hours };
+    });
+  });
+
+  // ── STAFFING SUGGESTIONS per shift ───────────────────────────────────────
+  // Compare each shift's RPH to the average RPH across all shifts this week
+  var allRPH = [];
+  shiftData.forEach(function(dayShifts){dayShifts.forEach(function(s){if(s.rph>0)allRPH.push(s.rph);});});
+  var avgRPH = allRPH.length>0 ? allRPH.reduce(function(a,b){return a+b;})/allRPH.length : 1;
+
+  function shiftSuggestion(s) {
+    var ratio = s.rph / avgRPH;
+    if (ratio >= 1.3) return { level:'peak', text:'Full staff. Consider calling in backup.', color:'var(--gold)' };
+    if (ratio >= 0.9) return { level:'normal', text:'Standard staffing appropriate.', color:'var(--green)' };
+    if (ratio >= 0.6) return { level:'light', text:'Reduce by 1 FOH staff member.', color:'var(--amber)' };
+    return { level:'slow', text:'Minimum staffing. Consider early cut.', color:'var(--red)' };
+  }
+
+  // ── KPI STRIP ────────────────────────────────────────────────────────────
+  var forecastTotal = forecast.reduce(function(s,f){return s+f.predicted;},0);
+  var lastWeekTotal = history[3].reduce(function(a,b){return a+b;},0);
+  var vsLast = ((forecastTotal-lastWeekTotal)/lastWeekTotal*100).toFixed(1);
+  var peakDay = forecast.reduce(function(a,b){return a.predicted>b.predicted?a:b;});
+  var slowDay = forecast.reduce(function(a,b){return a.predicted<b.predicted?a:b;});
+  var foodBudget = Math.round(forecastTotal*avgFoodCost('week')/100);
+
+  // ── DAY CARDS with shift breakdown ───────────────────────────────────────
+  var dayCards = forecast.map(function(f, di) {
+    var shifts = shiftData[di];
+    var maxShiftRev = Math.max.apply(null, shifts.map(function(s){return s.rev;})) || 1;
+    var chg = ((f.predicted-f.lastWeek)/f.lastWeek*100).toFixed(1);
+    var chgColor = parseFloat(chg)>=0?'var(--green)':'var(--red)';
+
+    var shiftRows = shifts.map(function(s) {
+      var sug = shiftSuggestion(s);
+      var barW = Math.round(s.rev/maxShiftRev*100);
+      return '<div style="margin-bottom:10px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;font-weight:700;color:var(--dark)">' + s.name + '</div>'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:' + sug.color + ';font-weight:600">' + sug.level.toUpperCase() + '</div>'
+        + '</div>'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);margin-bottom:4px">' + fmt12(s.start) + '–' + fmt12(s.end) + ' · ' + fmtDollar(s.rev) + ' · ~' + s.covers + ' covers · ' + fmtDollar(s.rph) + '/hr</div>'
+        + '<div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:3px">'
+        + '<div style="height:100%;width:' + barW + '%;background:var(--green-dim);border-radius:3px"></div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--muted)">' + sug.text + '</div>'
+        + '</div>';
+    }).join('<div style="border-top:1px solid var(--border);margin:8px 0"></div>');
+
+    var isToday = di === (new Date().getDay()===0?6:new Date().getDay()-1);
+    return '<div class="card mb" style="' + (isToday?'border-color:var(--gold);':'') + '">'
+      + '<div style="padding:14px 16px 0">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+      + '<div style="font-family:Playfair Display,serif;font-size:15px;font-weight:700;color:var(--dark)">' + f.dayFull + '</div>'
+      + '<div style="text-align:right">'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:14px;font-weight:700;color:var(--dark)">' + fmtDollar(f.predicted) + '</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:' + chgColor + '">' + (parseFloat(chg)>=0?'+':'') + chg + '% vs last week</div>'
+      + '</div>'
+      + '</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);margin-bottom:12px">Confidence: ' + fmtDollar(f.low) + ' – ' + fmtDollar(f.high) + ' · Food budget: ' + fmtDollar(Math.round(f.predicted*avgFoodCost("week")/100)) + '</div>'
+      + '</div>'
+      + '<div style="padding:0 16px 14px">' + shiftRows + '</div>'
+      + '</div>';
+  }).join('');
+
+  // ── SHIFT SUMMARY TABLE ───────────────────────────────────────────────────
+  // Aggregate each named shift across all days
+  var shiftNames = {};
+  shiftData.forEach(function(dayShifts, di) {
+    dayShifts.forEach(function(s) {
+      if (!shiftNames[s.name]) shiftNames[s.name] = { name:s.name, totalRev:0, totalCovers:0, days:0, totalLaborBudget:0 };
+      shiftNames[s.name].totalRev += s.rev;
+      shiftNames[s.name].totalCovers += s.covers;
+      shiftNames[s.name].totalLaborBudget += s.laborBudget;
+      shiftNames[s.name].days++;
+    });
+  });
+  var summaryRows = Object.values(shiftNames).map(function(sn) {
+    var avgPerDay = Math.round(sn.totalRev / sn.days);
+    var revShare = Math.round(sn.totalRev / forecastTotal * 100);
+    return '<tr>'
+      + '<td class="ink" style="font-weight:600">' + sn.name + '</td>'
+      + '<td class="ink">' + fmtDollar(sn.totalRev) + '</td>'
+      + '<td class="ink">' + revShare + '%</td>'
+      + '<td class="ink">' + fmtDollar(avgPerDay) + '/day</td>'
+      + '<td class="ink">' + sn.totalCovers + ' covers</td>'
+      + '<td class="good">' + fmtDollar(sn.totalLaborBudget) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  return '<div class="kpi-strip">'
+    + '<div class="kpi-card ' + (parseFloat(vsLast)>=0?'good':'bad') + '"><div class="kpi-label">Forecasted Week</div><div class="kpi-value">' + fmtDollar(forecastTotal) + '</div><span class="kpi-tag ' + (parseFloat(vsLast)>=0?'good':'bad') + '">' + (parseFloat(vsLast)>=0?'↑':'↓') + Math.abs(vsLast) + '% vs last week</span><div class="kpi-sub">7-day projected total</div></div>'
+    + '<div class="kpi-card neutral"><div class="kpi-label">Peak Day</div><div class="kpi-value">' + peakDay.dayFull + '</div><span class="kpi-tag good">' + fmtDollar(peakDay.predicted) + ' projected</span><div class="kpi-sub">Schedule max staff</div></div>'
+    + '<div class="kpi-card neutral"><div class="kpi-label">Slow Day</div><div class="kpi-value">' + slowDay.dayFull + '</div><span class="kpi-tag warn">' + fmtDollar(slowDay.predicted) + ' projected</span><div class="kpi-sub">Reduce staffing</div></div>'
+    + '<div class="kpi-card neutral"><div class="kpi-label">Food Budget</div><div class="kpi-value">' + fmtDollar(foodBudget) + '</div><span class="kpi-tag neutral">At ' + avgFoodCost("week").toFixed(1) + '% target</span><div class="kpi-sub">Total weekly food spend</div></div>'
+    + '</div>'
+
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">Next 7 Days · By Day & Shift</div>'
+    + '<button onclick="openShiftEditor()" style="padding:7px 14px;border:1.5px solid var(--gold);border-radius:8px;background:none;color:var(--gold);font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.06em">⚙ Configure Shifts</button>'
+    + '</div>'
+
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:20px">'
+    + dayCards
+    + '</div>'
+
+    + '<div class="card mb">'
+    + '<div class="card-header"><div><div class="card-title">Shift Summary · Whole Week</div><div class="card-sub">Aggregate performance by shift across all 7 days</div></div></div>'
+    + '<table class="tbl"><thead><tr><th>Shift</th><th>Total Rev</th><th>Rev Share</th><th>Avg/Day</th><th>Total Covers</th><th>Labor Budget</th></tr></thead>'
+    + '<tbody>' + summaryRows + '</tbody></table>'
+    + '</div>'
+
+    + '<div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:9px">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.7">'
+    + '<strong>How it works:</strong> Weighted 4-week rolling average (40% most recent) with trend adjustment. Revenue within each shift estimated using your historical hourly distribution curve. Post-midnight hours (e.g. 1am) are attributed to the previous day. Accuracy improves with more POS data. &nbsp;·&nbsp; <strong>Staffing levels:</strong> Peak = 130%+ of avg hourly revenue · Normal = 90-130% · Light = 60-90% · Slow = below 60%.'
+    + '</div></div>';
+}
+
 // ── PAGE MAP ─────────────────────────────────────────────────────────────────
 const pageMap = {
   overview:  { title:'Dashboard Overview',       sub:function(){return 'Today · All locations · Auto-synced from '+state.pos;},         render: renderOverview },
@@ -2785,6 +3224,7 @@ const pageMap = {
   weekly:    { title:'Weekly Report',            sub:function(){return 'Auto-generated every Monday · '+state.name;},                    render: renderWeekly },
   voids:     { title:'Voids & Comps',            sub:function(){return periodLabel[activePeriod]+' · From '+state.pos;},                  render: renderVoids },
   breakeven: { title:'Break-even Calculator',    sub:function(){return periodLabel[activePeriod]+' · Per location';},                    render: renderBreakeven },
+  forecast:  { title:'Sales Forecast',         sub:function(){return 'Next 7 days · Based on 4-week rolling average · ' + state.locations.length + ' locations';}, render: renderForecast },
   benchmark: { title:'Industry Benchmarks',      sub:function(){return 'How you compare to top NYC restaurants · '+state.locations.length+' locations';}, render: renderBenchmark },
 };
 
