@@ -913,31 +913,23 @@ function hideLoadingOverlay() {
 
 // ── MAIN DATA LOADER ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
-  // Check if user is logged in
   const token = getToken();
   if (!token) {
-    // No token — show demo data with a banner
     showDemoBanner();
-    navigate('overview');
     return;
   }
-
-  showLoadingOverlay();
   try {
     const data = await apiFetch('/api/overview?period=week');
     if (data && data.locations && data.locations.length > 0) {
       state = transformAPIData(data);
       updateSidebarName(state.name);
-      await Promise.all([loadHourlyData(), loadLaborData()]);
+      navigate('overview');
     } else {
       showNoDataBanner();
     }
   } catch(e) {
-    console.error('Failed to load dashboard data:', e);
     showDemoBanner();
   }
-  hideLoadingOverlay();
-  navigate('overview');
 }
 
 function showDemoBanner() {
@@ -2735,7 +2727,7 @@ function navigate(pageKey) {
   activePage = pageKey;
   var pg = pageMap[pageKey];
   if (!pg) return;
-  var c = document.getElementById('pageContent');
+  var c = document.getElementById('mainContent');
   if (!c) return;
   c.style.opacity = '0';
   document.getElementById('pageTitle').textContent = pg.title;
@@ -2803,6 +2795,9 @@ if (saveBtn) saveBtn.addEventListener('click', function() {
 });
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
+// Always render immediately with demo data so dashboard is never blank
+navigate('overview');
+// Then try to load real data in background if logged in
 loadDashboardData();
 </script>
 </body>
