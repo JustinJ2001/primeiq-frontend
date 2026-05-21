@@ -3217,7 +3217,7 @@ function renderForecast() {
           + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
           + '<div>'
           + '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + sn.name + '</div>'
-          + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">' + sn.days + ' days &nbsp;·&nbsp; ' + sn.totalCovers + ' total covers &nbsp;·&nbsp; ' + fmtDollar(avgPerDay) + ' avg/day</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">' + sn.days + ' days &nbsp;·&nbsp; ' + sn.totalCovers + ' total covers &nbsp;·&nbsp; ' + Math.round(sn.totalCovers/sn.days) + ' covers/day &nbsp;·&nbsp; ' + fmtDollar(avgPerDay) + ' avg/day</div>'
           + '</div>'
           + '<div style="text-align:right">'
           + '<div style="font-family:IBM Plex Mono,monospace;font-size:16px;font-weight:700;color:var(--dark)">' + fmtDollar(sn.totalRev) + '</div>'
