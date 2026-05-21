@@ -6,6 +6,9 @@
 <title>PrimeIQ — Restaurant Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
+* { box-sizing:border-box; }
+body { overflow-x:hidden; }
+
 :root {
   --bg: #faf8f4;
   --surface: #ffffff;
@@ -170,7 +173,7 @@ body::before {
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
 
 /* CONTENT */
-.content { padding:24px 32px; }
+.content { padding:24px 32px; overflow-x:hidden; }
 
 /* ALERT BANNER */
 .alert-banner {
@@ -329,6 +332,7 @@ body::before {
   background:var(--card);
   border:1px solid var(--border);
   border-radius:12px; overflow:hidden;
+  max-width:100%;
   opacity:0; animation:fadeUp 0.45s 0.2s forwards;
 }
 .card-header {
@@ -525,67 +529,94 @@ body::before {
 .tbl tbody tr:hover { background:rgba(40,25,5,0.02); }
 
 /* ── MOBILE RESPONSIVE ────────────────────────────────────────────────────── */
+/* ── MOBILE (phones up to 480px) ─────────────────────────────────────────── */
 @media (max-width: 480px) {
+
+  /* Sidebar moves to bottom as horizontal scrollable nav */
   .sidebar {
     position:fixed; bottom:0; top:auto; left:0; right:0; width:100%;
-    height:60px; flex-direction:row; border-right:none;
+    height:56px; flex-direction:row; border-right:none;
     border-top:1px solid rgba(255,220,130,0.15); z-index:200;
     overflow:hidden;
   }
-  .sidebar-logo { display:none; }
+  .sidebar-logo, .sidebar-footer { display:none; }
   .sidebar-nav {
     display:flex; flex-direction:row; padding:0;
     overflow-x:auto; overflow-y:hidden; width:100%;
-    scrollbar-width:none;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
   }
   .sidebar-nav::-webkit-scrollbar { display:none; }
   .nav-group-label { display:none; }
   .nav-item {
-    flex-shrink:0; padding:10px 12px; font-size:9px;
+    flex-shrink:0; padding:8px 14px; font-size:8px;
     white-space:nowrap; border-bottom:none;
     border-top:2px solid transparent;
-    display:flex; flex-direction:column; align-items:center; gap:3px;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    line-height:1.2;
   }
-  .nav-item.active { border-top:2px solid var(--gold); }
-  .nav-icon { font-size:14px; }
-  .sidebar-footer { display:none; }
+  .nav-item.active { border-top:2px solid var(--gold); background:rgba(184,134,11,0.08); }
+  .nav-icon { font-size:13px; }
 
-  .main { margin-left:0; padding-bottom:70px; }
-  .topbar { flex-wrap:wrap; gap:8px; padding:12px 14px; }
-  .page-title { font-size:18px; }
-  .period-bar { overflow-x:auto; }
+  /* Main content */
+  .main { margin-left:0 !important; padding-bottom:64px; }
+  .content { padding:12px 14px; }
+
+  /* Topbar */
+  .topbar { flex-wrap:wrap; gap:6px; padding:12px 14px 10px; }
+  .topbar-left { width:100%; }
+  .topbar-right { display:none; }
+  .page-title { font-size:17px; }
+  .page-sub { font-size:9px; }
+  .period-bar { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .period-btn { font-size:9px; padding:5px 10px; white-space:nowrap; }
 
+  /* KPI strip — 2 columns */
   .kpi-strip { grid-template-columns:1fr 1fr; gap:10px; }
-  .kpi-card { padding:14px; }
-  .kpi-value { font-size:22px; }
+  .kpi-card { padding:13px 14px; }
+  .kpi-value { font-size:20px; }
+  .kpi-label { font-size:7px; }
 
-  .grid-2 { grid-template-columns:1fr; }
-
-  .card { border-radius:10px; }
-  .card-header { flex-wrap:wrap; gap:8px; }
-
-  .tbl { font-size:9px; }
-  .tbl th { font-size:7px; padding:5px 6px; }
-  .tbl td { padding:6px; }
-
-  .week-row { gap:6px; }
+  /* Grids — all single column */
+  .grid-2 { grid-template-columns:1fr !important; }
+  .grid-3-1 { grid-template-columns:1fr !important; }
   .loc-cards { grid-template-columns:1fr !important; }
-  
-  #mainContent { padding:12px 14px; }
+
+  /* Cards */
+  .card { border-radius:10px; margin-bottom:12px; }
+  .card-header { flex-wrap:wrap; gap:6px; padding:14px 16px; }
+  .card-title { font-size:13px; }
+  .card-sub { font-size:9px; }
+  .card-badge { font-size:8px; }
+
+  /* Tables — scroll horizontally */
+  .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .tbl { font-size:8.5px; min-width:400px; }
+  .tbl th { font-size:7px; padding:5px 6px; }
+  .tbl td { padding:5px 6px; }
+
+  /* Charts */
+  .bar-row { gap:6px; }
+  .week-row { gap:6px; }
+  .bar-label { font-size:9px; width:24px; }
+  .bar-val { font-size:9px; }
+
+  /* Location cards */
+  .loc-prime-bar { height:6px; }
+  .loc-metric-label { font-size:7px; }
+  .loc-metric-val { font-size:13px; }
+
+  /* Alert items */
+  .alert-item { gap:10px; padding:12px 0; }
+  .alert-title { font-size:12px; }
+  .alert-desc { font-size:11px; }
+
+  /* Demo banner */
+  #demoBanner > div { flex-direction:column; gap:4px; }
 }
 
-
-@media (max-width: 480px) {
-  .content { padding:12px 14px; }
-  .topbar { padding:12px 14px 8px; }
-  .topbar-right { flex-wrap:wrap; gap:6px; }
-  .live-badge, .theme-toggle { display:none; }
-}
-
-@media (max-width: 380px) {
+@media (max-width: 360px) {
   .kpi-strip { grid-template-columns:1fr; }
-  .topbar .page-title { font-size:16px; }
+  .nav-item { padding:8px 10px; font-size:7.5px; }
 }
 
 .alerts-list { padding:0 20px 16px; }
@@ -1398,7 +1429,7 @@ function renderLocations() {
           <th style="text-align:right">Covers</th><th style="text-align:right">Est. Net</th>
         </tr></thead>
         <tbody>${locRows}</tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -1469,7 +1500,7 @@ function renderDaily() {
         <table class="cost-table">
           <thead><tr><th>Day</th><th style="text-align:right">Revenue</th><th style="text-align:right">Covers</th><th style="text-align:right">Avg Check</th></tr></thead>
           <tbody>${locBreakdown[0]}</tbody>
-        </table>
+        </table></div>
       </div>
     </div>
     <div class="card" style="animation-delay:0.4s;margin-top:14px">
@@ -1566,7 +1597,7 @@ function renderCosts() {
           <th style="text-align:right">Net Margin</th>
         </tr></thead>
         <tbody>${locRows}</tbody>
-      </table>
+      </table></div>
     </div>
 
     <div class="grid-2">
@@ -1582,7 +1613,7 @@ function renderCosts() {
             }).join('')}
             <tr><td style="font-weight:700;color:var(--text)">Total Fixed</td>${state.locations.map(l=>`<td style="font-weight:600;color:var(--text)">${fmtDollar(Math.round(totalFixed(l,p)))}</td>`).join('')}<td style="font-weight:700;color:var(--text)">${fmtDollar(Math.round(state.locations.reduce((s,l)=>s+totalFixed(l,p),0)))}</td></tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
       <div class="card">
         <div class="card-header"><div><div class="card-title">Variable Costs · ${periodLabel[p]}</div><div class="card-sub">Move with sales volume</div></div></div>
@@ -1596,7 +1627,7 @@ function renderCosts() {
             <tr><td class="ct-label">Food Waste</td><td class="ct-warn">${fmtDollar(Math.round(rev*state.locations.reduce((s,l)=>s+l.waste[p],0)/state.locations.length/100))}</td><td class="ct-warn">${fmtPct(state.locations.reduce((s,l)=>s+l.waste[p],0)/state.locations.length)}</td></tr>
             <tr><td style="font-weight:700;color:var(--text)">Total Variable</td><td style="font-weight:700;color:var(--text)">${fmtDollar(Math.round(rev*(avgFoodCost(p)+avgLaborCost(p)+state.ccFeeRate)/100+state.locations.reduce((s,l)=>s+l.deliveryRevenue[p]*state.deliveryCommission/100,0)))}</td><td style="font-weight:700">—</td></tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>`;
 }
@@ -1643,7 +1674,7 @@ function renderLabor() {
               <td class="${laborCls(l.laborCost[p])}">${l.laborCost[p]<=state.laborTarget?'✓ On plan':'↑ '+fmtPct(l.laborCost[p]-state.laborTarget)+' over'}</td>
             </tr>`).join('')}
           </tbody>
-        </table>
+        </table></div>
       </div>
       <div class="card">
         <div class="card-header"><div><div class="card-title">Actual vs Scheduled Hours · This Week</div><div class="card-sub">From ${state.payroll} · Every employee tracked</div></div><div class="card-badge">⚡ Auto</div></div>
@@ -1665,7 +1696,7 @@ function renderLabor() {
               return '<tr><td style="color:var(--text);font-weight:600">' + s.name + '</td><td class="dim">' + s.role + '</td><td style="color:var(--text)">' + s.scheduled + 'h</td><td style="color:var(--text)">' + s.actual + 'h</td><td class="' + cls + '">' + diffStr + '</td><td><span class="pill ' + pillCls + '">' + tag + '</span></td></tr>';
             }).join('')}
           </tbody>
-        </table>`).join('')}
+        </table></div>`).join('')}
         <div style="padding:12px 20px 16px;margin-top:8px;background:var(--amber-bg);border-top:1px solid var(--border)">
           <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:3px">⚠ Overtime costs you 1.5x</div>
           <div style="font-size:10.5px;color:var(--text-dim)">Any hour worked over 40 is paid at 1.5x rate. Catching this Wednesday saves money for the rest of the week. Adjust shifts before it happens, not after.</div>
@@ -1767,7 +1798,7 @@ function renderCashflow() {
           ${row('Delivery Commissions',delComm,'ct-warn',state.deliveryCommission+'% · '+state.delivery)}
           <tr style="border-top:2px solid var(--border)"><td style="font-weight:700;color:var(--text)">NET CASH</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${net<0?'–':''}${fmtDollar(Math.abs(Math.round(net)))}</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${fmtPct(Math.abs(netPct))}</td><td class="${net>0?'ct-good':'ct-bad'}">${net>0?'▲ Profitable':'▼ Losing money'}</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -1807,7 +1838,7 @@ function renderPL() {
           <tr><td style="color:var(--cream);font-weight:700">EBITDA</td><td class="${ebitdaMargin>0?'ct-good':'ct-bad'}">${ebitdaMargin>0?'':'-'}${fmtDollar(Math.round(Math.abs(ebitda)))}</td><td class="${ebitdaMargin>15?'ct-good':ebitdaMargin>8?'ct-warn':'ct-bad'}">${fmtPct(Math.abs(ebitdaMargin))}</td></tr>
           <tr><td style="color:var(--cream);font-weight:700">EST. NET INCOME</td><td class="${netIncome>0?'ct-good':'ct-bad'}">${netIncome>0?'':'-'}${fmtDollar(Math.round(Math.abs(netIncome)))}</td><td class="${netIncome>0?'ct-good':'ct-bad'}">${fmtPct(Math.abs(netIncome/rev*100))}</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -1874,7 +1905,7 @@ function renderDelivery() {
         <table class="cost-table">
           <thead><tr><th>Location</th><th style="text-align:right">Orders</th><th style="text-align:right">Revenue</th><th style="text-align:right">Avg Order</th><th style="text-align:right">Commission</th><th style="text-align:right">% of Sales</th><th style="text-align:right">Rating</th></tr></thead>
           <tbody>${locRows}</tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -1889,7 +1920,7 @@ function renderDelivery() {
           <tr><td class="ct-label" style="padding-left:20px">Food cost (${fmtPct(avgFoodCost(p))})</td><td class="ct-warn">–${fmtDollar(Math.round(totalDelRev*avgFoodCost(p)/100))}</td><td style="font-size:10px;color:var(--muted)">Same COGS as dine-in</td></tr>
           <tr><td style="font-weight:700;color:var(--text)">Net after all delivery costs</td><td class="${netDelRev-Math.round(totalDelRev*0.02)-Math.round(totalDelRev*avgFoodCost(p)/100)>0?'ct-good':'ct-bad'}" style="font-weight:700">${fmtDollar(Math.round(netDelRev-Math.round(totalDelRev*0.02)-Math.round(totalDelRev*avgFoodCost(p)/100)))}</td><td style="font-size:10px;color:var(--muted)">${fmtPct((netDelRev-Math.round(totalDelRev*0.02)-Math.round(totalDelRev*avgFoodCost(p)/100))/totalDelRev*100)} effective margin</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -1951,7 +1982,7 @@ function renderExpenses() {
           <tr style="border-top:2px solid var(--border)"><td style="font-weight:700;color:var(--text)">TOTAL EXPENSES</td><td class="ct-bad" style="font-weight:700">–${fmtDollar(totalExp)}</td><td class="ct-bad" style="font-weight:700">${fmtPct(totalExp/rev*100)}</td><td></td></tr>
           <tr><td style="font-weight:700;color:var(--text)">NET ${net>0?'PROFIT':'LOSS'}</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${net<0?'–':''}${fmtDollar(Math.abs(Math.round(net)))}</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${fmtPct(Math.abs(net/rev*100))}</td><td></td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -2022,7 +2053,7 @@ function renderWeekly() {
             <tr><td class="ct-label" style="padding-left:16px">CC fees + delivery comm.</td><td class="ct-warn">–${fmtDollar(ccAmt+delComm)}</td><td class="ct-warn">${fmtPct((ccAmt+delComm)/rev*100)}</td></tr>
             <tr style="border-top:2px solid var(--border)"><td style="font-weight:700;color:var(--text)">Est. Net</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${net<0?'–':''}${fmtDollar(Math.abs(Math.round(net)))}</td><td class="${net>0?'ct-good':'ct-bad'}" style="font-weight:700">${fmtPct(Math.abs(net/rev*100))}</td></tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
@@ -2096,7 +2127,7 @@ function renderVoids() {
       <table class="cost-table">
         <thead><tr><th>Location</th><th style="text-align:right">Revenue</th><th style="text-align:right">Voids $</th><th style="text-align:right">Voids %</th><th style="text-align:right">Comps $</th><th style="text-align:right">Comps %</th><th style="text-align:right">Total Leak</th><th style="text-align:right">Leak %</th></tr></thead>
         <tbody>${locRows}</tbody>
-      </table>
+      </table></div>
     </div>
     <div class="card">
       <div class="card-header"><div><div class="card-title">What to do about it</div></div></div>
@@ -2192,7 +2223,7 @@ function renderBreakeven() {
           <th style="text-align:right">Buffer</th>
         </tr></thead>
         <tbody>${tblRows}</tbody>
-      </table>
+      </table></div>
     </div>
     <div class="card">
       <div class="card-header"><div><div class="card-title">Levers that move your break-even</div></div></div>
@@ -2340,12 +2371,12 @@ function renderHourly() {
         </div>
         <div class="card mb">
           <div class="card-header"><div><div class="card-title">By Location · Daily Breakdown</div></div></div>
-          <table class="tbl">
+          <div class="tbl-wrap"><table class="tbl">
             <thead><tr><th>Day</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>vs Avg</th></tr></thead>
             <tbody>${tblRows}
               <tr class="total"><td>Total</td><td>${fmtDollar(hk.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(ev.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(weekTotal)}</td><td>—</td></tr>
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>`;
   }
@@ -2408,12 +2439,12 @@ function renderHourly() {
         </div>
         <div class="card mb">
           <div class="card-header"><div><div class="card-title">By Location · Weekly</div></div></div>
-          <table class="tbl">
+          <div class="tbl-wrap"><table class="tbl">
             <thead><tr><th>Week</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>Daily Avg</th></tr></thead>
             <tbody>${tblRows}
               <tr class="total"><td>Month Total</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.hk.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.ev.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(monthTotal)}</td><td>$${(monthTotal/28).toFixed(0)}/day</td></tr>
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>`;
   }
@@ -2481,12 +2512,12 @@ function renderHourly() {
       </div>
       <div class="card mb">
         <div class="card-header"><div><div class="card-title">By Location · Monthly</div></div></div>
-        <table class="tbl">
+        <div class="tbl-wrap"><table class="tbl">
           <thead><tr><th>Month</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>MoM</th></tr></thead>
           <tbody>${mTblRows}
             <tr class="total"><td>Total</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.hk,0)))}</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.ev,0)))}</td><td>${fmtDollar(Math.round(periodTotal))}</td><td>—</td></tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>`;
 }
@@ -2582,10 +2613,10 @@ function renderPayments() {
     </div>
     <div class="card mb">
       <div class="card-header"><div><div class="card-title">By Location · Payment Mix & Fees</div></div><div class="card-badge">⚡ Auto</div></div>
-      <table class="tbl">
+      <div class="tbl-wrap"><table class="tbl">
         <thead><tr><th>Location</th><th>Cash</th><th>Visa</th><th>MC</th><th>Amex</th><th>Gift</th><th>Total Fees</th></tr></thead>
         <tbody>${locRows}</tbody>
-      </table>
+      </table></div>
     </div>`;
 }
 
