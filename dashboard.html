@@ -530,7 +530,7 @@ body::before {
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-mark" id="sidebarBrand"><em>Planet</em> Taco</div>
+    <div class="logo-mark" id="sidebarBrand" style="font-size:16px;color:var(--gold)">Planet Taco</div>
     <div class="logo-sub">Powered by PrimeIQ</div>
   </div>
   <nav class="sidebar-nav">
@@ -3239,6 +3239,16 @@ function renderForecast() {
     + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.7">'
     + '<strong>How it works:</strong> Weighted 4-week rolling average (40% most recent) with trend adjustment. Revenue within each shift estimated using your historical hourly distribution curve. Post-midnight hours (e.g. 1am) are attributed to the previous day. Accuracy improves with more POS data. &nbsp;·&nbsp; <strong>Staffing levels:</strong> Peak = 130%+ of avg hourly revenue · Normal = 90-130% · Light = 60-90% · Slow = below 60%.'
     + '</div></div>';
+}
+
+function updateSidebarName(name) {
+  var el = document.getElementById('sidebarName');
+  if (el) el.textContent = name;
+  var brand = document.getElementById('sidebarBrand');
+  if (brand && name) {
+    brand.textContent = name;
+    brand.style.fontSize = name.length > 12 ? '13px' : '16px';
+  }
 }
 
 // ── PAGE MAP ─────────────────────────────────────────────────────────────────
