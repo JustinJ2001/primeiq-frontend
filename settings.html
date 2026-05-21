@@ -55,7 +55,7 @@ body{font-family:"Lato",sans-serif;background:#faf8f4;color:#1a1208;}
 <div class="header">
   <div class="logo"><em>Restaurant</em> Dashboard</div>
   <div class="header-nav">
-    <a class="header-link" href="/dashboard">Dashboard</a>
+    <a class="header-link" id="dash_link" href="/dashboard">Dashboard</a>
     <a class="header-link active" href="/settings">Settings</a>
     <a class="header-link" href="#" onclick="signOut()">Sign Out</a>
   </div>
@@ -125,7 +125,12 @@ async function apiFetch(path, method='GET', body=null) {
 
 // LOAD SETTINGS
 async function loadSettings() {
-  if (isDemo) return; // Demo mode - skip API call
+  if (isDemo) {
+    // Show demo placeholders instead of loading spinners
+    document.getElementById('locations_container').innerHTML = '<div style="padding:16px;background:#faf8f4;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:#8a7a5a">Sign in to view and edit your location data.</div>';
+    document.getElementById('integrations_container').innerHTML = '<div style="padding:16px;background:#faf8f4;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:#8a7a5a">Sign in to manage your POS, payroll, and delivery connections.</div>';
+    return;
+  }
   try {
     const data = await apiFetch('/api/settings');
     renderLocations(data.locations);
@@ -220,9 +225,14 @@ function reconnect(provider, type) {
 }
 
 async function openBillingPortal() {
+  if (isDemo) {
+    showAlert('Sign in to manage your billing.', 'info');
+    return;
+  }
   try {
     const data = await apiFetch('/api/create-portal-session', 'POST', {});
-    window.location.href = data.url;
+    if (data.url) window.location.href = data.url;
+    else showAlert('Could not open billing portal. Contact support.', 'error');
   } catch(e) {
     showAlert('Failed to open billing portal: ' + e.message, 'error');
   }
@@ -291,6 +301,11 @@ async function saveSettingsCategories() {
 }
 
 renderCatGrid();
+// Preserve demo param in nav links
+if (isDemo) {
+  var dl = document.getElementById('dash_link');
+  if (dl) dl.href = '/dashboard?demo=1';
+}
 
 </script>
 </body>
