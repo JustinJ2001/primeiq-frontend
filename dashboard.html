@@ -531,7 +531,9 @@ body::before {
 
 /* ── MOBILE RESPONSIVE ────────────────────────────────────────────────────── */
 /* ── MOBILE (phones up to 480px) ─────────────────────────────────────────── */
-@media (max-width: 480px) {
+/* ── MOBILE: touch devices or narrow screens ─────────────────────────────── */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
+
 
   /* Sidebar moves to bottom as horizontal scrollable nav */
   .sidebar {
@@ -613,16 +615,14 @@ body::before {
 
   /* Demo banner */
   #demoBanner > div { flex-direction:column; gap:4px; }
-}
 
-
-@media (max-width: 480px) {
   .card { border-radius:10px; }
   .tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
   .tbl { min-width:480px; }
+
 }
 
-@media (max-width: 360px) {
+@media (max-width: 400px) {
   .kpi-strip { grid-template-columns:1fr; }
   .nav-item { padding:8px 10px; font-size:7.5px; }
 }
