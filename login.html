@@ -53,6 +53,7 @@ body{font-family:"Lato",sans-serif;background:#1a1208;min-height:100vh;display:f
       <input class="f-input" id="password" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter')signIn()"></div>
     <a class="forgot" onclick="showReset()">Forgot password?</a>
     <button class="btn" id="login_btn" onclick="signIn()">Sign In →</button>
+    <button onclick="window.location.href='/dashboard?demo=1'" style="width:100%;padding:12px;margin-top:10px;border:1.5px solid var(--border);border-radius:8px;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:0.06em">View Demo Dashboard →</button>
   </div>
   <div class="signup-link">Don't have an account? <a href="/onboarding">Get started</a></div>
 </div>
@@ -109,6 +110,14 @@ async function signIn() {
     // Store token and redirect
     localStorage.setItem('rd_token', data.access_token);
     localStorage.setItem('rd_refresh', data.refresh_token);
+    // Fetch client ID and store it
+    try {
+      const clientRes = await fetch('https://restaurant-api-68re.onrender.com/api/settings', {
+        headers: { 'Authorization': 'Bearer ' + data.access_token }
+      });
+      const clientData = await clientRes.json();
+      if (clientData.client?.id) localStorage.setItem('rd_client_id', clientData.client.id);
+    } catch(e) {}
     window.location.href = '/dashboard';
   } catch(e) {
     showAlert(e.message || 'Sign in failed. Please try again.', 'error');

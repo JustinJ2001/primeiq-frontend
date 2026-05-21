@@ -913,9 +913,15 @@ function hideLoadingOverlay() {
 
 // ── MAIN DATA LOADER ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
+  // Check for demo mode via URL param
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('demo') === '1') {
+    showDemoBanner();
+    return;
+  }
   const token = getToken();
   if (!token) {
-    showDemoBanner();
+    window.location.href = '/login';
     return;
   }
   try {
