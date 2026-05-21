@@ -587,6 +587,24 @@ body::before {
   .kpi-strip { grid-template-columns:1fr; }
   .topbar .page-title { font-size:16px; }
 }
+
+.alerts-list { padding:0 20px 16px; }
+.alert-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+.alert-item:last-child { border-bottom:none; }
+.alert-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.alert-body { flex:1; }
+.alert-title { font-size:13px; font-weight:700; color:var(--dark); margin-bottom:4px; line-height:1.4; }
+.alert-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+
+.al-list { padding:16px 20px; }
+.al-row { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
+.al-row:last-child { border-bottom:none; }
+.al-ico { font-size:16px; flex-shrink:0; margin-top:1px; }
+.al-ico.bad { color:var(--red); }
+.al-ico.warn { color:var(--amber); }
+.al-ico.good { color:var(--green); font-weight:700; }
+.al-title { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:2px; }
+.al-desc { font-size:11px; color:var(--muted); line-height:1.5; }
 </style>
 </head>
 <body>
