@@ -918,6 +918,7 @@ async function loadDashboardData() {
   if (!token) {
     // No token — show demo data with a banner
     showDemoBanner();
+    navigate('overview');
     return;
   }
 
@@ -2716,6 +2717,96 @@ function renderBenchmark() {
     + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Data sources: NRA 2026 State of Industry · Toast 2025 NYC Dataset · BLS Food Services 2025 · Black Box Intelligence NYC Metro · OpenTable NYC 2025 · Whipplewood Financial Benchmarks 2026 · DoorDash NYC Merchant Report 2025. All benchmarks represent 2-6 location independent <strong>' + activeSegment + '</strong> operators in the NYC metro area. Updated Q1 2026.</div></div>';
 }
 
+
+// ── PAGE MAP ─────────────────────────────────────────────────────────────────
+const pageMap = {
+  overview:  { title:'Dashboard Overview',       sub:function(){return 'Today · All locations · Auto-synced from '+state.pos;},         render: renderOverview },
+  locations: { title:'Location Performance',     sub:function(){return state.locations.length+' locations · '+periodLabel[activePeriod];}, render: renderLocations },
+  daily:     { title:'Revenue',                  sub:function(){return 'This week · Auto-synced from '+state.pos;},                       render: renderDaily },
+  hourly:    { title:'Sales by Hour',            sub:function(){return 'Today · Both locations · From '+state.pos;},                      render: renderHourly },
+  payments:  { title:'Payment Methods',          sub:function(){return periodLabel[activePeriod]+' · Processing fees';},                  render: renderPayments },
+  costs:     { title:'Cost Breakdown',           sub:function(){return periodLabel[activePeriod]+' · Food, Labor, Prime Cost';},           render: renderCosts },
+  labor:     { title:'Labor & Scheduling',       sub:function(){return periodLabel[activePeriod]+' · From '+state.payroll;},              render: renderLabor },
+  menu:      { title:'Menu Performance',         sub:function(){return 'Sales mix + margin by item · From '+state.pos;},                  render: renderMenu },
+  delivery:  { title:'Delivery & Online Orders', sub:function(){return periodLabel[activePeriod]+' · '+state.delivery;},                  render: renderDelivery },
+  expenses:  { title:'All Expenses',             sub:function(){return periodLabel[activePeriod]+' · Every cost broken down';},           render: renderExpenses },
+  cashflow:  { title:'Cash Flow',                sub:function(){return periodLabel[activePeriod]+' · Full cash in / out';},               render: renderCashflow },
+  pl:        { title:'P&L Statement',            sub:function(){return periodLabel[activePeriod]+' · Auto-generated';},                   render: renderPL },
+  weekly:    { title:'Weekly Report',            sub:function(){return 'Auto-generated every Monday · '+state.name;},                    render: renderWeekly },
+  voids:     { title:'Voids & Comps',            sub:function(){return periodLabel[activePeriod]+' · From '+state.pos;},                  render: renderVoids },
+  breakeven: { title:'Break-even Calculator',    sub:function(){return periodLabel[activePeriod]+' · Per location';},                    render: renderBreakeven },
+  benchmark: { title:'Industry Benchmarks',      sub:function(){return 'How you compare to top NYC restaurants · '+state.locations.length+' locations';}, render: renderBenchmark },
+};
+
+function navigate(pageKey) {
+  activePage = pageKey;
+  var pg = pageMap[pageKey];
+  if (!pg) return;
+  var c = document.getElementById('pageContent');
+  if (!c) return;
+  c.style.opacity = '0';
+  document.getElementById('pageTitle').textContent = pg.title;
+  document.getElementById('pageSub').textContent = pg.sub();
+  setTimeout(function() {
+    c.innerHTML = pg.render();
+    c.style.transition = 'opacity 0.2s';
+    c.style.opacity = '1';
+  }, 120);
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.toggle('active', n.dataset.page === pageKey);
+  });
+}
+
+document.querySelectorAll('.nav-item').forEach(function(n) {
+  n.addEventListener('click', function() { navigate(n.dataset.page); });
+});
+
+document.querySelectorAll('.period-btn').forEach(function(b) {
+  b.addEventListener('click', function() {
+    activePeriod = b.dataset.period;
+    document.querySelectorAll('.period-btn').forEach(function(x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    navigate(activePage);
+  });
+});
+
+// ── SETUP MODAL ──────────────────────────────────────────────────────────────
+var modal = document.getElementById('setupModal');
+document.getElementById('openSetupBtn').addEventListener('click', function() { modal.classList.add('open'); });
+document.querySelector('.modal-close').addEventListener('click', function() { modal.classList.remove('open'); });
+modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('open'); });
+
+document.getElementById('saveSetup').addEventListener('click', function() {
+  var name = document.getElementById('f_name').value.trim() || state.name;
+  var cuisine = document.getElementById('f_cuisine').value.trim() || state.cuisine;
+  var pos = document.getElementById('f_pos').value || state.pos;
+  var payroll = document.getElementById('f_payroll').value || state.payroll;
+  var foodTarget = parseFloat(document.getElementById('f_food').value) || state.foodTarget;
+  var laborTarget = parseFloat(document.getElementById('f_labor').value) || state.laborTarget;
+  var primeTarget = parseFloat(document.getElementById('f_prime').value) || state.primeTarget;
+  var numLocs = parseInt(document.getElementById('f_numLocs').value) || 1;
+
+  state.name = name;
+  state.cuisine = cuisine;
+  state.pos = pos;
+  state.payroll = payroll;
+  state.foodTarget = foodTarget;
+  state.laborTarget = laborTarget;
+  state.primeTarget = primeTarget;
+  updateSidebarName(name);
+
+  document.getElementById('sidebarName').textContent = name;
+  modal.classList.remove('open');
+  document.getElementById('appliedNote').classList.add('show');
+  setTimeout(function() {
+    modal.classList.remove('open');
+    document.getElementById('appliedNote').classList.remove('show');
+    navigate(activePage);
+  }, 700);
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadDashboardData();
 </script>
 </body>
 </html>
