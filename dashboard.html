@@ -144,6 +144,7 @@ body::before {
   background:var(--bg);
   backdrop-filter:blur(8px);
   position:sticky; top:0; z-index:50;
+  flex-wrap:wrap;
 }
 .topbar-left { display:flex; flex-direction:column; }
 .page-title { font-family:'Playfair Display', serif; font-size:18px; color:var(--cream); }
@@ -561,8 +562,9 @@ body::before {
   body { overflow-x:hidden; }
 
   /* Topbar */
-  .topbar { flex-wrap:wrap; gap:6px; padding:10px 14px; }
+  .topbar { flex-wrap:wrap; gap:4px; padding:8px 14px; height:auto; min-height:44px; }
   .topbar-right { display:none; }
+  .topbar .period-selector { order:3; width:100%; overflow-x:auto; padding-bottom:8px; }
   .page-title { font-size:17px; }
   .page-sub { font-size:9px; }
   .period-bar { overflow-x:auto; -webkit-overflow-scrolling:touch; }
@@ -592,7 +594,6 @@ body::before {
     display:block;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
-    white-space:nowrap;
     max-width:100%;
   }
   .tbl th, .tbl td,
@@ -646,6 +647,29 @@ body::before {
     grid-template-columns: 1fr 1fr !important;
   }
   .form-grid, .form-grid-3, .form-grid-4 { grid-template-columns:1fr !important; }
+}
+
+@media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
+  .loc-card { overflow:visible; }
+  .kpi-card { overflow:visible; }
+}
+
+
+@media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
+  /* Ensure all text wraps on mobile - no overflow */
+  .card *, .loc-card * {
+    max-width:100%;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+  }
+  /* Warning/alert boxes should not overflow */
+  [style*="background:var(--red-bg)"],
+  [style*="background:var(--amber-bg)"],
+  [style*="background:var(--green-bg)"] {
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    overflow-x:hidden;
+  }
 }
 
 @media (max-width: 400px) {
@@ -826,14 +850,14 @@ body::before {
       <div class="page-title" id="pageTitle">Dashboard Overview</div>
       <div class="page-sub" id="pageSub">Today · All locations · Auto-synced from Toast POS</div>
     </div>
-    <div class="topbar-right">
-      <div class="period-selector">
+    <div class="period-selector" style="order:3;margin-top:0">
         <button class="period-btn" data-period="today">Today</button>
         <button class="period-btn active" data-period="week">Week</button>
         <button class="period-btn" data-period="month">Month</button>
         <button class="period-btn" data-period="quarter">Quarter</button>
         <button class="period-btn" data-period="ytd">YTD</button>
       </div>
+    <div class="topbar-right">
       <div class="live-badge"><div class="live-dot"></div>Live</div>
       <button id="themeToggle" style="
         padding:6px 12px; border-radius:8px; border:1px solid var(--border);
