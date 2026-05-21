@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurant Group Dashboard</title>
+<title>PrimeIQ — Restaurant Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -560,7 +560,7 @@ body::before {
       <div class="restaurant-avatar" id="sidebarAvatar">T</div>
       <div>
         <div class="restaurant-name" id="sidebarName">Loading...</div>
-        <div class="restaurant-locs" id="sidebarLocs">2 Locations · NYC</div>
+        <div class="restaurant-locs" id="sidebarLocs">2 Locations</div>
       </div>
     </div>
     <button class="setup-btn" onclick="window.location.href='/settings' + (window.location.search.includes('demo=1') ? '?demo=1' : '')">⚙ Settings</button>
@@ -2533,13 +2533,13 @@ function renderBenchmark() {
   const benchmarks = {
     'Fast Casual': {
       foodCost:    { avg:30.2, top:26.5, label:'Food Cost %', note:'NYC avg higher than national (28-29%) due to ingredient costs. Top operators hit 26-27% through portion discipline and supplier negotiation.' },
-      laborCost:   { avg:31.5, top:27.2, label:'Labor Cost %', note:'NYC min wage $16/hr pushes this above national avg. Top operators offset with cross-training and scheduling software.' },
-      primeCost:   { avg:61.7, top:53.8, label:'Prime Cost %', note:'NYC fast casual prime cost runs 2-3pts above national average. Under 58% is exceptional here.' },
+      laborCost:   { avg:31.5, top:27.2, label:'Labor Cost %', note:'local min wage $16/hr pushes this above national avg. Top operators offset with cross-training and scheduling software.' },
+      primeCost:   { avg:61.7, top:53.8, label:'Prime Cost %', note:'fast casual prime cost runs 2-3pts above national average. Under 58% is exceptional here.' },
       avgCheck:    { avg:16.80, top:21.50, label:'Avg Check', higher_is_better:true, note:'NYC premium over national ($13.20 avg). Top operators drive check higher with add-ons and premium modifiers.' },
-      netMargin:   { avg:5.8, top:11.4, label:'Net Margin %', higher_is_better:true, note:'Fast casual 4-10% nationally; NYC avg compressed by rent and labor. Top quartile NYC operators reach 10-12%.' },
-      deliveryPct: { avg:31.0, top:21.5, label:'Delivery % of Sales', note:'NYC fast casual skews heavily delivery. Top operators limit delivery to protect margins - every delivery order costs 22-30% off the top.' },
+      netMargin:   { avg:5.8, top:11.4, label:'Net Margin %', higher_is_better:true, note:'Fast casual 4-10% nationally; NYC avg compressed by rent and labor. Top quartile independent operators reach 10-12%.' },
+      deliveryPct: { avg:31.0, top:21.5, label:'Delivery % of Sales', note:'fast casual skews heavily delivery. Top operators limit delivery to protect margins - every delivery order costs 22-30% off the top.' },
       voidsPct:    { avg:2.9, top:1.2, label:'Voids & Comps %', note:'Industry avg 2.5-3.5%. Anything above 3% warrants pulling void reports by employee.' },
-      fixedPct:    { avg:20.5, top:15.5, label:'Fixed Cost %', note:'NYC commercial rent is 25-40% above national average. Top operators negotiate percentage-rent deals or operate in outer boroughs.' },
+      fixedPct:    { avg:20.5, top:15.5, label:'Fixed Cost %', note:'commercial rent is 25-40% above national average. Top operators negotiate percentage-rent deals or operate in outer boroughs.' },
     },
     'Casual Dining': {
       foodCost:    { avg:31.8, top:27.5, label:'Food Cost %', note:'Casual dining food cost driven by protein-heavy menus. Top operators run specials to move perishables before waste occurs.' },
@@ -2564,10 +2564,10 @@ function renderBenchmark() {
     'Pizza & Italian': {
       foodCost:    { avg:28.0, top:23.5, label:'Food Cost %', note:'Pizza/pasta has a structural food cost advantage - flour, tomato, cheese cost far less per portion than proteins. Top operators hit 22-24%.' },
       laborCost:   { avg:30.5, top:26.0, label:'Labor Cost %', note:'Pizza operations can be lean on FOH (counter/walk-up common). BOH labor is efficient once pizza production is streamlined.' },
-      primeCost:   { avg:58.5, top:49.5, label:'Prime Cost %', note:'Best prime cost category in NYC restaurants. Under 52% is achievable for high-volume pizza operators.' },
+      primeCost:   { avg:58.5, top:49.5, label:'Prime Cost %', note:'Best prime cost category in restaurants. Under 52% is achievable for high-volume pizza operators.' },
       avgCheck:    { avg:22.50, top:31.00, label:'Avg Check', higher_is_better:true, note:'Pizza check varies widely - $15 for a slice shop, $35+ for sit-down Neapolitan. Top operators push check with wine programs.' },
       netMargin:   { avg:8.5, top:15.5, label:'Net Margin %', higher_is_better:true, note:'Pizza is consistently the most profitable restaurant category in NYC. High-volume operators regularly hit 15-18% net margins.' },
-      deliveryPct: { avg:42.0, top:30.0, label:'Delivery % of Sales', note:'NYC pizza has the highest delivery share of any category. Delivery orders after commission earn 70-78 cents on the dollar.' },
+      deliveryPct: { avg:42.0, top:30.0, label:'Delivery % of Sales', note:'Pizza has the highest delivery share of any category. Delivery orders after commission earn 70-78 cents on the dollar.' },
       voidsPct:    { avg:2.4, top:0.9, label:'Voids & Comps %', note:'Pizza operations tend to have lower void rates due to simpler menus and faster ticket times. Anything above 2% warrants investigation.' },
       fixedPct:    { avg:17.0, top:12.5, label:'Fixed Cost %', note:'Pizza shops often occupy smaller cheaper spaces. Outer borough operators frequently have fixed costs 30-40% below Manhattan equivalents.' },
     },
@@ -2583,7 +2583,7 @@ function renderBenchmark() {
     },
     'Mexican & Latin': {
       foodCost:    { avg:30.8, top:26.2, label:'Food Cost %', note:'Mexican/Latin food cost varies - bean and rice heavy dishes are low cost, while proteins drive it up. Guac margins are exceptional.' },
-      laborCost:   { avg:31.8, top:27.0, label:'Labor Cost %', note:'Fast casual Mexican can run 27-29% labor. Upscale Latin with full bar and table service runs closer to 34-36%. NYC min wage hits this segment hard.' },
+      laborCost:   { avg:31.8, top:27.0, label:'Labor Cost %', note:'Fast casual Mexican can run 27-29% labor. Upscale Latin with full bar and table service runs closer to 34-36%. local min wage hits this segment hard.' },
       primeCost:   { avg:62.6, top:53.2, label:'Prime Cost %', note:'Mexican/Latin prime cost benefits from lower food cost ingredients when menu is designed around it. Best operators build the menu around margin first.' },
       avgCheck:    { avg:19.50, top:28.00, label:'Avg Check', higher_is_better:true, note:'Fast casual Mexican runs $14-18. Sit-down with cocktails runs $32-45. Strong margarita/cocktail programs dramatically lift check averages.' },
       netMargin:   { avg:6.2, top:12.5, label:'Net Margin %', higher_is_better:true, note:'Mexican/Latin concepts with strong bar programs consistently outperform on net margin. Beverage margin subsidizes tight food economics.' },
@@ -2606,10 +2606,10 @@ function renderBenchmark() {
       laborCost:   { avg:32.5, top:27.5, label:'Labor Cost %', note:'Early morning production labor is expensive and cannot be cut. Top operators offset with efficient scheduling and multi-role positions.' },
       primeCost:   { avg:66.0, top:55.5, label:'Prime Cost %', note:'Cafes and bakeries have structurally compressed margins. High prime cost is offset by volume and throughput - seats per hour is the key metric.' },
       avgCheck:    { avg:12.50, top:16.50, label:'Avg Check', higher_is_better:true, note:'Cafe check is low - $8-14 typically. Top operators drive check with add-ons, meal bundles, and whole-cake sales. Catering programs transform economics.' },
-      netMargin:   { avg:4.5, top:9.5, label:'Net Margin %', higher_is_better:true, note:'Cafe/bakery is one of the hardest NYC restaurant categories to make profitable. Success requires high volume, premium positioning, or wholesale.' },
+      netMargin:   { avg:4.5, top:9.5, label:'Net Margin %', higher_is_better:true, note:'Cafe/bakery is one of the hardest restaurant categories to make profitable. Success requires high volume, premium positioning, or wholesale.' },
       deliveryPct: { avg:15.0, top:8.0, label:'Delivery % of Sales', note:'Cafe delivery is growing but challenging - coffee does not travel well. Breakfast sandwiches and baked goods are the delivery winners.' },
       voidsPct:    { avg:2.2, top:0.8, label:'Voids & Comps %', note:'Cafe operations have low void rates due to simple standardized orders. Product waste (day-old pastries, pulled coffee) is a bigger loss driver.' },
-      fixedPct:    { avg:23.5, top:17.0, label:'Fixed Cost %', note:'NYC cafe rent is brutal relative to check size. Top operators negotiate short leases in emerging neighborhoods before rents rise.' },
+      fixedPct:    { avg:23.5, top:17.0, label:'Fixed Cost %', note:'Cafe rent is brutal relative to check size. Top operators negotiate short leases in emerging neighborhoods before rents rise.' },
     },
   };
 
@@ -2663,10 +2663,10 @@ function renderBenchmark() {
     var impactHtml = impact !== 0 ? '<div style="margin-top:10px;padding:10px 14px;background:' + (impact>=0?'var(--green-bg)':'var(--red-bg)') + ';border-radius:7px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;color:var(--dark)">' + (impact>=0?'You are ahead of the average':'Closing this gap would add') + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:700;color:' + ic + '">' + is + fmtDollar(Math.abs(Math.round(impact))) + ' ' + periodLabel[p].toLowerCase() + '</div></div>' : '';
 
     return '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:10px">'
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:13px;font-weight:700;color:var(--dark)">' + b.label + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">' + activeSegment + ' · NYC market</div></div><div style="text-align:right"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:' + sc + '">' + sl + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">vs ' + periodLabel[p] + ' average</div></div></div>'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:13px;font-weight:700;color:var(--dark)">' + b.label + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">' + activeSegment + ' · Local market</div></div><div style="text-align:right"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:' + sc + '">' + sl + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:2px">vs ' + periodLabel[p] + ' average</div></div></div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
       + '<div style="background:' + (status==='top'?'var(--green-bg)':status==='good'?'var(--amber-bg)':'var(--red-bg)') + ';border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">You</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:' + sc + '">' + fmt(y) + '</div></div>'
-      + '<div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">NYC Average</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:var(--muted)">' + fmt(b.avg) + '</div></div>'
+      + '<div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Market Avg</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:var(--muted)">' + fmt(b.avg) + '</div></div>'
       + '<div style="background:var(--green-bg);border-radius:8px;padding:12px;text-align:center"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Top Quartile</div><div style="font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:var(--green)">' + fmt(b.top) + '</div></div>'
       + '</div>'
       + '<div style="position:relative;height:8px;background:linear-gradient(to right,var(--red-bg),var(--amber-bg),var(--green-bg));border-radius:4px;margin-bottom:10px">'
@@ -2722,10 +2722,10 @@ function renderBenchmark() {
   }).join('');
 
   var opportunities = [];
-  if (food > bm.foodCost.avg)    opportunities.push({ label:'Reduce food cost to NYC average',         saving:(food-bm.foodCost.avg)/100*rev,       action:'Review portion sizes, supplier pricing, and prep waste weekly.' });
-  if (labor > bm.laborCost.avg)  opportunities.push({ label:'Reduce labor cost to NYC average',        saving:(labor-bm.laborCost.avg)/100*rev,     action:'Use your hourly sales data to cut staff during slow windows.' });
-  if (voidsPct > bm.voidsPct.avg) opportunities.push({ label:'Reduce voids & comps to NYC average',   saving:(voidsPct-bm.voidsPct.avg)/100*rev,   action:'Pull void report by employee. Set approval rules for comps.' });
-  if (avgChk < bm.avgCheck.avg)  opportunities.push({ label:'Raise avg check to NYC average',          saving:(bm.avgCheck.avg-avgChk)*covers,      action:'Add $1-2 to your highest-volume items. Train staff on upselling drinks.' });
+  if (food > bm.foodCost.avg)    opportunities.push({ label:'Reduce food cost to market average',         saving:(food-bm.foodCost.avg)/100*rev,       action:'Review portion sizes, supplier pricing, and prep waste weekly.' });
+  if (labor > bm.laborCost.avg)  opportunities.push({ label:'Reduce labor cost to market average',        saving:(labor-bm.laborCost.avg)/100*rev,     action:'Use your hourly sales data to cut staff during slow windows.' });
+  if (voidsPct > bm.voidsPct.avg) opportunities.push({ label:'Reduce voids & comps to market average',   saving:(voidsPct-bm.voidsPct.avg)/100*rev,   action:'Pull void report by employee. Set approval rules for comps.' });
+  if (avgChk < bm.avgCheck.avg)  opportunities.push({ label:'Raise avg check to market average',          saving:(bm.avgCheck.avg-avgChk)*covers,      action:'Add $1-2 to your highest-volume items. Train staff on upselling drinks.' });
   var totalOpp = opportunities.reduce(function(s,o){return s+o.saving;},0);
 
   var oppRows = opportunities.map(function(o) {
@@ -2735,11 +2735,11 @@ function renderBenchmark() {
       + '</div>';
   }).join('');
 
-  var scoreDesc = score >= 75 ? 'Your numbers put you in the top 25% of NYC ' + activeSegment + ' restaurants.' : score >= 50 ? 'You are performing at or above the NYC average. Room to reach the top quartile.' : 'Several metrics are below the NYC average. Closing these gaps could significantly increase profitability.';
+  var scoreDesc = score >= 75 ? 'Your numbers put you in the top 25% of ' + activeSegment + ' restaurants.' : score >= 50 ? 'You are performing at or above the market average. Room to reach the top quartile.' : 'Several metrics are below the market average. Closing these gaps could significantly increase profitability.';
 
   var oppSection = totalOpp > 0
-    ? '<div style="background:var(--red-bg);border:1.5px solid rgba(192,57,43,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (oppRows?'12':'0') + 'px"><div><div style="font-size:14px;font-weight:700;color:var(--red)">Total profitability gap vs NYC average</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">Estimated ' + periodLabel[p].toLowerCase() + ' revenue you could recover</div></div><div style="font-family:IBM Plex Mono,monospace;font-size:24px;font-weight:700;color:var(--red)">-' + fmtDollar(Math.round(totalOpp)) + '</div></div>' + (oppRows ? '<div style="border-top:1px solid rgba(192,57,43,0.15);padding-top:8px">' + oppRows + '</div>' : '') + '</div>'
-    : '<div style="background:var(--green-bg);border:1.5px solid rgba(45,122,79,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="font-size:14px;font-weight:700;color:var(--green)">You are performing above the NYC average across all key metrics</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:4px">Compare to Top Quartile to find your next improvement opportunity</div></div>';
+    ? '<div style="background:var(--red-bg);border:1.5px solid rgba(192,57,43,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (oppRows?'12':'0') + 'px"><div><div style="font-size:14px;font-weight:700;color:var(--red)">Total profitability gap vs market average</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:3px">Estimated ' + periodLabel[p].toLowerCase() + ' revenue you could recover</div></div><div style="font-family:IBM Plex Mono,monospace;font-size:24px;font-weight:700;color:var(--red)">-' + fmtDollar(Math.round(totalOpp)) + '</div></div>' + (oppRows ? '<div style="border-top:1px solid rgba(192,57,43,0.15);padding-top:8px">' + oppRows + '</div>' : '') + '</div>'
+    : '<div style="background:var(--green-bg);border:1.5px solid rgba(45,122,79,0.2);border-radius:12px;padding:18px 20px;margin-bottom:18px"><div style="font-size:14px;font-weight:700;color:var(--green)">You are performing above the market average across all key metrics</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-top:4px">Compare to Top Quartile to find your next improvement opportunity</div></div>';
 
   // Count metrics in each tier across all 8 metrics
   var metricKeys = ['foodCost','laborCost','primeCost','netMargin','avgCheck','voidsPct','deliveryPct','fixedPct'];
@@ -2777,7 +2777,7 @@ function renderBenchmark() {
     + oppSection
     + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Metric-by-metric breakdown · ' + periodLabel[p] + '</div>'
     + bmRow('primeCost') + bmRow('foodCost') + bmRow('laborCost') + bmRow('netMargin') + bmRow('avgCheck') + bmRow('voidsPct') + bmRow('deliveryPct') + bmRow('fixedPct')
-    + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Data sources: NRA 2026 State of Industry · Toast 2025 NYC Dataset · BLS Food Services 2025 · Black Box Intelligence NYC Metro · OpenTable NYC 2025 · Whipplewood Financial Benchmarks 2026 · DoorDash NYC Merchant Report 2025. All benchmarks represent 2-6 location independent <strong>' + activeSegment + '</strong> operators in the NYC metro area. Updated Q1 2026.</div></div>';
+    + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Data sources: NRA 2026 State of Industry · Toast 2025 NYC Dataset · BLS Food Services 2025 · Black Box Intelligence NYC Metro · OpenTable NYC 2025 · Whipplewood Financial Benchmarks 2026 · DoorDash NYC Merchant Report 2025. All benchmarks represent 2-6 location independent <strong>' + activeSegment + '</strong> operators in the US metro markets. Updated Q1 2026.</div></div>';
 }
 
 
@@ -3259,7 +3259,7 @@ const pageMap = {
   voids:     { title:'Voids & Comps',            sub:function(){return periodLabel[activePeriod]+' · From '+state.pos;},                  render: renderVoids },
   breakeven: { title:'Break-even Calculator',    sub:function(){return periodLabel[activePeriod]+' · Per location';},                    render: renderBreakeven },
   forecast:  { title:'Sales Forecast',         sub:function(){return 'Next 7 days · Based on 4-week rolling average · ' + state.locations.length + ' locations';}, render: renderForecast },
-  benchmark: { title:'Industry Benchmarks',      sub:function(){return 'How you compare to top NYC restaurants · '+state.locations.length+' locations';}, render: renderBenchmark },
+  benchmark: { title:'Industry Benchmarks',      sub:function(){return 'How you compare to top restaurants · '+state.locations.length+' locations';}, render: renderBenchmark },
 };
 
 function navigate(pageKey) {
