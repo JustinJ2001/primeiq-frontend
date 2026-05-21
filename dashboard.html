@@ -2664,10 +2664,44 @@ function renderBenchmark() {
       + noteHtml + impactHtml + '</div>';
   }
 
-  var segments = Object.keys(benchmarks);
+  var savedCats = [];
+  try { savedCats = JSON.parse(localStorage.getItem('rd_categories') || '[]'); } catch(e) {}
+  var allSegments = Object.keys(benchmarks);
+  var catToBench = {
+    'Fast Casual / Counter Service': 'Fast Casual',
+    'Casual Dining': 'Casual Dining',
+    'Fine Dining': 'Fine Dining',
+    'Breakfast & Brunch': 'Cafe & Bakery',
+    'Pizza & Italian': 'Pizza & Italian',
+    'Asian': 'Asian',
+    'Mexican & Latin': 'Mexican & Latin',
+    'Mediterranean & Middle Eastern': 'Casual Dining',
+    'Indian & South Asian': 'Asian',
+    'Caribbean': 'Casual Dining',
+    'Seafood': 'Fine Dining',
+    'Steakhouse': 'Fine Dining',
+    'Bars & Nightlife': 'Bars & Nightlife',
+    'Cafe & Bakery': 'Cafe & Bakery',
+    'Ghost Kitchen / Delivery Only': 'Fast Casual',
+    'Food Hall Stall': 'Fast Casual',
+    'Catering': 'Casual Dining',
+  };
+  var segments;
+  if (savedCats.length > 0) {
+    var mapped = savedCats.map(function(cat) { return catToBench[cat] || null; }).filter(Boolean);
+    var deduped = [];
+    mapped.forEach(function(s) { if (deduped.indexOf(s) < 0) deduped.push(s); });
+    segments = allSegments.filter(function(s) { return deduped.indexOf(s) >= 0; });
+    if (segments.length === 0) segments = allSegments;
+  } else {
+    segments = allSegments;
+  }
+  if (segments.indexOf(activeSegment) < 0) window._benchSegment = segments[0];
+  var activeSegmentFinal = window._benchSegment || segments[0];
+  bm = benchmarks[activeSegmentFinal] || benchmarks[segments[0]];
   window._setBenchSeg = function(s) { window._benchSegment = s; navigate('benchmark'); };
   var segButtons = segments.map(function(s) {
-    var active = s === activeSegment;
+    var active = s === activeSegmentFinal;
     var border = active ? 'var(--gold)' : 'var(--border)';
     var bg = active ? 'var(--gold)' : 'transparent';
     var color = active ? '#fff' : 'var(--muted)';

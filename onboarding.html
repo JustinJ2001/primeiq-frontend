@@ -145,6 +145,15 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     </div>
   </div>
 
+  <!-- STEP 1B: CATEGORY SELECTION -->
+  <div class="panel" id="panel1b">
+    <div class="panel-title">What kind of restaurant are you?</div>
+    <div class="panel-sub">Select all that apply · You can change this anytime from Settings</div>
+    <div id="s1b_alert" class="alert"></div>
+    <div id="category_grid" style="margin:20px 0"></div>
+    <button class="btn-gold" id="s1b_btn" onclick="saveCategories()" style="margin-top:8px">Continue →</button>
+  </div>
+
   <!-- STEP 2: LOCATIONS -->
   <div class="panel" id="panel2">
     <div class="panel-title">Your locations</div>
@@ -407,12 +416,40 @@ let state = {
   clientId: null,
   email: '',
   restaurantName: '',
+  categories: [],        // selected restaurant type categories
   locations: [],
-  connectedPOS: {},      // { locationId: { provider, status } }
-  connectedDelivery: {}, // { locationId: { providers: [] } }
+  connectedPOS: {},
+  connectedDelivery: {},
   connectedPayroll: null,
   checkoutComplete: false,
 };
+
+// ── ALL AVAILABLE CATEGORIES ───────────────────────────────────────────────
+const ALL_CATEGORIES = [
+  { group: 'Service Style', items: [
+    'Fast Casual / Counter Service',
+    'Casual Dining',
+    'Fine Dining',
+    'Breakfast & Brunch',
+  ]},
+  { group: 'Cuisine', items: [
+    'Pizza & Italian',
+    'Asian',
+    'Mexican & Latin',
+    'Mediterranean & Middle Eastern',
+    'Indian & South Asian',
+    'Caribbean',
+    'Seafood',
+    'Steakhouse',
+  ]},
+  { group: 'Format', items: [
+    'Bars & Nightlife',
+    'Cafe & Bakery',
+    'Ghost Kitchen / Delivery Only',
+    'Food Hall Stall',
+    'Catering',
+  ]},
+];
 
 // Check if returning from OAuth callback
 const urlParams = new URLSearchParams(window.location.search);
@@ -441,20 +478,75 @@ function goToStep(n) {
   renderStep(n);
 }
 
+function renderCategoryGrid() {
+  const grid = document.getElementById('category_grid');
+  if (!grid) return;
+  grid.innerHTML = ALL_CATEGORIES.map(group => {
+    const buttons = group.items.map(item => {
+      const sel = state.categories.includes(item);
+      return '<button onclick="toggleCategory(this, '' + item.replace(/'/g, "\'") + '')" style="padding:10px 16px;border-radius:8px;border:1.5px solid ' + (sel ? 'var(--gold)' : 'var(--border)') + ';background:' + (sel ? 'rgba(184,134,11,0.12)' : 'transparent') + ';color:' + (sel ? 'var(--gold)' : 'var(--muted)') + ';font-size:12px;cursor:pointer;transition:all 0.15s;margin:4px;font-family:inherit">' + item + '</button>';
+    }).join('');
+    return '<div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">' + group.group + '</div><div>' + buttons + '</div></div>';
+  }).join('');
+}
+
+function toggleCategory(btn, item) {
+  const idx = state.categories.indexOf(item);
+  if (idx >= 0) {
+    state.categories.splice(idx, 1);
+    btn.style.border = '1.5px solid var(--border)';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--muted)';
+  } else {
+    state.categories.push(item);
+    btn.style.border = '1.5px solid var(--gold)';
+    btn.style.background = 'rgba(184,134,11,0.12)';
+    btn.style.color = 'var(--gold)';
+  }
+}
+
+async function saveCategories() {
+  if (state.categories.length === 0) {
+    showAlert('s1b_alert', 'Please select at least one category.', 'error');
+    return;
+  }
+  setLoading('s1b_btn', true);
+  try {
+    // Save categories to client record
+    if (state.clientId) {
+      await apiFetch('/api/clients/' + state.clientId, 'PATCH', {
+        categories: state.categories
+      });
+    }
+    // Also save to localStorage for dashboard use
+    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
+    goToStep(2);
+  } catch(e) {
+    // Non-fatal — save to localStorage and continue
+    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
+    goToStep(2);
+  }
+  setLoading('s1b_btn', false);
+}
+
 function renderStep(n) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel' + n).classList.add('active');
+  const panel = document.getElementById('panel' + n);
+  if (panel) panel.classList.add('active');
+  // For progress bar, treat 1b as still step 1
+  const progN = n === '1b' ? 1 : n;
   document.querySelectorAll('.prog-step').forEach((s, i) => {
     s.classList.remove('active', 'done');
-    if (i + 1 < n) s.classList.add('done');
-    if (i + 1 === n) s.classList.add('active');
+    if (i + 1 < progN) s.classList.add('done');
+    if (i + 1 === progN) s.classList.add('active');
   });
   document.querySelectorAll('.prog-conn').forEach((c, i) => {
-    c.classList.toggle('done', i + 1 < n);
+    c.classList.toggle('done', i + 1 < progN);
   });
   window.scrollTo(0, 0);
 
   // Render dynamic content
+  if (n === '1b') renderCategoryGrid();
   if (n === 2) renderLocationForms();
   if (n === 3) renderPOSStep();
   if (n === 4) renderDeliveryStep();
@@ -481,20 +573,20 @@ async function createAccount() {
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password });
     if (authRes.error) throw new Error(authRes.error.message || 'Signup failed');
 
-    // Try signup response first
-    state.userId = authRes.user?.id || authRes.id || authRes?.data?.user?.id;
-    state.token  = authRes.access_token || authRes?.data?.session?.access_token;
-    state.email  = email;
+    state.email = email;
+    state.userId = authRes.user?.id || authRes.id;
+    state.token  = authRes.access_token;
 
-    // If no user ID from signup (e.g. email already exists), try signing in instead
-    if (!state.userId || !state.token) {
-      const loginRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password });
-      if (loginRes.error) throw new Error('Account may already exist. Try signing in at /login instead.');
-      state.userId = loginRes.user?.id || loginRes.id;
-      state.token  = loginRes.access_token;
+    // If email confirmation is required, Supabase returns user but no session
+    // Store what we have and move forward — we will create the client record after confirmation
+    if (!state.token) {
+      // Show email confirmation message and stop here
+      showAlert('s1_alert', 'Account created! Check your email and click the confirmation link, then come back and sign in at primeiq.io/login to continue setup.', 'success');
+      setLoading('s1_btn', false);
+      return;
     }
 
-    if (!state.userId) throw new Error('Could not create account. Please try again or contact support.');
+    if (!state.userId) throw new Error('Could not create account. Please try again.');
 
     // Create client record in our DB
     const clientRes = await apiFetch('/api/clients', 'POST', {

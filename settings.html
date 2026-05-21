@@ -69,6 +69,14 @@ body{font-family:"Lato",sans-serif;background:#faf8f4;color:#1a1208;}
 
   <!-- LOCATIONS -->
   <div class="section">
+    <div class="section-title">Restaurant Type</div>
+    <div class="section-sub">Select all that apply · Used to benchmark your performance against similar NYC restaurants</div>
+    <div id="cat_grid" style="margin-bottom:16px"></div>
+    <button class="btn" onclick="saveSettingsCategories()" style="padding:10px 20px">Save Categories</button>
+    <div id="cat_saved" style="display:none;font-family:IBM Plex Mono,monospace;font-size:10px;color:#2d7a4f;margin-top:8px">Saved</div>
+  </div>
+
+  <div class="section">
     <div class="section-title">Locations & Fixed Costs</div>
     <div class="section-sub">Update rent, utilities, and cost targets · Changes apply immediately</div>
     <div id="locations_container"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a7a5a"><span class="spinner"></span>Loading...</div></div>
@@ -224,6 +232,63 @@ function signOut() {
 }
 
 loadSettings();
+
+// CATEGORY MANAGEMENT
+var ALL_CATS = [
+  { group: 'Service Style', items: ['Fast Casual / Counter Service','Casual Dining','Fine Dining','Breakfast & Brunch'] },
+  { group: 'Cuisine', items: ['Pizza & Italian','Asian','Mexican & Latin','Mediterranean & Middle Eastern','Indian & South Asian','Caribbean','Seafood','Steakhouse'] },
+  { group: 'Format', items: ['Bars & Nightlife','Cafe & Bakery','Ghost Kitchen / Delivery Only','Food Hall Stall','Catering'] },
+];
+var selectedCats = [];
+try { selectedCats = JSON.parse(localStorage.getItem('rd_categories') || '[]'); } catch(ex) {}
+
+function renderCatGrid() {
+  var grid = document.getElementById('cat_grid');
+  if (!grid) return;
+  var html = '';
+  for (var g = 0; g < ALL_CATS.length; g++) {
+    var group = ALL_CATS[g];
+    html += '<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:700;color:#8a7a5a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">' + group.group + '</div><div>';
+    for (var i = 0; i < group.items.length; i++) {
+      var item = group.items[i];
+      var sel = selectedCats.indexOf(item) >= 0;
+      html += '<button data-cat="' + item + '" onclick="toggleCat(this)" style="padding:9px 14px;border-radius:8px;border:1.5px solid ' + (sel ? '#b8860b' : 'rgba(40,25,5,0.15)') + ';background:' + (sel ? 'rgba(184,134,11,0.1)' : 'transparent') + ';color:' + (sel ? '#b8860b' : '#8a7a5a') + ';font-size:11px;cursor:pointer;transition:all 0.15s;margin:3px;font-family:inherit">' + item + '</button>';
+    }
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+
+function toggleCat(btn) {
+  var item = btn.getAttribute('data-cat');
+  var idx = selectedCats.indexOf(item);
+  if (idx >= 0) {
+    selectedCats.splice(idx, 1);
+    btn.style.border = '1.5px solid rgba(40,25,5,0.15)';
+    btn.style.background = 'transparent';
+    btn.style.color = '#8a7a5a';
+  } else {
+    selectedCats.push(item);
+    btn.style.border = '1.5px solid #b8860b';
+    btn.style.background = 'rgba(184,134,11,0.1)';
+    btn.style.color = '#b8860b';
+  }
+}
+
+async function saveSettingsCategories() {
+  localStorage.setItem('rd_categories', JSON.stringify(selectedCats));
+  try {
+    var clientId = localStorage.getItem('rd_client_id');
+    if (clientId) {
+      await apiFetch('/api/clients/' + clientId, 'PATCH', { categories: selectedCats });
+    }
+  } catch(ex) {}
+  var saved = document.getElementById('cat_saved');
+  if (saved) { saved.style.display = 'block'; setTimeout(function(){ saved.style.display='none'; }, 2000); }
+}
+
+renderCatGrid();
+
 </script>
 </body>
 </html>
