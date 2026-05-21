@@ -511,6 +511,18 @@ body::before {
   color:var(--green); margin-right:auto; display:none; align-items:center; gap:6px;
 }
 .applied-note.show { display:flex; }
+
+.tbl { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:10px; }
+.tbl th { padding:8px 12px; text-align:left; font-size:8px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border); font-weight:600; }
+.tbl td { padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--dark); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr.total td { font-weight:700; background:rgba(40,25,5,0.03); border-top:2px solid var(--border); }
+.tbl td.dim { color:var(--muted); }
+.tbl td.ink { color:var(--dark); }
+.tbl td.good { color:var(--green); font-weight:600; }
+.tbl td.bad  { color:var(--red); font-weight:600; }
+.tbl td.warn { color:var(--amber); font-weight:600; }
+.tbl tbody tr:hover { background:rgba(40,25,5,0.02); }
 </style>
 </head>
 <body>
