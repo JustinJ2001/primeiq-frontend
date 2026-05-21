@@ -104,7 +104,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const API_BASE     = 'https://restaurant-api-68re.onrender.com';
 
 const token = localStorage.getItem('rd_token');
-if (!token) window.location.href = '/login';
+const urlP = new URLSearchParams(window.location.search);
+const isDemo = urlP.get('demo') === '1';
+if (!token && !isDemo) { window.location.href = '/login'; }
 
 function showAlert(msg, type) {
   const el = document.getElementById('global_alert');
