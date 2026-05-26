@@ -91,6 +91,54 @@ body{font-family:"Lato",sans-serif;background:#faf8f4;color:#1a1208;}
 
   <!-- BILLING -->
   <div class="section">
+    <div class="section-title">Upload Data</div>
+    <div class="section-sub">Manually upload sales, payroll, or delivery data from any source</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8a7a5a;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px">Data Type</label>
+        <select id="upload_type" onchange="updateUploadInstructions()" style="width:100%;padding:9px 12px;border:1px solid #e8e0d0;border-radius:8px;font-family:inherit;font-size:13px;background:#faf8f4">
+          <option value="sales">Sales / Revenue (POS)</option>
+          <option value="labor">Labor / Payroll</option>
+          <option value="delivery">Delivery Platform Payout</option>
+          <option value="food_cost">Food Cost / Invoices</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#8a7a5a;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px">Source</label>
+        <select id="upload_source" onchange="updateUploadInstructions()" style="width:100%;padding:9px 12px;border:1px solid #e8e0d0;border-radius:8px;font-family:inherit;font-size:13px;background:#faf8f4">
+          <option value="">Select source</option>
+          <option value="toast">Toast POS</option>
+          <option value="square">Square</option>
+          <option value="clover">Clover</option>
+          <option value="lightspeed">Lightspeed</option>
+          <option value="gusto">Gusto (payroll)</option>
+          <option value="adp">ADP (payroll)</option>
+          <option value="doordash">DoorDash</option>
+          <option value="ubereats">Uber Eats</option>
+          <option value="grubhub">Grubhub</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="settings_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#faf8f4;border-radius:8px;border-left:3px solid #b8860b">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#b8860b;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Export instructions</div>
+      <ol id="settings_csv_steps" style="padding-left:16px;font-size:12px;color:#1a0e02;line-height:1.9"></ol>
+    </div>
+
+    <div id="settings_drop_zone" onclick="document.getElementById('settings_csv_file').click()" ondragover="event.preventDefault();this.style.borderColor='#b8860b'" ondragleave="this.style.borderColor='#e8e0d0'" ondrop="handleSettingsCSVDrop(event)" style="border:1.5px dashed #e8e0d0;border-radius:8px;padding:24px;text-align:center;cursor:pointer;margin-bottom:10px;transition:border-color 0.2s">
+      <input type="file" id="settings_csv_file" accept=".csv" style="display:none" onchange="previewSettingsCSV(this)">
+      <div style="font-size:28px;margin-bottom:6px">📄</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a7a5a">Drag and drop your CSV, or click to browse</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#b0a090;margin-top:4px">Your data is encrypted and private</div>
+    </div>
+
+    <div id="settings_csv_preview" style="display:none"></div>
+    <div id="settings_upload_alert" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;margin-top:8px"></div>
+  </div>
+
+  <div class="section">
     <div class="section-title">Billing</div>
     <div class="section-sub">Manage your subscription, update payment method, download invoices</div>
     <p style="font-size:13px;color:#8a7a5a;margin-bottom:16px;line-height:1.6">Your subscription is managed through Stripe. Click below to update your card, view invoices, or cancel. Changes take effect immediately.</p>
@@ -301,6 +349,93 @@ async function saveSettingsCategories() {
 }
 
 renderCatGrid();
+
+// CSV UPLOAD
+var UPLOAD_STEPS = {
+  "toast_sales": ["Go to pos.toasttab.com", "Reports → Daily Sales Summary", "Select date range", "Export → Download as CSV", "Upload above"],
+  "square_sales": ["Go to squareup.com/dashboard", "Reports → Sales Summary", "Set date range → Export CSV", "Upload above"],
+  "clover_sales": ["Go to clover.com/dashboard", "Reporting → Sales Summary", "Export as CSV", "Upload above"],
+  "gusto_labor": ["Go to app.gusto.com", "Reports → Payroll Reports", "Download CSV", "Upload above"],
+  "adp_labor": ["Log in to ADP", "Reports → Payroll Summary → Export CSV", "Upload above"],
+  "doordash_delivery": ["Go to restaurant.doordash.com", "Financials → Payouts → Download CSV", "Upload above"],
+  "ubereats_delivery": ["Go to restaurants.ubereats.com", "Payments → Statements → Download CSV", "Upload above"],
+  "grubhub_delivery": ["Log in to Grubhub for Restaurants", "Financials → Export CSV", "Upload above"]
+};
+
+function updateUploadInstructions() {
+  var type = document.getElementById('upload_type').value;
+  var source = document.getElementById('upload_source').value;
+  var key = source + '_' + type;
+  var steps = UPLOAD_STEPS[key];
+  var div = document.getElementById('settings_csv_instructions');
+  if (steps || source) {
+    var list = steps || ['Export a ' + type + ' report from ' + (source||'your system') + ' as CSV', 'Upload the file above'];
+    document.getElementById('settings_csv_steps').innerHTML = list.map(function(s){return '<li>' + s + '</li>';}).join('');
+    div.style.display = 'block';
+  } else {
+    div.style.display = 'none';
+  }
+}
+
+function handleSettingsCSVDrop(event) {
+  event.preventDefault();
+  document.getElementById('settings_drop_zone').style.borderColor = '#e8e0d0';
+  var file = event.dataTransfer.files[0];
+  if (file) previewSettingsCSVFile(file);
+}
+
+function previewSettingsCSV(input) {
+  if (input.files[0]) previewSettingsCSVFile(input.files[0]);
+}
+
+async function previewSettingsCSVFile(file) {
+  var text = await file.text();
+  var lines = text.trim().split('\n').slice(0, 4);
+  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+  var preview = document.getElementById('settings_csv_preview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#8a7a5a;margin-bottom:6px">PREVIEW</div>'
+    + '<div style="overflow-x:auto;margin-bottom:10px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
+    + headers.map(function(h){ return '<th style="padding:5px 8px;background:#1a0e02;color:white;font-size:8px;font-family:IBM Plex Mono,monospace;text-align:left">' + h.slice(0,16) + '</th>'; }).join('')
+    + '</tr></thead><tbody>'
+    + lines.slice(1,4).map(function(row){
+        return '<tr>' + row.split(',').map(function(cell){
+          return '<td style="padding:5px 8px;border-bottom:1px solid #e8e0d0;color:#6b5a3e;font-size:11px">' + cell.replace(/"/g,'').trim().slice(0,16) + '</td>';
+        }).join('') + '</tr>';
+      }).join('')
+    + '</tbody></table></div>'
+    + '<div style="display:flex;gap:8px;align-items:center">'
+    + '<button onclick="doSettingsUpload()" style="padding:9px 20px;background:#b8860b;color:white;border:none;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer;font-weight:600">Upload & Process →</button>'
+    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#8a7a5a">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
+    + '</div>';
+  window._settingsCSVFile = file;
+}
+
+async function doSettingsUpload() {
+  if (!window._settingsCSVFile) return;
+  var text = await window._settingsCSVFile.text();
+  var type = document.getElementById('upload_type').value;
+  var source = document.getElementById('upload_source').value;
+  var clientId = localStorage.getItem('rd_client_id');
+  var alertEl = document.getElementById('settings_upload_alert');
+  try {
+    if (!isDemo) {
+      await apiFetch('/api/csv/upload', 'POST', { client_id: clientId, type: type, content: text, source: source });
+    }
+    alertEl.style.display = 'block';
+    alertEl.style.background = '#e8f5ee';
+    alertEl.style.color = '#2d7a4f';
+    alertEl.textContent = 'Data uploaded. Your dashboard will update within a few minutes.';
+    document.getElementById('settings_csv_preview').style.display = 'none';
+    window._settingsCSVFile = null;
+  } catch(e) {
+    alertEl.style.display = 'block';
+    alertEl.style.background = '#fdf0ee';
+    alertEl.style.color = '#c0392b';
+    alertEl.textContent = 'Upload failed: ' + e.message;
+  }
+}
+
 // Preserve demo param in nav links
 if (isDemo) {
   var dl = document.getElementById('dash_link');

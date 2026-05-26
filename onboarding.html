@@ -64,10 +64,14 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .oauth-btn.connected{border-color:var(--green);background:var(--green-bg);color:var(--green);}
 .skip-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;text-decoration:underline;display:block;text-align:center;margin-top:8px;}
 .skip-link:hover{color:var(--dark);}
-.csv-upload{border:1.5px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.csv-upload:hover{border-color:var(--gold);}
+.csv-upload{border:1.5px dashed var(--border);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.csv-upload:hover{border-color:var(--gold);background:rgba(184,134,11,0.03);}
 .csv-upload input{display:none;}
-.csv-upload-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;}
+.csv-upload-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;}
+.csv-col-chip{display:inline-block;padding:2px 8px;background:var(--gold-dim,rgba(184,134,11,0.1));color:var(--gold);border-radius:4px;font-family:"IBM Plex Mono",monospace;font-size:9px;margin:2px;}
+.csv-preview-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+.csv-preview-table th{padding:5px 8px;background:var(--dark);color:white;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;}
+.csv-preview-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);}
 .plan-card{border:1.5px solid var(--border);border-radius:12px;padding:22px;background:#fff;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
 .plan-price{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);}
 .plan-period{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
@@ -220,13 +224,38 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       </div>
     </div>
     <div class="conn-detail pos-detail" id="pos_detail_csv">
-      <div class="conn-detail-title">CSV Import — Any POS</div>
-      <div class="conn-detail-sub">Export a daily sales report from your POS. Needs columns: Date, Gross Sales, Covers or Transactions.</div>
-      <div class="csv-upload" onclick="document.getElementById('pos_csv').click()">
-        <input type="file" id="pos_csv" accept=".csv" onchange="uploadCSV('sales',this)">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload sales CSV</div>
+      <div class="conn-detail-title">Upload Sales Data — Any POS</div>
+      <div class="conn-detail-sub">Select your POS below for step-by-step export instructions</div>
+
+      <div style="margin:14px 0">
+        <label class="f-label">My POS system is</label>
+        <select id="csv_pos_type" onchange="showCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
+          <option value="">Select your POS →</option>
+          <option value="toast">Toast</option>
+          <option value="clover">Clover</option>
+          <option value="lightspeed">Lightspeed</option>
+          <option value="spoton">SpotOn</option>
+          <option value="revel">Revel</option>
+          <option value="aloha">Aloha / NCR</option>
+          <option value="micros">Oracle MICROS</option>
+          <option value="other">Other / Not sure</option>
+        </select>
       </div>
+
+      <div id="csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="csv_pos_name"></span></div>
+        <ol id="csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.8"></ol>
+        <div id="csv_columns_note" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+      </div>
+
+      <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
+        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="uploadCSV('sales',this)">
+        <div style="font-size:32px;margin-bottom:8px">📄</div>
+        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Accepts .csv files · Your data stays private</div>
+      </div>
+
+      <div id="csv_preview" style="display:none;margin-top:12px"></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:10px">
@@ -271,13 +300,33 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <button class="btn-gold" onclick="setDeliveryCommission('grubhub')">Save Rate →</button>
     </div>
     <div class="conn-detail del-detail" id="del_detail_csv">
-      <div class="conn-detail-title">Upload Payout Report CSV</div>
-      <div class="conn-detail-sub">Download your weekly payout report from any platform and upload. Columns: Date, Platform, Orders, Revenue, Commission.</div>
-      <div class="csv-upload" onclick="document.getElementById('del_csv').click()">
-        <input type="file" id="del_csv" accept=".csv" onchange="uploadCSV('delivery',this)">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload payout CSV</div>
+      <div class="conn-detail-title">Upload Delivery Payout Data</div>
+      <div class="conn-detail-sub">Select your platform for step-by-step export instructions</div>
+
+      <div style="margin:14px 0">
+        <label class="f-label">Platform</label>
+        <select id="del_csv_platform" onchange="showDeliveryCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
+          <option value="">Select platform →</option>
+          <option value="doordash">DoorDash</option>
+          <option value="ubereats">Uber Eats</option>
+          <option value="grubhub">Grubhub</option>
+          <option value="other">Other platform</option>
+        </select>
       </div>
+
+      <div id="del_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="del_csv_platform_name"></span></div>
+        <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
+      </div>
+
+      <div class="csv-upload" onclick="document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleDeliveryCSVDrop(event)">
+        <input type="file" id="del_csv" accept=".csv" onchange="previewDeliveryCSV(this)">
+        <div style="font-size:32px;margin-bottom:8px">📄</div>
+        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
+      </div>
+
+      <div id="del_csv_preview" style="display:none;margin-top:12px"></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:10px">
@@ -327,8 +376,27 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div class="conn-detail pay-detail" id="pay_detail_csv">
       <div class="conn-detail-title">Upload Labor Report CSV</div>
       <div class="conn-detail-sub">Export weekly hours from your system. Columns: Employee, Role, Week, Scheduled Hours, Actual Hours, Total Pay.</div>
-      <div class="csv-upload" onclick="document.getElementById('labor_csv').click()">
-        <input type="file" id="labor_csv" accept=".csv" onchange="uploadCSV('labor',this)">
+      <div style="margin:14px 0">
+        <label class="f-label">Payroll System</label>
+        <select id="pay_csv_source" onchange="showPayrollCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
+          <option value="">Select system →</option>
+          <option value="gusto">Gusto</option>
+          <option value="adp">ADP</option>
+          <option value="paychex">Paychex</option>
+          <option value="homebase">Homebase</option>
+          <option value="7shifts">7shifts</option>
+          <option value="toast_payroll">Toast Payroll</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div id="pay_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="pay_csv_source_name"></span></div>
+        <ol id="pay_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
+      </div>
+
+      <div class="csv-upload" onclick="document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handlePayrollCSVDrop(event)">
+        <input type="file" id="labor_csv" accept=".csv" onchange="previewPayrollCSV(this)">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Click to upload labor CSV</div>
       </div>
@@ -776,21 +844,312 @@ async function handleOAuthCallback(provider, code, encodedState) {
   }
 }
 
+const CSV_INSTRUCTIONS = {
+  toast: {
+    name: 'Toast POS',
+    steps: [
+      'Log in to your Toast account at <b>pos.toasttab.com</b>',
+      'Go to <b>Reports → Daily Sales Summary</b>',
+      'Select your date range (last 30-90 days recommended)',
+      'Click <b>Export → Download as CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Toast exports include Date, Net Sales, Covers, and Payment Method columns — all supported automatically.'
+  },
+  clover: {
+    name: 'Clover',
+    steps: [
+      'Log in to your Clover dashboard at <b>clover.com/dashboard</b>',
+      'Go to <b>Reporting → Sales Summary</b>',
+      'Select your date range',
+      'Click the <b>Export</b> button (top right)',
+      'Choose <b>CSV</b> format and download',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Clover CSVs include Date, Gross Sales, Net Sales, and Transaction Count — all mapped automatically.'
+  },
+  lightspeed: {
+    name: 'Lightspeed',
+    steps: [
+      'Log in to your Lightspeed back office',
+      'Go to <b>Reports → Sales → Daily Sales</b>',
+      'Set your date range',
+      'Click <b>Export to CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Lightspeed exports are fully supported. Include at minimum Date and Sales columns.'
+  },
+  spoton: {
+    name: 'SpotOn',
+    steps: [
+      'Log in to your SpotOn dashboard',
+      'Go to <b>Analytics → Sales Reports</b>',
+      'Select date range and click <b>Export</b>',
+      'Download the CSV file',
+      'Upload the downloaded file below'
+    ],
+    columns: 'SpotOn exports include all columns needed for food cost and labor tracking.'
+  },
+  revel: {
+    name: 'Revel Systems',
+    steps: [
+      'Log in to your Revel Management Console',
+      'Go to <b>Reports → Sales → Daily Summary</b>',
+      'Select your date range',
+      'Click <b>Export</b> and choose CSV',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Revel exports are fully supported.'
+  },
+  aloha: {
+    name: 'Aloha / NCR',
+    steps: [
+      'Open your Aloha Manager or NCR Silver back office',
+      'Go to <b>Reports → Daily Sales Report</b>',
+      'Set date range and run the report',
+      'Click <b>Export → CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Aloha exports are supported. Include Date, Net Sales, and Cover Count columns if available.'
+  },
+  micros: {
+    name: 'Oracle MICROS',
+    steps: [
+      'Log in to your MICROS Reporting & Analytics portal',
+      'Navigate to <b>Sales Summary Report</b>',
+      'Select your locations and date range',
+      'Click <b>Export → CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'MICROS exports are fully supported.'
+  },
+  other: {
+    name: 'your POS',
+    steps: [
+      'Log in to your POS back office or reporting portal',
+      'Find the <b>Sales Summary</b> or <b>Daily Sales Report</b> section',
+      'Select your date range (last 30-90 days is ideal)',
+      'Export as <b>CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'We need at minimum: Date, Gross or Net Sales. Covers/transactions, food cost, and payment breakdown are optional but improve accuracy.'
+  }
+};
+
+function showCSVInstructions() {
+  const type = document.getElementById('csv_pos_type').value;
+  const instructDiv = document.getElementById('csv_instructions');
+  if (!type) { instructDiv.style.display = 'none'; return; }
+  const data = CSV_INSTRUCTIONS[type];
+  document.getElementById('csv_pos_name').textContent = data.name;
+  document.getElementById('csv_steps').innerHTML = data.steps.map(s => '<li>' + s + '</li>').join('');
+  document.getElementById('csv_columns_note').textContent = data.columns;
+  instructDiv.style.display = 'block';
+}
+
+function handleCSVDrop(event, type) {
+  event.preventDefault();
+  document.getElementById('csv_drop_zone').style.borderColor = '';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  showCSVPreview(file, type);
+}
+
+async function showCSVPreview(file, type) {
+  const text = await file.text();
+  const lines = text.trim().split('\n').slice(0, 4);
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  const preview = document.getElementById('csv_preview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
+    + '<div style="overflow-x:auto"><table class="csv-preview-table"><thead><tr>'
+    + headers.map(h => '<th>' + h.slice(0,20) + '</th>').join('')
+    + '</tr></thead><tbody>'
+    + lines.slice(1, 4).map(row => '<tr>' + row.split(',').map(c => '<td>' + c.replace(/"/g,'').trim().slice(0,20) + '</td>').join('') + '</tr>').join('')
+    + '</tbody></table></div>'
+    + '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'
+    + '<button class="btn-gold" style="padding:8px 18px" onclick="doCSVUpload('' + type + '')">✓ Upload This File</button>'
+    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
+    + '</div>';
+  window._pendingCSVFile = file;
+}
+
+async function doCSVUpload(type) {
+  if (!window._pendingCSVFile) return;
+  const text = await window._pendingCSVFile.text();
+  const locId = state.locations[0]?.id;
+  try {
+    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
+    document.getElementById('csv_preview').innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded successfully — your dashboard will update within a few minutes.</div>';
+    state.connectedPOS[locId] = { provider: 'csv_' + (document.getElementById('csv_pos_type')?.value || 'manual'), status: 'connected' };
+    renderPOSStep();
+  } catch(e) {
+    showAlert('pos_alert', e.message, 'error');
+  }
+}
+
+const CSV_INSTRUCTIONS = {
+  toast: {
+    name: 'Toast POS',
+    steps: [
+      'Log in to your Toast account at <b>pos.toasttab.com</b>',
+      'Go to <b>Reports → Daily Sales Summary</b>',
+      'Select your date range (last 30-90 days recommended)',
+      'Click <b>Export → Download as CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Toast exports include Date, Net Sales, Covers, and Payment Method columns — all supported automatically.'
+  },
+  clover: {
+    name: 'Clover',
+    steps: [
+      'Log in to your Clover dashboard at <b>clover.com/dashboard</b>',
+      'Go to <b>Reporting → Sales Summary</b>',
+      'Select your date range',
+      'Click the <b>Export</b> button (top right)',
+      'Choose <b>CSV</b> format and download',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Clover CSVs include Date, Gross Sales, Net Sales, and Transaction Count — all mapped automatically.'
+  },
+  lightspeed: {
+    name: 'Lightspeed',
+    steps: [
+      'Log in to your Lightspeed back office',
+      'Go to <b>Reports → Sales → Daily Sales</b>',
+      'Set your date range',
+      'Click <b>Export to CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Lightspeed exports are fully supported. Include at minimum Date and Sales columns.'
+  },
+  spoton: {
+    name: 'SpotOn',
+    steps: [
+      'Log in to your SpotOn dashboard',
+      'Go to <b>Analytics → Sales Reports</b>',
+      'Select date range and click <b>Export</b>',
+      'Download the CSV file',
+      'Upload the downloaded file below'
+    ],
+    columns: 'SpotOn exports include all columns needed for food cost and labor tracking.'
+  },
+  revel: {
+    name: 'Revel Systems',
+    steps: [
+      'Log in to your Revel Management Console',
+      'Go to <b>Reports → Sales → Daily Summary</b>',
+      'Select your date range',
+      'Click <b>Export</b> and choose CSV',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Revel exports are fully supported.'
+  },
+  aloha: {
+    name: 'Aloha / NCR',
+    steps: [
+      'Open your Aloha Manager or NCR Silver back office',
+      'Go to <b>Reports → Daily Sales Report</b>',
+      'Set date range and run the report',
+      'Click <b>Export → CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'Aloha exports are supported. Include Date, Net Sales, and Cover Count columns if available.'
+  },
+  micros: {
+    name: 'Oracle MICROS',
+    steps: [
+      'Log in to your MICROS Reporting & Analytics portal',
+      'Navigate to <b>Sales Summary Report</b>',
+      'Select your locations and date range',
+      'Click <b>Export → CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'MICROS exports are fully supported.'
+  },
+  other: {
+    name: 'your POS',
+    steps: [
+      'Log in to your POS back office or reporting portal',
+      'Find the <b>Sales Summary</b> or <b>Daily Sales Report</b> section',
+      'Select your date range (last 30-90 days is ideal)',
+      'Export as <b>CSV</b>',
+      'Upload the downloaded file below'
+    ],
+    columns: 'We need at minimum: Date, Gross or Net Sales. Covers/transactions, food cost, and payment breakdown are optional but improve accuracy.'
+  }
+};
+
+function showCSVInstructions() {
+  const type = document.getElementById('csv_pos_type').value;
+  const instructDiv = document.getElementById('csv_instructions');
+  if (!type) { instructDiv.style.display = 'none'; return; }
+  const data = CSV_INSTRUCTIONS[type];
+  document.getElementById('csv_pos_name').textContent = data.name;
+  document.getElementById('csv_steps').innerHTML = data.steps.map(s => '<li>' + s + '</li>').join('');
+  document.getElementById('csv_columns_note').textContent = data.columns;
+  instructDiv.style.display = 'block';
+}
+
+function handleCSVDrop(event, type) {
+  event.preventDefault();
+  document.getElementById('csv_drop_zone').style.borderColor = '';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  showCSVPreview(file, type);
+}
+
+async function showCSVPreview(file, type) {
+  const text = await file.text();
+  const lines = text.trim().split('\n').slice(0, 4);
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  const preview = document.getElementById('csv_preview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
+    + '<div style="overflow-x:auto"><table class="csv-preview-table"><thead><tr>'
+    + headers.map(h => '<th>' + h.slice(0,20) + '</th>').join('')
+    + '</tr></thead><tbody>'
+    + lines.slice(1, 4).map(row => '<tr>' + row.split(',').map(c => '<td>' + c.replace(/"/g,'').trim().slice(0,20) + '</td>').join('') + '</tr>').join('')
+    + '</tbody></table></div>'
+    + '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'
+    + '<button class="btn-gold" style="padding:8px 18px" onclick="doCSVUpload('' + type + '')">✓ Upload This File</button>'
+    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
+    + '</div>';
+  window._pendingCSVFile = file;
+}
+
+async function doCSVUpload(type) {
+  if (!window._pendingCSVFile) return;
+  const text = await window._pendingCSVFile.text();
+  const locId = state.locations[0]?.id;
+  try {
+    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
+    document.getElementById('csv_preview').innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded successfully — your dashboard will update within a few minutes.</div>';
+    state.connectedPOS[locId] = { provider: 'csv_' + (document.getElementById('csv_pos_type')?.value || 'manual'), status: 'connected' };
+    renderPOSStep();
+  } catch(e) {
+    showAlert('pos_alert', e.message, 'error');
+  }
+}
+
 async function uploadCSV(type, input) {
   const file = input.files[0];
   if (!file) return;
+  // Show preview first for pos_csv, direct upload for others
+  if (input.id === 'pos_csv') {
+    showCSVPreview(file, type);
+    return;
+  }
   const text = await file.text();
-  const locId = document.getElementById('pos_loc_id')?.value || state.locations[0]?.id;
-  setLoading('csv_btn_' + type, true);
+  const locId = state.locations[0]?.id;
   try {
     await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
-    showAlert('pos_alert', 'CSV uploaded and queued for processing.', 'success');
+    showAlert('pos_alert', '✓ Data uploaded — your dashboard will update shortly.', 'success');
     state.connectedPOS[locId] = { provider: 'csv', status: 'connected' };
     renderPOSStep();
   } catch(e) {
     showAlert('pos_alert', e.message, 'error');
   }
-  setLoading('csv_btn_' + type, false);
 }
 
 function skipPOS() {
@@ -1051,6 +1410,200 @@ function renderStep(n) {
   if (n === 5) renderPayrollStep();
   if (n === 6) renderReviewStep();
 }
+
+// ── DELIVERY CSV INSTRUCTIONS ─────────────────────────────────────────────────
+var DELIVERY_CSV_STEPS = {
+  doordash: {
+    name: 'DoorDash',
+    steps: [
+      'Log in to <b>restaurant.doordash.com</b>',
+      'Go to <b>Financials → Payouts</b>',
+      'Select your date range',
+      'Click <b>Download CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  ubereats: {
+    name: 'Uber Eats',
+    steps: [
+      'Log in to <b>restaurants.ubereats.com</b>',
+      'Go to <b>Payments → Statements</b>',
+      'Select the statement period',
+      'Click <b>Download</b> to get the CSV',
+      'Upload the file here'
+    ]
+  },
+  grubhub: {
+    name: 'Grubhub',
+    steps: [
+      'Log in to <b>restaurant.grubhub.com</b>',
+      'Go to <b>Financials → Payment History</b>',
+      'Select date range',
+      'Click <b>Export</b> to download CSV',
+      'Upload the file here'
+    ]
+  },
+  other: {
+    name: 'your platform',
+    steps: [
+      'Log in to your delivery platform dashboard',
+      'Find the <b>Financials</b> or <b>Payments</b> section',
+      'Export your payout report as CSV',
+      'Upload the file here'
+    ]
+  }
+};
+
+function showDeliveryCSVInstructions() {
+  var platform = document.getElementById('del_csv_platform').value;
+  var div = document.getElementById('del_csv_instructions');
+  if (!platform) { div.style.display = 'none'; return; }
+  var data = DELIVERY_CSV_STEPS[platform];
+  document.getElementById('del_csv_platform_name').textContent = data.name;
+  document.getElementById('del_csv_steps').innerHTML = data.steps.map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  div.style.display = 'block';
+}
+
+function handleDeliveryCSVDrop(event) {
+  event.preventDefault();
+  var file = event.dataTransfer.files[0];
+  if (file) previewGenericCSV(file, 'delivery', 'del_csv_preview', 'del_alert');
+}
+
+function previewDeliveryCSV(input) {
+  if (input.files[0]) previewGenericCSV(input.files[0], 'delivery', 'del_csv_preview', 'del_alert');
+}
+
+// ── PAYROLL CSV INSTRUCTIONS ──────────────────────────────────────────────────
+var PAYROLL_CSV_STEPS = {
+  gusto: {
+    name: 'Gusto',
+    steps: [
+      'Log in to <b>app.gusto.com</b>',
+      'Go to <b>Reports → Payroll Reports</b>',
+      'Select your payroll period',
+      'Click <b>Download CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  adp: {
+    name: 'ADP',
+    steps: [
+      'Log in to your ADP portal',
+      'Go to <b>Reports → Payroll Summary</b>',
+      'Select date range and click <b>Export → CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  paychex: {
+    name: 'Paychex',
+    steps: [
+      'Log in to <b>mypaychex.com</b>',
+      'Go to <b>Reports → Payroll Reports</b>',
+      'Select your payroll period and export as CSV',
+      'Upload the file here'
+    ]
+  },
+  homebase: {
+    name: 'Homebase',
+    steps: [
+      'Log in to <b>joinhomebase.com</b>',
+      'Go to <b>Reports → Timesheets</b>',
+      'Select your date range',
+      'Click <b>Export CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  '7shifts': {
+    name: '7shifts',
+    steps: [
+      'Log in to <b>app.7shifts.com</b>',
+      'Go to <b>Reports → Labor Report</b>',
+      'Select date range',
+      'Click <b>Export → CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  toast_payroll: {
+    name: 'Toast Payroll',
+    steps: [
+      'Log in to your Toast account',
+      'Go to <b>Payroll → Reports</b>',
+      'Select your pay period',
+      'Click <b>Export CSV</b>',
+      'Upload the file here'
+    ]
+  },
+  other: {
+    name: 'your payroll system',
+    steps: [
+      'Log in to your payroll or scheduling system',
+      'Find the <b>Reports</b> section',
+      'Export hours and wages as CSV for your date range',
+      'Upload the file here'
+    ]
+  }
+};
+
+function showPayrollCSVInstructions() {
+  var source = document.getElementById('pay_csv_source').value;
+  var div = document.getElementById('pay_csv_instructions');
+  if (!source) { div.style.display = 'none'; return; }
+  var data = PAYROLL_CSV_STEPS[source];
+  if (!data) return;
+  document.getElementById('pay_csv_source_name').textContent = data.name;
+  document.getElementById('pay_csv_steps').innerHTML = data.steps.map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  div.style.display = 'block';
+}
+
+function handlePayrollCSVDrop(event) {
+  event.preventDefault();
+  var file = event.dataTransfer.files[0];
+  if (file) previewGenericCSV(file, 'labor', 'pay_csv_preview', 'pay_alert');
+}
+
+function previewPayrollCSV(input) {
+  if (input.files[0]) previewGenericCSV(input.files[0], 'labor', 'pay_csv_preview', 'pay_alert');
+}
+
+// ── GENERIC CSV PREVIEW + UPLOAD ─────────────────────────────────────────────
+async function previewGenericCSV(file, type, previewId, alertId) {
+  var text = await file.text();
+  var lines = text.trim().split('
+').slice(0, 4);
+  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+  var preview = document.getElementById(previewId);
+  preview.style.display = 'block';
+  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
+    + '<div style="overflow-x:auto;margin-bottom:10px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
+    + headers.map(function(h){ return '<th style="padding:5px 8px;background:var(--dark);color:white;font-size:8px;font-family:IBM Plex Mono,monospace;text-align:left">' + h.slice(0,16) + '</th>'; }).join('')
+    + '</tr></thead><tbody>'
+    + lines.slice(1,4).map(function(row){
+        return '<tr>' + row.split(',').map(function(cell){
+          return '<td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px">' + cell.replace(/"/g,'').trim().slice(0,16) + '</td>';
+        }).join('') + '</tr>';
+      }).join('')
+    + '</tbody></table></div>'
+    + '<div style="display:flex;gap:8px;align-items:center">'
+    + '<button class="btn-gold" style="padding:8px 18px" onclick="doGenericUpload('' + type + '','' + previewId + '','' + alertId + '')">✓ Upload This File</button>'
+    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
+    + '</div>';
+  window['_pendingCSV_' + type] = { file: file, text: text };
+}
+
+async function doGenericUpload(type, previewId, alertId) {
+  var pending = window['_pendingCSV_' + type];
+  if (!pending) return;
+  var locId = state.locations[0]?.id;
+  try {
+    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text });
+    document.getElementById(previewId).innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded — your dashboard will update within a few minutes.</div>';
+    showAlert(alertId, '✓ ' + type + ' data uploaded successfully.', 'success');
+  } catch(e) {
+    showAlert(alertId, e.message, 'error');
+  }
+}
+
 </script>
 </body>
 </html>
