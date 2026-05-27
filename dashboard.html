@@ -1646,139 +1646,254 @@ function renderLocations() {
     </div>`;
 }
 
+// Helper: get operating hours from shift config
+function getOperatingHours() {
+  var cfg = loadShiftConfig();
+  var shifts = cfg.default || getDefaultShifts();
+  var open  = Math.min.apply(null, shifts.map(function(s){ return s.start; }));
+  var close = Math.max.apply(null, shifts.map(function(s){ return s.end; }));
+  // Clamp to sensible range
+  open  = Math.max(open, 6);
+  close = Math.min(close, 26); // supports past midnight (24=12am, 25=1am, 26=2am)
+  return { open: open, close: close };
+}
+
+// Helper: format 24h integer as 12h string
+function fmtHr(h) {
+  var h24 = h % 24;
+  if (h24 === 0) return '12am';
+  if (h24 < 12) return h24 + 'am';
+  if (h24 === 12) return '12pm';
+  return (h24 - 12) + 'pm';
+}
+
 function renderDaily() {
   const p = activePeriod;
-  const pCfg = {
-    today:   { labels:['11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'], mults:[0.05,0.10,0.09,0.07,0.04,0.05,0.13,0.16,0.14,0.11,0.06], active:6,  unit:'hour',  avgLabel:'Avg/hr',   periodName:'Today' },
-    week:    { labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],                            mults:[0.11,0.12,0.10,0.13,0.17,0.21,0.16], active:3,  unit:'day',   avgLabel:'Avg/day',  periodName:'This Week' },
-    month:   { labels:['Week 1','Week 2','Week 3','Week 4'],                                 mults:[0.23,0.25,0.26,0.26], active:3,  unit:'week',  avgLabel:'Avg/week', periodName:'This Month' },
-    quarter: { labels:['Month 1','Month 2','Month 3'],                                       mults:[0.31,0.33,0.36], active:2,  unit:'month', avgLabel:'Avg/mo',   periodName:'This Quarter' },
-    ytd:     { labels:['Jan','Feb','Mar','Apr','May'],                                        mults:[0.17,0.18,0.20,0.22,0.23], active:4,  unit:'month', avgLabel:'Avg/mo',   periodName:'Year to Date' },
-  };
-  const cfg = pCfg[p] || pCfg.week;
-  const labels = cfg.labels;
-  const mults = cfg.mults;
-  const n = labels.length;
-  const periodName = cfg.periodName;
-  const avgLabel = cfg.avgLabel;
-
-  const locData = state.locations.map(function(l) {
-    return mults.map(function(m) { return Math.round((l.revenue[p]||0) * m); });
-  });
-  const combined = labels.map(function(_,i) {
-    return state.locations.reduce(function(s,l,li) { return s+(locData[li]?.[i]||0); }, 0);
-  });
-  const totalRev = combined.reduce(function(a,b){return a+b;}, 0);
-  const maxV = Math.max.apply(null, combined.concat([1]));
-  const bestIdx  = combined.indexOf(Math.max.apply(null, combined));
-  const worstIdx = combined.indexOf(Math.min.apply(null, combined));
-  const avg = Math.round(totalRev / n);
   const avgChk = overallAvgCheck(p) || 24;
 
-  const priorTotal = state.locations.reduce(function(s,l){ return s+(l.revPrev?.[p]||l.revenue[p]*0.91||0); }, 0);
-  const pctChg = priorTotal > 0 ? ((totalRev - priorTotal) / priorTotal * 100).toFixed(1) : null;
-  const pctTag = pctChg !== null
-    ? (parseFloat(pctChg) >= 0
-        ? '<span class="kpi-tag good">↑ ' + pctChg + '% vs prior</span>'
-        : '<span class="kpi-tag bad">↓ ' + Math.abs(pctChg) + '% vs prior</span>')
-    : '';
+  // ── REVENUE PROFILE (weights) ─────────────────────────────────────────────
+  // Typical intraday revenue distribution (indices = hours from open)
+  const intradayWeights = [0.03,0.06,0.10,0.12,0.09,0.05,0.05,0.12,0.15,0.12,0.08,0.03];
 
-  const chartRows = labels.map(function(d,i) {
-    const total = combined[i];
-    const w = Math.round(total/maxV*88)+'%';
-    const isPeak  = i === bestIdx;
-    const isSlow  = i === worstIdx;
-    const color = isPeak ? 'var(--gold)' : isSlow ? '#f5c0bb' : 'var(--green-dim)';
-    const tag = isPeak ? ' ★' : isSlow ? ' ↓' : '';
+  // ── ROLLING DATA GENERATOR ────────────────────────────────────────────────
+  // Generates n historical data points ending with current period
+  // Each prior period is slightly less (growth trend) with variance
+  function makeRolling(currentTotal, n, variancePct) {
+    var vals = [];
+    for (var i = n-1; i >= 0; i--) {
+      var trend = Math.pow(0.97, i); // ~3% growth per period going back
+      var variance = 1 + (Math.random() * variancePct * 2 - variancePct);
+      vals.push(Math.round(currentTotal * trend * variance));
+    }
+    vals[n-1] = Math.round(currentTotal); // current period = actual
+    return vals;
+  }
+
+  // Seed random for consistent demo data
+  function seededVal(base, seed, variance) {
+    var x = Math.sin(seed) * 10000;
+    var r = x - Math.floor(x);
+    return Math.round(base * (1 + (r * variance * 2 - variance)));
+  }
+
+  const totalRev = state.locations.reduce(function(s,l){ return s+(l.revenue[p]||0); }, 0);
+  const priorRev = state.locations.reduce(function(s,l){ return s+(l.revPrev?.[p]||l.revenue[p]*0.91||0); }, 0);
+  const pctChg = priorRev > 0 ? ((totalRev - priorRev) / priorRev * 100).toFixed(1) : null;
+
+  // ── BUILD CHART DATA BY PERIOD ────────────────────────────────────────────
+  var labels, vals, currentIdx, xLabel, unitLabel, chartTitle;
+
+  if (p === 'today') {
+    // Show last 7 days with today highlighted
+    var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var todayDow = new Date().getDay();
+    labels = [];
+    vals = [];
+    for (var d = 6; d >= 0; d--) {
+      var dow = (todayDow - d + 7) % 7;
+      labels.push(d === 0 ? 'Today' : dayNames[dow]);
+      var dayMult = [0.85,0.90,0.88,0.92,0.95,1.15,1.10][dow]; // weekday pattern
+      vals.push(d === 0
+        ? Math.round(totalRev)
+        : Math.round(seededVal(totalRev * dayMult, d*7+dow, 0.08)));
+    }
+    currentIdx = 6;
+    xLabel = 'day'; unitLabel = 'Daily avg'; chartTitle = 'Revenue · Last 7 Days';
+
+  } else if (p === 'week') {
+    // Show last 10 weeks with current week highlighted
+    var weekRevBase = state.locations.reduce(function(s,l){ return s+(l.revenue.week||0); }, 0);
+    labels = [];
+    vals = [];
+    for (var w = 9; w >= 0; w--) {
+      labels.push(w === 0 ? 'This Wk' : w === 1 ? 'Last Wk' : w + 'w ago');
+      vals.push(w === 0
+        ? Math.round(weekRevBase)
+        : Math.round(seededVal(weekRevBase * Math.pow(0.975, w), w*13, 0.07)));
+    }
+    currentIdx = 9;
+    xLabel = 'week'; unitLabel = 'Weekly avg'; chartTitle = 'Revenue · Last 10 Weeks';
+
+  } else if (p === 'month') {
+    // Show last 12 months with current month highlighted
+    var monthRevBase = state.locations.reduce(function(s,l){ return s+(l.revenue.month||0); }, 0);
+    var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var curMonth = new Date().getMonth();
+    labels = [];
+    vals = [];
+    for (var m = 11; m >= 0; m--) {
+      var mn = (curMonth - m + 12) % 12;
+      labels.push(m === 0 ? 'This Mo' : monthNames[mn]);
+      vals.push(m === 0
+        ? Math.round(monthRevBase)
+        : Math.round(seededVal(monthRevBase * Math.pow(0.973, m), m*17+mn, 0.09)));
+    }
+    currentIdx = 11;
+    xLabel = 'month'; unitLabel = 'Monthly avg'; chartTitle = 'Revenue · Last 12 Months';
+
+  } else if (p === 'quarter') {
+    // Show last 6 quarters
+    var qtrRevBase = state.locations.reduce(function(s,l){ return s+(l.revenue.quarter||0); }, 0);
+    labels = [];
+    vals = [];
+    for (var q = 5; q >= 0; q--) {
+      labels.push(q === 0 ? 'This Qtr' : q === 1 ? 'Last Qtr' : 'Q-'+q);
+      vals.push(q === 0
+        ? Math.round(qtrRevBase)
+        : Math.round(seededVal(qtrRevBase * Math.pow(0.96, q), q*23, 0.10)));
+    }
+    currentIdx = 5;
+    xLabel = 'quarter'; unitLabel = 'Quarterly avg'; chartTitle = 'Revenue · Last 6 Quarters';
+
+  } else { // ytd
+    // Show each month of current year up to today
+    var ytdBase = state.locations.reduce(function(s,l){ return s+(l.revenue.ytd||0); }, 0);
+    var curMo = new Date().getMonth(); // 0=Jan
+    var allMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    labels = [];
+    vals = [];
+    var monthlyAvg = ytdBase / (curMo + 1);
+    for (var mi = 0; mi <= curMo; mi++) {
+      labels.push(allMonths[mi]);
+      var seasonal = [0.82,0.85,0.92,0.98,1.05,1.10,1.12,1.08,0.98,0.95,0.90,0.88][mi];
+      vals.push(mi === curMo
+        ? Math.round(monthlyAvg * seasonal)
+        : Math.round(seededVal(monthlyAvg * seasonal, mi*29, 0.06)));
+    }
+    currentIdx = curMo;
+    xLabel = 'month'; unitLabel = 'Monthly avg'; chartTitle = 'Revenue · Year to Date';
+  }
+
+  // ── CHART ─────────────────────────────────────────────────────────────────
+  var maxV = Math.max.apply(null, vals.concat([1]));
+  var bestIdx  = vals.indexOf(Math.max.apply(null, vals));
+  var worstIdx = vals.indexOf(Math.min.apply(null, vals));
+  var totalShown = vals.reduce(function(a,b){return a+b;},0);
+  var avgShown = Math.round(totalShown / vals.length);
+
+  var chartRows = labels.map(function(d,i) {
+    var v = vals[i];
+    var w = Math.round(v/maxV*88)+'%';
+    var isCurrent = i === currentIdx;
+    var isBest    = i === bestIdx && i !== currentIdx;
+    var isWorst   = i === worstIdx && i !== currentIdx;
+    var color = isCurrent ? 'var(--gold)' : isBest ? 'var(--green)' : isWorst ? '#f5c0bb' : 'var(--green-dim)';
+    var tag = isBest ? '★' : isWorst ? '↓' : isCurrent ? '←' : '';
     return '<div class="week-row" style="align-items:center">'
-      + '<div class="week-day" style="font-size:9px;color:'+(isPeak?'var(--gold)':'var(--muted)')+'">'+d+tag+'</div>'
-      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+color+'"></div></div>'
-      + '<div class="week-val" style="font-size:10px">'+fmtDollar(total)+'</div>'
-      + '<div style="width:40px;text-align:right;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">'+Math.round(total/avgChk)+' cvr</div>'
+      + '<div class="week-day" style="font-size:9px;min-width:54px;color:'+(isCurrent?'var(--gold)':'var(--muted)')+'">'+d+(tag?' '+tag:'')+'</div>'
+      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+color+(isCurrent?';opacity:0.9':'')+'"></div></div>'
+      + '<div class="week-val" style="font-size:10px;min-width:60px">'+fmtDollar(v)+'</div>'
+      + '<div style="width:44px;text-align:right;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">'+Math.round(v/avgChk)+' cvr</div>'
       + '</div>';
   }).join('');
 
-  const locHeaders = '<th>Period</th>' + state.locations.map(function(l){
-    return '<th style="text-align:right">' + (l.name.includes('–') ? l.name.split('–').pop().trim() : l.name) + '</th>';
-  }).join('') + '<th style="text-align:right">Total</th><th style="text-align:right">Covers</th>';
+  // ── LOCATION BREAKDOWN TABLE ──────────────────────────────────────────────
+  var locHeaders = '<th>Period</th>'
+    + state.locations.map(function(l){
+        return '<th style="text-align:right">'+(l.name.includes('–')?l.name.split('–').pop().trim():l.name)+'</th>';
+      }).join('')
+    + '<th style="text-align:right">Total</th><th style="text-align:right">Covers</th>';
 
-  const locRows = labels.map(function(d,i) {
-    const vals = state.locations.map(function(l,li){ return locData[li]?.[i]||0; });
-    const rowTotal = vals.reduce(function(a,b){return a+b;}, 0);
-    return '<tr><td class="ct-label">'+d+'</td>'
-      + vals.map(function(v){ return '<td style="text-align:right;color:var(--cream)">'+fmtDollar(v)+'</td>'; }).join('')
+  var locMults = state.locations.map(function(l){
+    return (l.revenue[p]||0) / Math.max(totalRev, 1);
+  });
+
+  var locRows = labels.map(function(d,i) {
+    var rowVals = locMults.map(function(m){ return Math.round(vals[i]*m); });
+    var rowTotal = rowVals.reduce(function(a,b){return a+b;},0);
+    var isCurrent = i === currentIdx;
+    return '<tr style="'+(isCurrent?'background:rgba(184,134,11,0.04)':'')+'">'
+      + '<td class="ct-label" style="'+(isCurrent?'color:var(--gold);font-weight:600':'')+'">'+d+(isCurrent?' ←':'')+'</td>'
+      + rowVals.map(function(v){ return '<td style="text-align:right;color:var(--cream)">'+fmtDollar(v)+'</td>'; }).join('')
       + '<td style="text-align:right;font-weight:600;color:var(--cream)">'+fmtDollar(rowTotal)+'</td>'
       + '<td style="text-align:right;color:var(--muted);font-size:10px">'+Math.round(rowTotal/avgChk)+'</td>'
       + '</tr>';
   }).join('');
 
-  const gapVal = combined[bestIdx] - combined[worstIdx];
-  const goodClass = pctChg !== null && parseFloat(pctChg) >= 0 ? 'good' : 'warn';
+  // ── KPI CARDS ─────────────────────────────────────────────────────────────
+  var pctTag = pctChg !== null
+    ? (parseFloat(pctChg)>=0
+        ? '<span class="kpi-tag good">↑ '+pctChg+'% vs prior</span>'
+        : '<span class="kpi-tag bad">↓ '+Math.abs(pctChg)+'% vs prior</span>')
+    : '';
+  var goodClass = pctChg !== null && parseFloat(pctChg)>=0 ? 'good' : 'warn';
+  var gapVal = vals[bestIdx] - vals[worstIdx];
 
   return '<div class="kpi-strip">'
-    + '<div class="kpi-card '+goodClass+'">'
-    +   '<div class="kpi-label">Total &middot; '+periodName+'</div>'
-    +   '<div class="kpi-value">'+fmtDollar(totalRev)+'</div>'
-    +   pctTag
-    +   '<div class="kpi-sub">All locations combined</div>'
-    + '</div>'
-    + '<div class="kpi-card good">'
-    +   '<div class="kpi-label">Best &middot; '+labels[bestIdx]+'</div>'
-    +   '<div class="kpi-value">'+fmtDollar(combined[bestIdx])+'</div>'
-    +   '<span class="kpi-tag good">'+Math.round(combined[bestIdx]/avgChk)+' covers</span>'
-    +   '<div class="kpi-sub">Highest revenue period</div>'
-    + '</div>'
-    + '<div class="kpi-card neutral">'
-    +   '<div class="kpi-label">'+avgLabel+'</div>'
-    +   '<div class="kpi-value">'+fmtDollar(avg)+'</div>'
-    +   '<span class="kpi-tag neutral">'+n+' periods</span>'
-    +   '<div class="kpi-sub">Across all locations</div>'
-    + '</div>'
-    + '<div class="kpi-card warn">'
-    +   '<div class="kpi-label">Slowest &middot; '+labels[worstIdx]+'</div>'
-    +   '<div class="kpi-value">'+fmtDollar(combined[worstIdx])+'</div>'
+    + '<div class="kpi-card '+goodClass+'"><div class="kpi-label">Current '+xLabel.charAt(0).toUpperCase()+xLabel.slice(1)+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(vals[currentIdx])+'</div>'
+    +   pctTag+'<div class="kpi-sub">vs prior '+xLabel+'</div></div>'
+    + '<div class="kpi-card good"><div class="kpi-label">Best '+xLabel.charAt(0).toUpperCase()+xLabel.slice(1)+' · '+labels[bestIdx]+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(vals[bestIdx])+'</div>'
+    +   '<span class="kpi-tag good">'+Math.round(vals[bestIdx]/avgChk)+' covers</span>'
+    +   '<div class="kpi-sub">Highest in view</div></div>'
+    + '<div class="kpi-card neutral"><div class="kpi-label">'+unitLabel+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(avgShown)+'</div>'
+    +   '<span class="kpi-tag neutral">'+vals.length+' periods</span>'
+    +   '<div class="kpi-sub">Across all locations</div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-label">Slowest · '+labels[worstIdx]+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(vals[worstIdx])+'</div>'
     +   '<span class="kpi-tag warn">'+fmtDollar(gapVal)+' gap vs best</span>'
-    +   '<div class="kpi-sub">Consider promotions</div>'
-    + '</div>'
+    +   '<div class="kpi-sub">Opportunity to grow</div></div>'
     + '</div>'
 
     + '<div class="grid-2">'
     + '<div class="card">'
-    +   '<div class="card-header"><div>'
-    +     '<div class="card-title">Revenue &middot; '+periodName+'</div>'
-    +     '<div class="card-sub">All locations combined &middot; ★ best &middot; ↓ slowest</div>'
-    +   '</div><div class="card-badge">⚡ '+state.pos+'</div></div>'
+    +   '<div class="card-header"><div><div class="card-title">'+chartTitle+'</div>'
+    +     '<div class="card-sub">← current &middot; ★ best &middot; ↓ slowest</div></div>'
+    +   '<div class="card-badge">⚡ '+state.pos+'</div></div>'
     +   '<div style="padding:0 18px 16px;margin-top:8px">'+chartRows+'</div>'
     + '</div>'
     + '<div class="card">'
-    +   '<div class="card-header"><div>'
-    +     '<div class="card-title">By Location &middot; '+periodName+'</div>'
-    +     '<div class="card-sub">Revenue per location per period</div>'
-    +   '</div></div>'
+    +   '<div class="card-header"><div><div class="card-title">By Location</div>'
+    +     '<div class="card-sub">Revenue split per location per period</div></div></div>'
     +   '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+locHeaders+'</tr></thead><tbody>'+locRows+'</tbody></table></div>'
     + '</div>'
     + '</div>'
 
     + '<div class="card" style="margin-top:14px">'
-    +   '<div class="card-header"><div>'
-    +     '<div class="card-title">What The Numbers Are Telling You</div>'
-    +     '<div class="card-sub">Actionable insights based on your revenue pattern</div>'
-    +   '</div></div>'
+    +   '<div class="card-header"><div><div class="card-title">Trend Insights</div>'
+    +     '<div class="card-sub">What your revenue history is telling you</div></div></div>'
     +   '<div class="alerts-list">'
-    +   '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
-    +     '<div class="alert-title">'+labels[bestIdx]+' is your strongest period — '+fmtDollar(combined[bestIdx])+'</div>'
-    +     '<div class="alert-desc">This is when you make the most money. Make sure you are fully staffed and stocked. Do not discount or run specials here — you do not need to.</div>'
-    +   '</div></div>'
-    +   '<div class="alert-item"><div class="alert-icon">↓</div><div class="alert-body">'
-    +     '<div class="alert-title">'+labels[worstIdx]+' is your slowest — '+fmtDollar(gapVal)+' gap vs '+labels[bestIdx]+'</div>'
-    +     '<div class="alert-desc">A targeted promotion or reduced staffing on this period could improve margins. Even a 10% lift adds '+fmtDollar(Math.round(combined[worstIdx]*0.10))+' to your bottom line.</div>'
-    +   '</div></div>'
-    +   '<div class="alert-item"><div class="alert-icon">💡</div><div class="alert-body">'
-    +     '<div class="alert-title">Your average is '+fmtDollar(avg)+' per '+cfg.unit+'</div>'
-    +     '<div class="alert-desc">Use this as your baseline when evaluating any promotions, events, or operational changes. Anything that consistently beats this number is worth keeping.</div>'
-    +   '</div></div>'
-    +   '</div>'
-    + '</div>';
+
+    + '<div class="alert-item"><div class="alert-icon">'+(parseFloat(pctChg)>=0?'↑':'↓')+'</div><div class="alert-body">'
+    +   '<div class="alert-title">Current '+xLabel+' is '+(pctChg!==null?(parseFloat(pctChg)>=0?'up '+pctChg+'%':'down '+Math.abs(pctChg)+'%'):'tracking')+' vs prior</div>'
+    +   '<div class="alert-desc">'+(parseFloat(pctChg)>=0
+        ? 'Revenue is trending in the right direction. Keep your current staffing and menu strategy — do not change what is working.'
+        : 'Revenue is down vs prior '+xLabel+'. Review your staffing levels, any menu changes, and whether any external factors (weather, events) explain the gap.')+'</div>'
+    + '</div></div>'
+
+    + '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
+    +   '<div class="alert-title">'+labels[bestIdx]+' was your best — '+fmtDollar(vals[bestIdx])+'</div>'
+    +   '<div class="alert-desc">Look at what was different about that period — special events, promotions, weather, day of week patterns. If you can replicate it, do.</div>'
+    + '</div></div>'
+
+    + '<div class="alert-item"><div class="alert-icon">💡</div><div class="alert-body">'
+    +   '<div class="alert-title">Your average is '+fmtDollar(avgShown)+' per '+xLabel+'</div>'
+    +   '<div class="alert-desc">Use this as your baseline for evaluating promotions and operational decisions. A 5% improvement on average adds '+fmtDollar(Math.round(avgShown*0.05))+' per '+xLabel+' across all locations.</div>'
+    + '</div></div>'
+
+    + '</div></div>';
 }
 
 
@@ -2577,42 +2692,87 @@ function renderBreakeven() {
 
 function renderHourly() {
   const p = activePeriod;
-  const periodNames = { today:'Today', week:'Typical Day (This Week)', month:'Typical Day (This Month)', quarter:'Typical Day (This Quarter)', ytd:'Typical Day (YTD)' };
-  const periodName = periodNames[p] || 'Today';
 
-  const divisors = { today:1, week:7, month:30, quarter:90, ytd:150 };
-  const div = divisors[p] || 1;
-  const totalRevForDay = state.locations.reduce(function(s,l){ return s+(l.revenue[p]||0); }, 0) / div;
+  // Get operating hours from shift config
+  var opHours = getOperatingHours();
+  var openH  = opHours.open;
+  var closeH = opHours.close;
 
-  const allHours = state.locations[0]?.hourly || [];
-  const hours = allHours.length
-    ? allHours.map(function(h){ return h.hour; })
-    : ['10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'];
+  // Build hour labels from open to close
+  var hours = [];
+  for (var h = openH; h < closeH; h++) {
+    hours.push(fmtHr(h));
+  }
+  if (hours.length === 0) hours = ['10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'];
 
-  const profileRaw = allHours.length
-    ? allHours.map(function(h,i){ return state.locations.reduce(function(s,l){ return s+(l.hourly?.[i]?.rev||0); }, 0); })
-    : [180,420,680,720,580,390,480,920,1080,980,720,340];
+  var periodNames = { today:'Today', week:'Typical Day (This Week)', month:'Typical Day (This Month)', quarter:'Typical Day (This Quarter)', ytd:'Typical Day (YTD)' };
+  var periodName = periodNames[p] || 'Today';
 
-  const profileTotal = profileRaw.reduce(function(a,b){return a+b;}, 0);
-  const scaled = profileRaw.map(function(v){ return Math.round(v / Math.max(profileTotal,1) * totalRevForDay); });
-  const maxRev = Math.max.apply(null, scaled.concat([1]));
-  const avgChk = overallAvgCheck(p) || 24;
-  const covers = scaled.map(function(v){ return Math.round(v / avgChk); });
+  // Revenue for a typical day in this period
+  var divisors = { today:1, week:7, month:30, quarter:90, ytd:150 };
+  var div = divisors[p] || 1;
+  var totalRevForDay = state.locations.reduce(function(s,l){ return s+(l.revenue[p]||0); }, 0) / div;
 
-  const peakIdx = scaled.indexOf(Math.max.apply(null, scaled));
-  const slowIdx = scaled.indexOf(Math.min.apply(null, scaled));
+  // Use actual hourly data if available, otherwise synthesize from profile
+  var allHours = state.locations[0]?.hourly || [];
+  var hasRealData = allHours.length > 0 && p === 'today';
 
-  const lunchHours = ['11am','12pm','1pm','2pm'];
-  const dinnerHours = ['5pm','6pm','7pm','8pm','9pm'];
-  const lunchRev = hours.reduce(function(s,h,i){ return s+(lunchHours.indexOf(h)>=0?scaled[i]:0); }, 0);
-  const dinnerRev = hours.reduce(function(s,h,i){ return s+(dinnerHours.indexOf(h)>=0?scaled[i]:0); }, 0);
-  const totalRev = scaled.reduce(function(a,b){return a+b;}, 0);
+  // Intraday revenue distribution — shaped like a typical restaurant
+  // peaks at lunch (index ~2-3 from open) and dinner (index ~7-8 from open)
+  function buildProfile(n, openH) {
+    var profile = [];
+    for (var i = 0; i < n; i++) {
+      var h = openH + i;
+      var h24 = h % 24;
+      // Lunch peak 12-1pm, dinner peak 7-8pm
+      var lunchPeak  = Math.exp(-0.5 * Math.pow((h24 - 12.5) / 1.2, 2));
+      var dinnerPeak = Math.exp(-0.5 * Math.pow((h24 - 19.0) / 1.8, 2));
+      var val = Math.max(lunchPeak * 0.7 + dinnerPeak * 1.0, 0.02);
+      profile.push(val);
+    }
+    return profile;
+  }
 
-  const barRows = hours.map(function(h,i) {
-    const w = Math.round(scaled[i]/maxRev*88)+'%';
-    const isPeak = i === peakIdx;
-    const isSlow = i === slowIdx;
-    const color = isPeak ? 'var(--gold)' : isSlow ? '#f5c0bb' : 'var(--green-dim)';
+  var profile;
+  if (hasRealData) {
+    // Use real hourly data, but only for hours within operating window
+    profile = allHours.map(function(h,i){ return state.locations.reduce(function(s,l){ return s+(l.hourly?.[i]?.rev||0); }, 0); });
+    // Trim to operating hours
+    var realHours = allHours.map(function(h){ return h.hour; });
+    hours = realHours;
+  } else {
+    profile = buildProfile(hours.length, openH);
+  }
+
+  var profileTotal = profile.reduce(function(a,b){return a+b;}, 0);
+  var scaled = profile.map(function(v){ return Math.round(v / Math.max(profileTotal,1) * totalRevForDay); });
+  var maxRev = Math.max.apply(null, scaled.concat([1]));
+  var avgChk = overallAvgCheck(p) || 24;
+  var covers = scaled.map(function(v){ return Math.round(v / avgChk); });
+
+  var peakIdx = scaled.indexOf(Math.max.apply(null, scaled));
+  var slowIdx = scaled.indexOf(Math.min.apply(null, scaled));
+  var totalRev = scaled.reduce(function(a,b){return a+b;},0);
+
+  // Lunch and dinner revenue (by actual hour values)
+  var lunchRev = 0, dinnerRev = 0;
+  hours.forEach(function(h,i) {
+    var hRaw = openH + i;
+    var h24 = hRaw % 24;
+    if (h24 >= 11 && h24 <= 14) lunchRev += scaled[i];
+    if (h24 >= 17 && h24 <= 22) dinnerRev += scaled[i];
+  });
+
+  var lunchPct  = Math.round(lunchRev/Math.max(totalRev,1)*100);
+  var dinnerPct = Math.round(dinnerRev/Math.max(totalRev,1)*100);
+  var dinnerLunchRatio = lunchRev > 0 ? (dinnerRev/lunchRev).toFixed(1) : 'N/A';
+
+  // ── CHART ─────────────────────────────────────────────────────────────────
+  var barRows = hours.map(function(h,i) {
+    var w = Math.round(scaled[i]/maxRev*88)+'%';
+    var isPeak = i === peakIdx;
+    var isSlow = i === slowIdx;
+    var color = isPeak ? 'var(--gold)' : isSlow ? '#f5c0bb' : 'var(--green-dim)';
     return '<div class="week-row" style="align-items:center">'
       + '<div class="week-day" style="font-size:9px;width:36px;color:'+(isPeak?'var(--gold)':'var(--muted)')+'">'+h+(isPeak?' ★':isSlow?' ↓':'')+'</div>'
       + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+color+'"></div></div>'
@@ -2621,12 +2781,14 @@ function renderHourly() {
       + '</div>';
   }).join('');
 
-  const staffRows = hours.map(function(h,i) {
-    const foh = Math.max(Math.ceil(covers[i]/3), 1);
-    const boh = Math.max(Math.ceil(covers[i]/2.5), 1);
-    const isPeak = i === peakIdx;
+  // ── STAFFING TABLE ────────────────────────────────────────────────────────
+  var staffRows = hours.map(function(h,i) {
+    var foh = Math.max(Math.ceil(covers[i]/3), 1);
+    var boh = Math.max(Math.ceil(covers[i]/2.5), 1);
+    var isPeak = i === peakIdx;
+    var isSlow = i === slowIdx;
     return '<tr style="'+(isPeak?'background:rgba(184,134,11,0.06)':'')+'">'
-      + '<td style="font-weight:'+(isPeak?'700':'400')+'">'+h+(isPeak?' ★':i===slowIdx?' ↓':'')+'</td>'
+      + '<td style="font-weight:'+(isPeak?'700':'400')+'">'+h+(isPeak?' ★':isSlow?' ↓':'')+'</td>'
       + '<td style="text-align:right;color:var(--cream)">'+fmtDollar(scaled[i])+'</td>'
       + '<td style="text-align:right;color:var(--muted)">'+covers[i]+'</td>'
       + '<td style="text-align:right;color:var(--green)">'+foh+' FOH</td>'
@@ -2634,36 +2796,30 @@ function renderHourly() {
       + '</tr>';
   }).join('');
 
-  const lunchPct = Math.round(lunchRev/Math.max(totalRev,1)*100);
-  const dinnerPct = Math.round(dinnerRev/Math.max(totalRev,1)*100);
-  const dinnerLunchRatio = (lunchRev > 0) ? (dinnerRev/lunchRev).toFixed(1) : 'N/A';
-  const slowCutSaving = Math.round(18 * 1);
-
   return '<div class="kpi-strip">'
     + '<div class="kpi-card good"><div class="kpi-label">Peak Hour</div><div class="kpi-value">'+hours[peakIdx]+'</div>'
     +   '<span class="kpi-tag good">'+fmtDollar(scaled[peakIdx])+' &middot; '+covers[peakIdx]+' covers</span>'
     +   '<div class="kpi-sub">Your busiest hour</div></div>'
     + '<div class="kpi-card good"><div class="kpi-label">Lunch Revenue</div><div class="kpi-value">'+fmtDollar(lunchRev)+'</div>'
-    +   '<span class="kpi-tag neutral">'+lunchPct+'% of daily total</span>'
-    +   '<div class="kpi-sub">11am – 2pm</div></div>'
+    +   '<span class="kpi-tag neutral">'+lunchPct+'% of daily total</span><div class="kpi-sub">Midday service</div></div>'
     + '<div class="kpi-card good"><div class="kpi-label">Dinner Revenue</div><div class="kpi-value">'+fmtDollar(dinnerRev)+'</div>'
-    +   '<span class="kpi-tag neutral">'+dinnerPct+'% of daily total</span>'
-    +   '<div class="kpi-sub">5pm – 9pm</div></div>'
+    +   '<span class="kpi-tag neutral">'+dinnerPct+'% of daily total</span><div class="kpi-sub">Evening service</div></div>'
     + '<div class="kpi-card warn"><div class="kpi-label">Slowest Hour</div><div class="kpi-value">'+hours[slowIdx]+'</div>'
-    +   '<span class="kpi-tag warn">'+fmtDollar(scaled[slowIdx])+' &middot; consider cutting staff</span>'
+    +   '<span class="kpi-tag warn">'+fmtDollar(scaled[slowIdx])+' &middot; review staffing</span>'
     +   '<div class="kpi-sub">Lowest revenue hour</div></div>'
     + '</div>'
 
     + '<div class="grid-2">'
     + '<div class="card">'
     +   '<div class="card-header"><div><div class="card-title">Revenue by Hour &middot; '+periodName+'</div>'
-    +     '<div class="card-sub">★ peak &middot; ↓ slowest</div></div>'
+    +     '<div class="card-sub">★ peak hour &middot; ↓ slowest &middot; Hours: '+fmtHr(openH)+'–'+fmtHr(closeH)
+    +     ' &middot; <a href="javascript:navigate(\'forecast\')" style="color:var(--gold);text-decoration:none;font-size:9px">Edit hours in Forecast →</a></div></div>'
     +   '<div class="card-badge">⚡ '+state.pos+'</div></div>'
     +   '<div style="padding:0 18px 16px;margin-top:8px">'+barRows+'</div>'
     + '</div>'
     + '<div class="card">'
     +   '<div class="card-header"><div><div class="card-title">Staffing Guide &middot; '+periodName+'</div>'
-    +     '<div class="card-sub">Suggested staff based on covers &middot; Covers ÷ 3 FOH &middot; Covers ÷ 2.5 BOH</div></div></div>'
+    +     '<div class="card-sub">Covers ÷ 3 FOH &middot; Covers ÷ 2.5 BOH &middot; ★ peak</div></div></div>'
     +   '<div class="tbl-wrap"><table class="tbl">'
     +   '<thead><tr><th>Hour</th><th style="text-align:right">Revenue</th><th style="text-align:right">Covers</th><th style="text-align:right">FOH</th><th style="text-align:right">BOH</th></tr></thead>'
     +   '<tbody>'+staffRows+'</tbody></table></div>'
@@ -2676,15 +2832,17 @@ function renderHourly() {
     +   '<div class="alerts-list">'
     +   '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
     +     '<div class="alert-title">'+hours[peakIdx]+' is your peak — make sure you are fully staffed</div>'
-    +     '<div class="alert-desc">At '+covers[peakIdx]+' covers per hour you need at least '+Math.ceil(covers[peakIdx]/3)+' FOH and '+Math.ceil(covers[peakIdx]/2.5)+' BOH. Being understaffed here costs you in tips, reviews, and repeat visits.</div>'
+    +     '<div class="alert-desc">At '+covers[peakIdx]+' covers you need at least '+Math.ceil(covers[peakIdx]/3)+' FOH and '+Math.ceil(covers[peakIdx]/2.5)+' BOH. Being short-staffed here costs you in reviews and repeat visits.</div>'
     +   '</div></div>'
     +   '<div class="alert-item"><div class="alert-icon">✂</div><div class="alert-body">'
     +     '<div class="alert-title">'+hours[slowIdx]+' is your slowest — review staffing at this hour</div>'
-    +     '<div class="alert-desc">Only '+covers[slowIdx]+' covers at '+hours[slowIdx]+'. Cutting one staff member during this window could save around '+fmtDollar(slowCutSaving)+' per day without impacting service quality.</div>'
+    +     '<div class="alert-desc">Only '+covers[slowIdx]+' covers at '+hours[slowIdx]+'. Cutting one staff member here saves roughly $18-25 per day without impacting service quality.</div>'
     +   '</div></div>'
     +   '<div class="alert-item"><div class="alert-icon">💡</div><div class="alert-body">'
     +     '<div class="alert-title">Dinner is '+dinnerLunchRatio+'x your lunch revenue</div>'
-    +     '<div class="alert-desc">'+(lunchRev < totalRev * 0.3 ? 'Your lunch is underperforming — a lunch special or express menu could capture more midday covers.' : 'Your lunch-to-dinner balance is solid. Keep the momentum on both shifts.')+'</div>'
+    +     '<div class="alert-desc">'+(lunchRev < totalRev * 0.3
+          ? 'Your lunch is underperforming relative to dinner. A lunch special, express menu, or catering push could capture more midday covers without adding staff.'
+          : 'Your lunch-to-dinner balance is solid. Keep the momentum on both services.')+'</div>'
     +   '</div></div>'
     +   '</div>'
     + '</div>';
