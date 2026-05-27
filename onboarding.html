@@ -1607,10 +1607,18 @@ async function doGenericUpload(type, previewId, alertId) {
   var pending = window['_pendingCSV_' + type];
   if (!pending) return;
   var locId = state.locations[0]?.id;
+  var previewEl = document.getElementById(previewId);
   try {
+    if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';
+    var validation = await apiFetch('/api/csv/validate', 'POST', { type: type, content: pending.text });
+    if (!validation.valid) {
+      if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px"><strong>Cannot upload this file:</strong><br>' + validation.issues.join('<br>') + '<br><br>Check that you exported the correct report from your system.</div>';
+      return;
+    }
+    if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Uploading ' + validation.row_count + ' rows...</div>';
     await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text });
-    document.getElementById(previewId).innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded — your dashboard will update within a few minutes.</div>';
-    showAlert(alertId, '✓ ' + type + ' data uploaded successfully.', 'success');
+    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows uploaded — your dashboard will update within a few minutes.</div>';
+    showAlert(alertId, 'Data uploaded successfully.', 'success');
   } catch(e) {
     showAlert(alertId, e.message, 'error');
   }

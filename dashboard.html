@@ -1148,6 +1148,7 @@ function transformAPIData(apiData) {
   });
 
   return {
+    lastSynced: apiData.client?.last_synced_at || null,
     name: apiData.client?.name || 'My Restaurant',
     cuisine: 'Restaurant',
     pos: 'Connected POS',
