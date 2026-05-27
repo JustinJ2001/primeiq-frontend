@@ -1697,8 +1697,8 @@ function renderDaily() {
   }
 
   const totalRev = state.locations.reduce(function(s,l){ return s+(l.revenue[p]||0); }, 0);
-  const priorRev = state.locations.reduce(function(s,l){ return s+(l.revPrev?.[p]||l.revenue[p]*0.91||0); }, 0);
-  const pctChg = priorRev > 0 ? ((totalRev - priorRev) / priorRev * 100).toFixed(1) : null;
+  // pctChg calculated after rolling vals are built - placeholder here
+  var pctChg = null;
 
   // ── BUILD CHART DATA BY PERIOD ────────────────────────────────────────────
   var labels, vals, currentIdx, xLabel, unitLabel, chartTitle;
@@ -1783,6 +1783,11 @@ function renderDaily() {
     currentIdx = curMo;
     xLabel = 'month'; unitLabel = 'Monthly avg'; chartTitle = 'Revenue · Year to Date';
   }
+
+  // pctChg: compare current period vs prior period using rolling data
+  pctChg = (vals.length >= 2 && vals[currentIdx-1] > 0)
+    ? ((vals[currentIdx] - vals[currentIdx-1]) / vals[currentIdx-1] * 100).toFixed(1)
+    : null;
 
   // ── CHART ─────────────────────────────────────────────────────────────────
   var maxV = Math.max.apply(null, vals.concat([1]));
@@ -1897,6 +1902,22 @@ function renderDaily() {
 }
 
 
+
+
+function periodRent(l, p) {
+  var m = l.rent || 0;
+  return p==='today' ? m/30 : p==='week' ? m/4.3 : p==='month' ? m : p==='quarter' ? m*3 : m*12;
+}
+
+function periodFixed(l, p, field) {
+  var m = l[field] || 0;
+  return p==='today' ? m/30 : p==='week' ? m/4.3 : p==='month' ? m : p==='quarter' ? m*3 : m*12;
+}
+
+function totalFixed(l, p) {
+  return periodFixed(l,p,'rent') + periodFixed(l,p,'utilities') + periodFixed(l,p,'insurance')
+       + periodFixed(l,p,'supplies') + periodFixed(l,p,'marketing') + periodFixed(l,p,'software');
+}
 
 function renderCosts() {
   const p = activePeriod;
