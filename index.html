@@ -1,81 +1,136 @@
-<!-- v2 updated 2026-05-21 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrimeIQ — Know Your Numbers Daily</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IBM+Plex+Mono:wght@300;400;500;600&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:"Lato",sans-serif;background:#faf8f4;color:#1a1208;}
-nav{background:#1a1208;padding:18px 60px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:"Playfair Display",serif;font-size:20px;color:#e8b84b;}
-.logo em{font-style:italic;color:#f5ead6;}
+:root{--dark:#1a0e02;--dark2:#241508;--gold:#c49a2e;--gold-lt:#e8b84b;--cream:#f5ead6;--muted:rgba(255,255,255,0.4);--muted2:rgba(255,255,255,0.25);--bg:#faf8f4;--border:rgba(40,25,5,0.1);--green:#2d7a4f;--amber:#c9820a;}
+html{scroll-behavior:smooth;}
+body{font-family:"Lato",sans-serif;background:var(--bg);color:var(--dark);overflow-x:hidden;}
+nav{background:var(--dark);padding:18px 60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(232,184,75,0.08);}
+.logo{font-family:"Playfair Display",serif;font-size:20px;color:var(--gold-lt);}
+.logo em{font-style:italic;color:var(--cream);}
 .nav-links{display:flex;align-items:center;gap:24px;}
-.nav-link{font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;}
+.nav-link{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
 .nav-link:hover{color:#fff;}
-.nav-cta{padding:8px 20px;border:1px solid rgba(232,184,75,0.4);border-radius:7px;color:#e8b84b;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
+.nav-cta{padding:8px 20px;border:1px solid rgba(232,184,75,0.4);border-radius:7px;color:var(--gold-lt);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
 .nav-cta:hover{background:rgba(232,184,75,0.1);}
-.hero{background:#1a1208;padding:100px 60px 80px;text-align:center;}
-.hero-tag{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#e8b84b;margin-bottom:20px;}
-.hero-title{font-family:"Playfair Display",serif;font-size:58px;color:#f5ead6;line-height:1.08;max-width:700px;margin:0 auto 20px;}
-.hero-title em{color:#e8b84b;font-style:italic;}
-.hero-sub{font-size:17px;color:rgba(255,255,255,0.5);max-width:520px;margin:0 auto 40px;line-height:1.6;}
-.hero-cta{display:inline-block;padding:16px 40px;background:#e8b84b;color:#1a1208;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;border-radius:9px;text-decoration:none;transition:all 0.2s;}
-.hero-cta:hover{background:#c49a2e;}
-.hero-sub-cta{font-family:"IBM Plex Mono",monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-top:14px;}
-.logos{background:#111;padding:20px 60px;display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;}
-.logo-label{font-family:"IBM Plex Mono",monospace;font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:0.1em;}
-.logo-items{display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
-.logo-item{font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.06em;}
-.pain{padding:80px 60px;max-width:1000px;margin:0 auto;}
-.pain-title{font-family:"Playfair Display",serif;font-size:36px;color:#1a1208;text-align:center;margin-bottom:12px;}
-.pain-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;text-align:center;margin-bottom:50px;letter-spacing:0.08em;}
-.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-.pain-card{background:#fff;border:1px solid rgba(40,25,5,0.1);border-radius:12px;padding:24px;}
-.pain-icon{font-size:24px;margin-bottom:12px;}
-.pain-q{font-size:14px;font-weight:700;color:#1a1208;margin-bottom:8px;line-height:1.4;}
-.pain-a{font-size:12.5px;color:#8a7a5a;line-height:1.6;}
-.how{background:#1a1208;padding:80px 60px;}
+.hero{background:var(--dark);padding:110px 60px 90px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(ellipse,rgba(196,154,46,0.12) 0%,transparent 70%);pointer-events:none;}
+.hero-tag{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:22px;}
+.hero-title{font-family:"Playfair Display",serif;font-size:62px;color:var(--cream);line-height:1.06;max-width:720px;margin:0 auto 22px;}
+.hero-title em{color:var(--gold-lt);font-style:italic;}
+.hero-sub{font-size:17px;color:var(--muted);max-width:540px;margin:0 auto 42px;line-height:1.65;}
+.hero-cta{display:inline-block;padding:17px 44px;background:var(--gold-lt);color:var(--dark);font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;border-radius:9px;text-decoration:none;transition:all 0.2s;}
+.hero-cta:hover{background:var(--gold);transform:translateY(-1px);}
+.hero-sub-cta{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--muted2);margin-top:16px;}
+.integrations{padding:16px 60px;display:flex;align-items:center;gap:32px;justify-content:center;background:var(--dark2);border-top:1px solid rgba(255,255,255,0.04);}
+.int-label{font-family:"IBM Plex Mono",monospace;font-size:8px;color:var(--muted2);letter-spacing:0.15em;text-transform:uppercase;white-space:nowrap;}
+.int-items{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;}
+.int-item{font-family:"IBM Plex Mono",monospace;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.06em;}
+.int-item.live{color:rgba(196,154,46,0.7);}
+.int-sep{color:rgba(255,255,255,0.1);}
+.email-preview-section{background:var(--dark);padding:80px 60px;}
+.email-preview-inner{max-width:960px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.ep-label{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:14px;}
+.ep-title{font-family:"Playfair Display",serif;font-size:34px;color:var(--cream);line-height:1.2;margin-bottom:14px;}
+.ep-body{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:22px;}
+.ep-check{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;}
+.ep-check-icon{color:var(--gold);font-family:"IBM Plex Mono",monospace;font-size:10px;flex-shrink:0;margin-top:2px;}
+.ep-check-text{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;}
+.email-mockup{background:#0e0a04;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;font-family:"IBM Plex Mono",monospace;}
+.email-mockup-header{padding:10px 14px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:7px;}
+.email-dot{width:8px;height:8px;border-radius:50%;}
+.email-subject{font-size:8px;color:rgba(255,255,255,0.25);flex:1;letter-spacing:0.02em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.email-body{padding:18px;font-size:10px;line-height:1.9;color:rgba(255,255,255,0.5);}
+.email-sec-title{color:rgba(255,255,255,0.25);letter-spacing:0.1em;margin:12px 0 5px;font-size:8.5px;}
+.email-row{display:flex;justify-content:space-between;padding:1px 0;font-size:9.5px;}
+.email-row-l{color:rgba(255,255,255,0.4);}
+.email-row-r{color:rgba(255,255,255,0.75);}
+.eg{color:#5cb88c;}
+.ew{color:#e8a94b;}
+.email-div{border-top:1px solid rgba(255,255,255,0.07);margin:11px 0;}
+.section-tag{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;text-align:center;}
+.section-title{font-family:"Playfair Display",serif;font-size:38px;color:var(--dark);text-align:center;margin-bottom:10px;}
+.section-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;text-align:center;margin-bottom:52px;letter-spacing:0.06em;}
+.pain{padding:90px 60px;max-width:1080px;margin:0 auto;}
+.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.pain-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:26px;transition:box-shadow 0.2s;}
+.pain-card:hover{box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.pain-icon{font-size:26px;margin-bottom:12px;}
+.pain-q{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:8px;line-height:1.4;}
+.pain-a{font-size:12.5px;color:#7a6a50;line-height:1.65;}
+.how{background:var(--dark);padding:90px 60px;}
 .how-inner{max-width:1000px;margin:0 auto;}
-.how-title{font-family:"Playfair Display",serif;font-size:36px;color:#f5ead6;text-align:center;margin-bottom:10px;}
-.how-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:50px;letter-spacing:0.08em;}
-.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-.how-step{background:rgba(255,255,255,0.04);border:1px solid rgba(255,220,130,0.1);border-radius:12px;padding:22px;text-align:center;}
-.how-num{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#e8b84b;letter-spacing:0.1em;margin-bottom:12px;}
-.how-step-title{font-family:"Playfair Display",serif;font-size:15px;color:#f5ead6;margin-bottom:8px;}
-.how-step-body{font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6;}
-.metrics{padding:80px 60px;max-width:1000px;margin:0 auto;}
-.metrics-title{font-family:"Playfair Display",serif;font-size:36px;color:#1a1208;text-align:center;margin-bottom:10px;}
-.metrics-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;text-align:center;margin-bottom:50px;letter-spacing:0.08em;}
-.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-.metric-card{background:#fff;border:1px solid rgba(40,25,5,0.1);border-radius:12px;padding:22px;position:relative;overflow:hidden;}
+.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:52px;}
+.how-step{background:rgba(255,255,255,0.03);border:1px solid rgba(255,220,130,0.1);border-radius:12px;padding:24px;}
+.how-num{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--gold);letter-spacing:0.1em;margin-bottom:14px;}
+.how-step-title{font-family:"Playfair Display",serif;font-size:15px;color:var(--cream);margin-bottom:8px;}
+.how-step-body{font-size:12px;color:var(--muted);line-height:1.65;}
+.metrics{padding:90px 60px;max-width:1080px;margin:0 auto;}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.metric-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px;position:relative;overflow:hidden;transition:box-shadow 0.2s;}
+.metric-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.07);}
 .metric-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:#b8860b;}
 .metric-label{font-family:"IBM Plex Mono",monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:#8a7a5a;margin-bottom:8px;}
-.metric-name{font-family:"Playfair Display",serif;font-size:17px;color:#1a1208;margin-bottom:6px;}
-.metric-desc{font-size:12px;color:#8a7a5a;line-height:1.5;}
-.pos-section{background:#f5f2ec;padding:60px;text-align:center;}
-.pos-title{font-family:"Playfair Display",serif;font-size:28px;color:#1a1208;margin-bottom:10px;}
-.pos-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;margin-bottom:30px;letter-spacing:0.08em;}
-.pos-list{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;}
-.pos-pill{padding:8px 18px;background:#fff;border:1px solid rgba(40,25,5,0.1);border-radius:20px;font-family:"IBM Plex Mono",monospace;font-size:10px;color:#1a1208;letter-spacing:0.06em;}
-.pricing{padding:80px 60px;max-width:600px;margin:0 auto;text-align:center;}
-.pricing-tag{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:0.2em;color:#b8860b;text-transform:uppercase;margin-bottom:16px;}
-.pricing-title{font-family:"Playfair Display",serif;font-size:36px;color:#1a1208;margin-bottom:10px;}
-.pricing-card{background:#fff;border:1.5px solid rgba(40,25,5,0.1);border-radius:16px;padding:36px;margin-top:30px;}
-.price{font-family:"Playfair Display",serif;font-size:52px;color:#1a1208;}
-.price-period{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#8a7a5a;}
-.pricing-features{list-style:none;text-align:left;margin:24px 0;}
-.pricing-features li{font-size:13px;color:#8a7a5a;padding:6px 0;border-bottom:1px solid #f0ede6;display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
-.pricing-features li::before{content:"✓";color:#2d7a4f;font-weight:700;flex-shrink:0;}
-.pricing-cta{display:block;padding:16px;background:#b8860b;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;border-radius:9px;text-decoration:none;margin-top:24px;transition:all 0.2s;}
-.pricing-cta:hover{background:#9a7009;}
-.pricing-note{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#8a7a5a;margin-top:12px;}
-.footer{background:#1a1208;padding:40px 60px;display:flex;align-items:center;justify-content:space-between;}
-.footer-logo{font-family:"Playfair Display",serif;font-size:16px;color:#e8b84b;}
-.footer-logo em{font-style:italic;color:#f5ead6;}
-.footer-copy{font-family:"IBM Plex Mono",monospace;font-size:9px;color:rgba(255,255,255,0.25);}
+.metric-name{font-family:"Playfair Display",serif;font-size:16px;color:var(--dark);margin-bottom:6px;}
+.metric-desc{font-size:12px;color:#7a6a50;line-height:1.55;}
+.systems{background:#f0ece4;padding:60px;}
+.systems-inner{max-width:900px;margin:0 auto;text-align:center;}
+.systems-title{font-family:"Playfair Display",serif;font-size:26px;color:var(--dark);margin-bottom:8px;}
+.systems-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:#8a7a5a;margin-bottom:6px;letter-spacing:0.06em;}
+.systems-note{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#aaa;margin-bottom:28px;}
+.systems-group{margin-bottom:22px;}
+.systems-group-label{font-family:"IBM Plex Mono",monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:#b0a090;margin-bottom:10px;}
+.pill-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;}
+.pill{padding:7px 16px;background:#fff;border:1px solid var(--border);border-radius:20px;font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--dark);letter-spacing:0.04em;}
+.pill.live{border-color:rgba(45,122,79,0.4);color:var(--green);}
+.pill.soon{border-color:var(--border);color:#b0a090;}
+.pill.csv{border-color:rgba(196,154,46,0.4);color:var(--amber);}
+.pricing{padding:90px 60px;max-width:620px;margin:0 auto;text-align:center;}
+.pricing-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:40px;margin-top:32px;position:relative;overflow:hidden;}
+.pricing-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#b8860b,#e8b84b);}
+.price{font-family:"Playfair Display",serif;font-size:56px;color:var(--dark);}
+.price-period{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#8a7a5a;margin-top:4px;}
+.pricing-features{list-style:none;text-align:left;margin:28px 0;}
+.pricing-features li{font-size:13px;color:#5a4a30;padding:7px 0;border-bottom:1px solid #f0ede6;display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+.pricing-features li:last-child{border-bottom:none;}
+.pricing-features li::before{content:"✓";color:var(--green);font-weight:700;flex-shrink:0;}
+.pricing-cta{display:block;padding:17px;background:#b8860b;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;border-radius:9px;text-decoration:none;margin-top:24px;transition:all 0.2s;}
+.pricing-cta:hover{background:#9a7009;transform:translateY(-1px);}
+.pricing-note{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#a09080;margin-top:14px;line-height:1.6;}
+.vs-row{display:flex;gap:12px;align-items:center;margin-top:10px;padding:10px 14px;background:#faf8f4;border-radius:7px;}
+.vs-label{font-family:"IBM Plex Mono",monospace;font-size:8px;color:#a09080;letter-spacing:0.08em;width:100px;flex-shrink:0;text-align:right;}
+.vs-val{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:#5a4a30;}
+.vs-val.strike{text-decoration:line-through;color:#c0b090;}
+.vs-val.good{color:var(--green);font-weight:600;}
+footer{background:var(--dark);padding:40px 60px;display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:"Playfair Display",serif;font-size:16px;color:var(--gold-lt);}
+.footer-logo em{font-style:italic;color:var(--cream);}
+.footer-links{display:flex;gap:24px;}
+.footer-link{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--muted2);text-decoration:none;}
+.footer-link:hover{color:rgba(255,255,255,0.5);}
+.footer-copy{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--muted2);}
+@media(max-width:768px){
+  nav{padding:16px 20px;}
+  .nav-links .nav-link{display:none;}
+  .hero{padding:70px 24px 60px;}
+  .hero-title{font-size:38px;}
+  .integrations{padding:14px 20px;gap:16px;}
+  .email-preview-section{padding:60px 24px;}
+  .email-preview-inner{grid-template-columns:1fr;gap:36px;}
+  .pain,.metrics{padding:60px 24px;}
+  .pain-grid,.metrics-grid{grid-template-columns:1fr;}
+  .how{padding:60px 24px;}
+  .how-steps{grid-template-columns:1fr 1fr;}
+  .systems{padding:50px 24px;}
+  .pricing{padding:60px 24px;}
+  footer{flex-direction:column;gap:16px;text-align:center;padding:32px 24px;}
+  .footer-links{flex-wrap:wrap;justify-content:center;}
+}
 </style>
 </head>
 <body>
@@ -92,161 +147,213 @@ nav{background:#1a1208;padding:18px 60px;display:flex;align-items:center;justify
 </nav>
 
 <div class="hero">
-  <div class="hero-tag">Built for independent restaurant operators</div>
+  <div class="hero-tag">Built for independent restaurant operators with 2–5 locations</div>
   <h1 class="hero-title">Know your numbers.<br><em>Every morning.</em></h1>
-  <p class="hero-sub">Food cost, labor, prime cost, delivery commissions — pulled automatically from your POS, payroll, and delivery platforms. No spreadsheets. No manual work.</p>
-  <a class="hero-cta" href="/onboarding">Get Started — $500/month →</a>
-  <div class="hero-sub-cta">Setup included · Cancel anytime · Works with Toast, Square, Clover and more</div>
+  <p class="hero-sub">Food cost, labor, prime cost, and delivery commissions — pulled automatically from your existing systems. Know your numbers every morning. No spreadsheets.</p>
+  <a class="hero-cta" href="/onboarding">Start Free 30-Day Pilot →</a>
+  <div class="hero-sub-cta">No credit card required · Cancel anytime · Works with Toast, Square, and more</div>
 </div>
 
-<div class="logos">
-  <div class="logo-label">WORKS WITH</div>
-  <div class="logo-items">
-    <div class="logo-item">Toast POS</div>
-    <div class="logo-item">Square</div>
-    <div class="logo-item">Clover</div>
-    <div class="logo-item">DoorDash</div>
-    <div class="logo-item">Uber Eats</div>
-    <div class="logo-item">GrubHub</div>
-    <div class="logo-item">Homebase</div>
-    <div class="logo-item">Gusto</div>
-    <div class="logo-item">7shifts</div>
+<div class="integrations">
+  <div class="int-label">Works with</div>
+  <div class="int-items">
+    <div class="int-item live">✓ Toast POS</div>
+    <div class="int-sep">·</div>
+    <div class="int-item live">✓ Square</div>
+    <div class="int-sep">·</div>
+    <div class="int-item">Clover</div>
+    <div class="int-sep">·</div>
+    <div class="int-item">Gusto</div>
+    <div class="int-sep">·</div>
+    <div class="int-item">DoorDash</div>
+    <div class="int-sep">·</div>
+    <div class="int-item">Uber Eats</div>
+    <div class="int-sep">·</div>
+    <div class="int-item">Any CSV export</div>
+  </div>
+</div>
+
+<div class="email-preview-section">
+  <div class="email-preview-inner">
+    <div>
+      <div class="ep-label">Daily morning digest</div>
+      <h2 class="ep-title">Know how yesterday went before you walk in the door.</h2>
+      <p class="ep-body">Every morning at 6am, PrimeIQ emails you a summary of the previous day across all your locations. Revenue, food cost, labor, prime cost, delivery net revenue, and your weekly pace. Read it in 20 seconds.</p>
+      <div class="ep-check"><div class="ep-check-icon">✓</div><div class="ep-check-text">Revenue per location vs same day last week</div></div>
+      <div class="ep-check"><div class="ep-check-icon">✓</div><div class="ep-check-text">Food cost, labor, prime cost — flagged against your targets</div></div>
+      <div class="ep-check"><div class="ep-check-icon">✓</div><div class="ep-check-text">Net delivery revenue after commissions</div></div>
+      <div class="ep-check"><div class="ep-check-icon">✓</div><div class="ep-check-text">Week-so-far total and your pace for the full week</div></div>
+      <div class="ep-check"><div class="ep-check-icon">✓</div><div class="ep-check-text">Monday only: full last-week summary automatically</div></div>
+    </div>
+    <div>
+      <div class="email-mockup">
+        <div class="email-mockup-header">
+          <div class="email-dot" style="background:#ff5f57"></div>
+          <div class="email-dot" style="background:#febc2e"></div>
+          <div class="email-dot" style="background:#28c840"></div>
+          <div class="email-subject">The Local Group · Tue May 26 · $8,030 revenue · Prime cost 63.2% ⚠</div>
+        </div>
+        <div class="email-body">
+          <div>Good morning Maria,</div>
+          <div style="margin-top:8px;color:rgba(255,255,255,0.25);font-size:9px">Yesterday — Tuesday May 26</div>
+          <div style="border-top:1px solid rgba(255,255,255,0.07);margin:8px 0"></div>
+          <div class="email-sec-title">REVENUE</div>
+          <div class="email-row"><span class="email-row-l">Midtown</span><span class="email-row-r">$4,820 &nbsp;<span class="eg">up 8% vs last Tue</span></span></div>
+          <div class="email-row"><span class="email-row-l">Downtown</span><span class="email-row-r">$3,210 &nbsp;<span class="ew">down 3%</span></span></div>
+          <div class="email-row"><span class="email-row-l">Combined</span><span class="email-row-r" style="color:#fff">$8,030</span></div>
+          <div class="email-sec-title">COSTS</div>
+          <div class="email-row"><span class="email-row-l">Food cost</span><span class="email-row-r">33.8% &nbsp;<span class="eg">✓ target 34%</span></span></div>
+          <div class="email-row"><span class="email-row-l">Labor cost</span><span class="email-row-r">29.4% &nbsp;<span class="ew">⚠ target 28%</span></span></div>
+          <div class="email-row"><span class="email-row-l">Prime cost</span><span class="email-row-r">63.2% &nbsp;<span class="ew">⚠ target 62%</span></span></div>
+          <div class="email-sec-title">DELIVERY (net after commission)</div>
+          <div class="email-row"><span class="email-row-l">DoorDash net</span><span class="email-row-r">$967 &nbsp;<span style="color:rgba(255,255,255,0.25)">after 22%</span></span></div>
+          <div class="email-row"><span class="email-row-l">Uber Eats net</span><span class="email-row-r">$519 &nbsp;<span style="color:rgba(255,255,255,0.25)">after 30%</span></span></div>
+          <div class="email-sec-title">WEEK SO FAR (Mon–Tue)</div>
+          <div class="email-row"><span class="email-row-l">Revenue</span><span class="email-row-r">$15,840</span></div>
+          <div class="email-row"><span class="email-row-l">On pace for</span><span class="email-row-r" style="color:#fff">$54,200 this week</span></div>
+          <div class="email-row"><span class="email-row-l">Last week</span><span class="email-row-r">$49,800</span></div>
+          <div class="email-div"></div>
+          <div style="color:var(--gold);font-size:9px">primeiq.io/dashboard</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="pain">
-  <h2 class="pain-title">Sound familiar?</h2>
-  <p class="pain-sub">The problems every independent restaurant operator has</p>
+  <div class="section-tag">Sound familiar?</div>
+  <h2 class="section-title">The problems every independent operator has</h2>
+  <p class="section-sub">If you run 2–5 locations, you've felt all of these</p>
   <div class="pain-grid">
-    <div class="pain-card">
-      <div class="pain-icon">📅</div>
-      <div class="pain-q">You find out you had a bad week on Friday.</div>
-      <div class="pain-a">By then it's too late to fix it. You could have caught it Tuesday and adjusted staffing Wednesday.</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">📊</div>
-      <div class="pain-q">Toast shows you sales. It doesn't show you profit.</div>
-      <div class="pain-a">Your POS has no idea what you paid in rent, what DoorDash kept, or whether Tuesday was actually profitable.</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">🛵</div>
-      <div class="pain-q">You know DoorDash takes 22%. But how much was that last week in dollars?</div>
-      <div class="pain-a">Most operators can't answer this. After commissions, packaging, and food cost, your delivery margin is a lot thinner than it looks.</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">💼</div>
-      <div class="pain-q">Your accountant tells you how last month went. Last month.</div>
-      <div class="pain-a">You need visibility daily, not 30 days later. Problems fixed Tuesday cost far less than problems discovered at month end.</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">🧾</div>
-      <div class="pain-q">Voids and comps add up quietly.</div>
-      <div class="pain-a">A few hundred dollars a week in voids is $15,000 a year. Most operators have no idea what the number actually is.</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">👥</div>
-      <div class="pain-q">Labor costs creep up without you noticing.</div>
-      <div class="pain-a">Someone picks up an extra shift, someone else hits overtime. By the time you see it in payroll the week is over.</div>
-    </div>
+    <div class="pain-card"><div class="pain-icon">📅</div><div class="pain-q">You find out you had a bad week on Friday.</div><div class="pain-a">By then it's too late to fix it. You could have caught it Tuesday and adjusted staffing on Wednesday.</div></div>
+    <div class="pain-card"><div class="pain-icon">📊</div><div class="pain-q">Toast shows you sales. It doesn't show you profit.</div><div class="pain-a">Your POS has no idea what you paid in rent, what DoorDash kept, or whether Tuesday was actually profitable.</div></div>
+    <div class="pain-card"><div class="pain-icon">🛵</div><div class="pain-q">DoorDash takes 22%. How much was that last week in dollars?</div><div class="pain-a">After commissions, packaging, and food cost, your delivery margin is a lot thinner than it looks. Most operators can't answer this.</div></div>
+    <div class="pain-card"><div class="pain-icon">💼</div><div class="pain-q">Your accountant tells you how last month went. Last month.</div><div class="pain-a">You need visibility daily, not 30 days later. Problems fixed Tuesday cost far less than problems discovered at month end.</div></div>
+    <div class="pain-card"><div class="pain-icon">🧾</div><div class="pain-q">Voids and comps add up quietly.</div><div class="pain-a">A few hundred dollars a week in voids is $15,000 a year. Most operators have no idea what their number actually is.</div></div>
+    <div class="pain-card"><div class="pain-icon">👥</div><div class="pain-q">Labor costs creep up without you noticing.</div><div class="pain-a">Someone picks up an extra shift, someone hits overtime. By the time you see it in payroll, the week is already over.</div></div>
   </div>
 </div>
 
 <div class="how" id="how">
   <div class="how-inner">
-    <h2 class="how-title">How it works</h2>
-    <p class="how-sub">Set up once. Runs forever. You do nothing.</p>
+    <div class="section-tag" style="color:var(--gold)">How it works</div>
+    <h2 class="section-title" style="color:var(--cream)">Set up once. Runs forever.</h2>
+    <p class="section-sub">You do nothing after the first 10 minutes</p>
     <div class="how-steps">
       <div class="how-step">
         <div class="how-num">STEP 01</div>
         <div class="how-step-title">Connect your systems</div>
-        <div class="how-step-body">Link your POS, payroll, and delivery platforms in about 10 minutes. One-click OAuth for Toast, Square, DoorDash, Uber Eats, and more.</div>
+        <div class="how-step-body">Link your POS and payroll in about 10 minutes. One-click OAuth for Toast and Square. CSV upload works for everything else — we show you exactly where to find the export in your system.</div>
       </div>
       <div class="how-step">
         <div class="how-num">STEP 02</div>
-        <div class="how-step-title">We pull your data</div>
-        <div class="how-step-body">Every 4 hours we pull sales, labor, and delivery data from all your connected systems automatically. No manual entry ever.</div>
+        <div class="how-step-title">Add your fixed costs</div>
+        <div class="how-step-body">Enter rent, utilities, and insurance once. These feed into your P&L and break-even automatically. Takes 3 minutes and never needs updating unless something changes.</div>
       </div>
       <div class="how-step">
         <div class="how-num">STEP 03</div>
         <div class="how-step-title">See everything in one place</div>
-        <div class="how-step-body">Log in any time and see exactly where you stand — food cost, labor, prime cost, delivery commissions, voids, break-even.</div>
+        <div class="how-step-body">Log in any time — food cost, labor, prime cost, delivery commissions, voids, break-even, P&L, and forecasts. All your locations. One dashboard.</div>
       </div>
       <div class="how-step">
         <div class="how-num">STEP 04</div>
-        <div class="how-step-title">Get reports automatically</div>
-        <div class="how-step-body">Weekly P&L every Monday morning. Monthly report on the 1st. Both delivered to your email automatically, every week, every month.</div>
+        <div class="how-step-title">Get your morning digest</div>
+        <div class="how-step-body">Every morning at 6am, a clean summary lands in your inbox. Yesterday's key numbers flagged against your targets, with your week-so-far pace. Read it in 20 seconds.</div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="metrics" id="metrics">
-  <h2 class="metrics-title">What we track</h2>
-  <p class="metrics-sub">Everything your POS should show you but doesn't</p>
+  <div class="section-tag">What we track</div>
+  <h2 class="section-title">Everything your POS should show you but doesn't</h2>
+  <p class="section-sub">Calculated automatically from your connected systems · Estimates based on tracked costs only</p>
   <div class="metrics-grid">
-    <div class="metric-card"><div class="metric-label">PROFITABILITY</div><div class="metric-name">Food Cost %</div><div class="metric-desc">Actual food cost vs your target, flagged the moment it drifts over.</div></div>
-    <div class="metric-card"><div class="metric-label">PROFITABILITY</div><div class="metric-name">Labor Cost %</div><div class="metric-desc">Actual vs scheduled hours, overtime alerts before the week ends.</div></div>
-    <div class="metric-card"><div class="metric-label">PROFITABILITY</div><div class="metric-name">Prime Cost</div><div class="metric-desc">Food + Labor combined. The number that determines if you're profitable.</div></div>
-    <div class="metric-card"><div class="metric-label">REVENUE</div><div class="metric-name">Revenue by Hour</div><div class="metric-desc">Which hours drive the most revenue — and contribution margin per hour.</div></div>
-    <div class="metric-card"><div class="metric-label">OPERATIONS</div><div class="metric-name">Voids &amp; Comps</div><div class="metric-desc">Every voided and comped transaction tracked by location and employee.</div></div>
-    <div class="metric-card"><div class="metric-label">DELIVERY</div><div class="metric-name">Delivery Net Revenue</div><div class="metric-desc">What DoorDash, Uber Eats, and GrubHub actually pay you after commissions.</div></div>
-    <div class="metric-card"><div class="metric-label">OPERATIONS</div><div class="metric-name">Break-even Covers</div><div class="metric-desc">How many covers you need today before you start making money.</div></div>
-    <div class="metric-card"><div class="metric-label">REVENUE</div><div class="metric-name">Payment Method Fees</div><div class="metric-desc">Exactly how much Amex, Visa, and Mastercard cost you in processing fees.</div></div>
-    <div class="metric-card"><div class="metric-label">REPORTING</div><div class="metric-name">Full P&amp;L Statement</div><div class="metric-desc">Revenue to net income, every cost line, every location, auto-generated.</div></div>
-    <div class="metric-card"><div class="metric-label">FORECASTING</div><div class="metric-name">Sales Forecast</div><div class="metric-desc">7-day revenue forecast by day and shift window — with staffing suggestions and food ordering budget per shift.</div></div>
-    <div class="metric-card"><div class="metric-label">FORECASTING</div><div class="metric-name">Shift Planning</div><div class="metric-desc">Define your own shift windows. PrimeIQ forecasts revenue per shift and tells you exactly how to staff each one.</div></div>
-    <div class="metric-card"><div class="metric-label">BENCHMARKS</div><div class="metric-name">Industry Benchmarks</div><div class="metric-desc">See how your food cost, labor, prime cost, and margins compare to similar restaurants in your market — by segment.</div></div>
+    <div class="metric-card"><div class="metric-label">Profitability</div><div class="metric-name">Food Cost %</div><div class="metric-desc">Actual food cost vs your target, updated daily. Flagged the moment it drifts above target.</div></div>
+    <div class="metric-card"><div class="metric-label">Profitability</div><div class="metric-name">Labor Cost %</div><div class="metric-desc">Actual vs scheduled hours per location. Overtime alerts before the week ends.</div></div>
+    <div class="metric-card"><div class="metric-label">Profitability</div><div class="metric-name">Prime Cost</div><div class="metric-desc">Food + Labor combined. The single number that determines whether you're actually profitable.</div></div>
+    <div class="metric-card"><div class="metric-label">Revenue</div><div class="metric-name">Revenue Over Time</div><div class="metric-desc">Rolling history by day, week, month, quarter, and YTD — always showing trend vs the prior period.</div></div>
+    <div class="metric-card"><div class="metric-label">Revenue</div><div class="metric-name">Revenue by Hour</div><div class="metric-desc">Which hours drive the most covers — with staffing recommendations per hour based on your actual volume.</div></div>
+    <div class="metric-card"><div class="metric-label">Delivery</div><div class="metric-name">Delivery Net Revenue</div><div class="metric-desc">What DoorDash, Uber Eats, and Grubhub actually pay you after commissions. Not gross — net.</div></div>
+    <div class="metric-card"><div class="metric-label">Operations</div><div class="metric-name">Voids &amp; Comps</div><div class="metric-desc">Every voided and comped transaction tracked by location. Annualized impact so you see what it really costs.</div></div>
+    <div class="metric-card"><div class="metric-label">Operations</div><div class="metric-name">Break-even Calculator</div><div class="metric-desc">How many covers you need today before you start making money. Per location, updated daily.</div></div>
+    <div class="metric-card"><div class="metric-label">Operations</div><div class="metric-name">Payment Method Fees</div><div class="metric-desc">Exactly how much Amex, Visa, and Mastercard cost in processing fees each week — and what you could save.</div></div>
+    <div class="metric-card"><div class="metric-label">Reporting</div><div class="metric-name">Estimated P&amp;L</div><div class="metric-desc">Revenue to estimated net income, every cost line, every location — auto-generated from your tracked data.</div></div>
+    <div class="metric-card"><div class="metric-label">Forecasting</div><div class="metric-name">7-Day Sales Forecast</div><div class="metric-desc">Next week's revenue by day and shift — with staffing suggestions and food budget per shift window.</div></div>
+    <div class="metric-card"><div class="metric-label">Benchmarks</div><div class="metric-name">Industry Benchmarks</div><div class="metric-desc">How your food cost, labor, and margins compare to similar restaurants by segment. Directional guidance.</div></div>
   </div>
 </div>
 
-<div class="pos-section">
-  <h2 class="pos-title">Works with your existing systems</h2>
-  <p class="pos-sub">Connect once — we handle everything else</p>
-  <div class="pos-list">
-    <div class="pos-pill">Toast POS</div>
-    <div class="pos-pill">Square</div>
-    <div class="pos-pill">Clover</div>
-    <div class="pos-pill">Lightspeed</div>
-    <div class="pos-pill">Revel</div>
-    <div class="pos-pill">SpotOn</div>
-    <div class="pos-pill">TouchBistro</div>
-    <div class="pos-pill">DoorDash</div>
-    <div class="pos-pill">Uber Eats</div>
-    <div class="pos-pill">GrubHub</div>
-    <div class="pos-pill">Homebase</div>
-    <div class="pos-pill">Gusto</div>
-    <div class="pos-pill">7shifts</div>
-    <div class="pos-pill">ADP</div>
-    <div class="pos-pill">Any CSV Export</div>
+<div class="systems">
+  <div class="systems-inner">
+    <h2 class="systems-title">Works with your existing systems</h2>
+    <p class="systems-sub">Connect once — we handle everything else</p>
+    <p class="systems-note">CSV upload available for all systems · Direct API connections where shown</p>
+    <div class="systems-group">
+      <div class="systems-group-label">POS Systems</div>
+      <div class="pill-row">
+        <div class="pill live">✓ Toast POS</div>
+        <div class="pill live">✓ Square</div>
+        <div class="pill soon">Clover — coming soon</div>
+        <div class="pill csv">Any POS via CSV</div>
+      </div>
+    </div>
+    <div class="systems-group">
+      <div class="systems-group-label">Payroll</div>
+      <div class="pill-row">
+        <div class="pill soon">Gusto — coming soon</div>
+        <div class="pill csv">Any payroll via CSV</div>
+      </div>
+    </div>
+    <div class="systems-group">
+      <div class="systems-group-label">Delivery Platforms</div>
+      <div class="pill-row">
+        <div class="pill csv">DoorDash via CSV</div>
+        <div class="pill csv">Uber Eats via CSV</div>
+        <div class="pill csv">Grubhub via CSV</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="pricing" id="pricing">
-  <div class="pricing-tag">Simple pricing</div>
-  <h2 class="pricing-title">One price. Everything included.</h2>
+  <div class="section-tag">Simple pricing</div>
+  <h2 class="section-title">One price. Everything included.</h2>
   <div class="pricing-card">
     <div class="price">$500</div>
-    <div class="price-period">per month · all locations included · cancel anytime</div>
+    <div class="price-period">per month · all locations · cancel anytime</div>
     <ul class="pricing-features">
-      <li>Daily dashboard — food cost, labor, prime cost, delivery, voids, break-even</li>
-      <li>All your locations in one view</li>
-      <li>Works with Toast, Square, Clover, Lightspeed, and more</li>
-      <li>DoorDash, Uber Eats, and GrubHub commission tracking</li>
-      <li>Weekly P&L report every Monday morning</li>
-      <li>Monthly report automatically on the 1st</li>
-      <li>Sales by hour with staffing insights</li>
-      <li>Actual vs scheduled labor hours and overtime alerts</li>
-      <li>Setup included — we get you connected</li>
-      <li>Direct support — real person, fast response</li>
+      <li>Full dashboard — food cost, labor, prime cost, delivery, voids, break-even, forecasting</li>
+      <li>All locations in one view — no per-location fees</li>
+      <li>Daily 6am morning digest with your key numbers</li>
+      <li>Revenue history with rolling trend vs prior periods</li>
+      <li>Sales by hour with per-hour staffing guide</li>
+      <li>Industry benchmarks by restaurant segment</li>
+      <li>Estimated P&L auto-generated from connected data</li>
+      <li>CSV upload for any system — POS, payroll, delivery</li>
+      <li>Setup included — we walk you through everything</li>
+      <li>Direct support from a real person</li>
     </ul>
-    <a class="pricing-cta" href="/onboarding">Get Started →</a>
-    <div class="pricing-note">No contracts · Cancel from your billing portal anytime · Setup fee may apply for complex configurations</div>
+    <a class="pricing-cta" href="/onboarding">Start Free 30-Day Pilot →</a>
+    <div class="pricing-note">No credit card required for pilot · No contracts · Cancel anytime · No refunds after billing</div>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid #f0ede6">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#a09080;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">vs. the competition</div>
+      <div class="vs-row"><div class="vs-label">MarginEdge</div><div class="vs-val strike">$350/location = $700+ for 2 locations</div></div>
+      <div class="vs-row"><div class="vs-label">Restaurant365</div><div class="vs-val strike">$300–435/location/month</div></div>
+      <div class="vs-row"><div class="vs-label">PrimeIQ</div><div class="vs-val good">$500 flat · all locations · more features</div></div>
+    </div>
   </div>
 </div>
 
-<footer class="footer">
+<footer>
   <div class="footer-logo"><em>Prime</em>IQ</div>
-  <div class="footer-copy">© 2026 · PrimeIQ · Built for independent restaurant operators · Secure · Encrypted</div>
+  <div class="footer-links">
+    <a class="footer-link" href="/terms">Terms</a>
+    <a class="footer-link" href="/privacy">Privacy</a>
+    <a class="footer-link" href="/dashboard?demo=1">View Demo</a>
+    <a class="footer-link" href="mailto:justin@primeiq.io">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 PrimeIQ · Built for independent restaurant operators</div>
 </footer>
 
 </body>
