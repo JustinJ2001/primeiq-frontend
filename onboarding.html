@@ -1289,15 +1289,25 @@ function renderReviewStep() {
 async function startCheckout() {
   setLoading('checkout_btn', true);
   try {
-    // Save onboarding state in case they return
     localStorage.setItem('rd_onboard_state', JSON.stringify(state));
+
+    // Check if this client is a pilot account - bypass Stripe if so
+    const clientId = state.clientId || localStorage.getItem('rd_client_id');
+    if (clientId) {
+      const clientData = await apiFetch('/api/clients/' + clientId);
+      if (clientData && clientData.is_pilot) {
+        // Pilot account - skip billing, go straight to dashboard
+        localStorage.setItem('rd_pilot', 'true');
+        window.location.href = '/dashboard';
+        return;
+      }
+    }
 
     const res = await apiFetch('/api/create-checkout-session', 'POST', {
       user_id: state.userId,
       email: state.email,
       price_id: CONFIG.priceId,
     });
-    // Redirect to Stripe
     window.location.href = res.url;
   } catch(e) {
     showAlert('review_alert', e.message, 'error');

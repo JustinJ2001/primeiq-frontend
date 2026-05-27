@@ -778,6 +778,32 @@ body::before {
   border:none; border-radius:8px; font-family:'IBM Plex Mono',monospace;
   font-size:10px; cursor:pointer; letter-spacing:0.06em;
 }
+
+.data-missing-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  color:var(--amber); background:rgba(212,160,23,0.1);
+  border:1px solid rgba(212,160,23,0.25);
+  padding:2px 8px; border-radius:10px; margin-left:8px;
+  vertical-align:middle;
+}
+.data-complete-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  color:var(--green); background:rgba(45,122,79,0.1);
+  border:1px solid rgba(45,122,79,0.2);
+  padding:2px 8px; border-radius:10px; margin-left:8px;
+}
+.completeness-bar {
+  display:flex; gap:6px; padding:8px 20px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  align-items:center; flex-wrap:wrap;
+}
+.completeness-item { display:flex; align-items:center; gap:4px; }
+.completeness-dot { width:6px; height:6px; border-radius:50%; }
+.completeness-dot.on { background:var(--green); }
+.completeness-dot.off { background:var(--border); }
 </style>
 </head>
 <body>
@@ -785,7 +811,7 @@ body::before {
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-mark" id="sidebarBrand" style="font-size:16px;color:var(--gold)">Planet Taco</div>
+    <div class="logo-mark" id="sidebarBrand" style="font-size:16px;color:var(--gold)">The Local Group</div>
     <div class="logo-sub">Powered by PrimeIQ</div>
   </div>
   <nav class="sidebar-nav">
@@ -840,7 +866,7 @@ body::before {
         <div class="form-grid">
           <div class="form-group full">
             <label class="form-label">Restaurant / Group Name</label>
-            <input class="form-input" id="f_name" placeholder="e.g. Planet Taco, Mamá's Kitchen" />
+            <input class="form-input" id="f_name" placeholder="e.g. The Local Group, Mamá's Kitchen" />
           </div>
           <div class="form-group">
             <label class="form-label">Cuisine Type</label>
@@ -936,6 +962,14 @@ body::before {
         font-size:10px; color:var(--muted); transition:all 0.2s; letter-spacing:0.05em;
       ">☀ Light</button>
     </div>
+  </div>
+  <div class="completeness-bar" id="completenessBar">
+    <span style="color:var(--muted);letter-spacing:0.08em">DATA SOURCES:</span>
+    <div class="completeness-item"><div class="completeness-dot on" id="dot_sales"></div><span id="label_sales" style="color:var(--green)">Sales</span></div>
+    <div class="completeness-item"><div class="completeness-dot off" id="dot_labor"></div><span id="label_labor" style="color:var(--muted)">Labor</span></div>
+    <div class="completeness-item"><div class="completeness-dot off" id="dot_delivery"></div><span id="label_delivery" style="color:var(--muted)">Delivery</span></div>
+    <div class="completeness-item"><div class="completeness-dot off" id="dot_fixed"></div><span id="label_fixed" style="color:var(--muted)">Fixed Costs</span></div>
+    <span id="completeness_msg" style="margin-left:auto;color:var(--amber)"></span>
   </div>
   <div class="content" id="mainContent"></div>
 </main>
@@ -1102,6 +1136,7 @@ function transformAPIData(apiData) {
     name: apiData.client?.name || 'My Restaurant',
     cuisine: 'Restaurant',
     pos: 'Connected POS',
+  dataCompleteness: { sales: true, labor: false, delivery: false, fixedCosts: false },
     payroll: 'Connected Payroll',
     accounting: 'QuickBooks',
     delivery: 'Delivery Platforms',
@@ -1195,6 +1230,8 @@ async function loadDashboardData() {
     window.location.href = '/login';
     return;
   }
+  // Pilot accounts get full access without Stripe subscription
+  const isPilot = localStorage.getItem('rd_pilot') === 'true';
   try {
     const data = await apiFetch('/api/overview?period=week');
     if (data && data.locations && data.locations.length > 0) {
@@ -1210,6 +1247,7 @@ async function loadDashboardData() {
 }
 
 function showDemoBanner() {
+  state.dataCompleteness = { sales: true, labor: true, delivery: true, fixedCosts: true };
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#1a1208;border-bottom:1px solid rgba(184,134,11,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;';
   banner.innerHTML = `
@@ -1236,7 +1274,7 @@ function showNoDataBanner() {
 
 
 let state = {
-  name: 'Planet Taco',
+  name: 'The Local Group',
   cuisine: 'Fast Casual Mexican',
   pos: 'Toast POS',
   payroll: 'Gusto',
@@ -1249,8 +1287,8 @@ let state = {
   deliveryCommission: 22, // % delivery platforms take
   locations: [
     {
-      name: 'Planet Taco – Hells Kitchen',
-      address: '458 W 46th St, New York',
+      name: 'The Local Group – Midtown',
+      address: '142 W 49th St, New York',
       status: 'open',
       seats: 42,
       staff: { foh: 8, boh: 6, managers: 2 },
@@ -1299,8 +1337,8 @@ let state = {
       ],
     },
     {
-      name: 'Planet Taco – East Village',
-      address: '131 E 7th St, New York',
+      name: 'The Local Group – Downtown',
+      address: '87 Orchard St, New York',
       status: 'open',
       seats: 28,
       staff: { foh: 6, boh: 5, managers: 1 },
@@ -2278,7 +2316,7 @@ function renderVoids() {
       <div class="card-header"><div><div class="card-title">What to do about it</div></div></div>
       <div class="alerts-list" style="padding:0 20px 16px">
         <div class="alert-item"><div class="alert-icon flag">🔍</div><div class="alert-body">
-          <div class="alert-title">East Village voids are high — ${((state.locations[1]?.voids&&state.locations[1].voids[p]||0)/state.locations[1]?.revenue[p]*100).toFixed(1)}% of revenue</div>
+          <div class="alert-title">Downtown voids are high — ${((state.locations[1]?.voids&&state.locations[1].voids[p]||0)/state.locations[1]?.revenue[p]*100).toFixed(1)}% of revenue</div>
           <div class="alert-desc">Pull the void report from ${state.pos} and look for: same employee repeating voids, voids at specific times (closing shift), same menu items being voided repeatedly. Any of these patterns suggests a training issue or something worse.</div>
         </div></div>
         <div class="alert-item"><div class="alert-icon warn">🍽️</div><div class="alert-body">
@@ -2517,7 +2555,7 @@ function renderHourly() {
         <div class="card mb">
           <div class="card-header"><div><div class="card-title">By Location · Daily Breakdown</div></div></div>
           <div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th>Day</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>vs Avg</th></tr></thead>
+            <thead><tr><th>Day</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>vs Avg</th></tr></thead>
             <tbody>${tblRows}
               <tr class="total"><td>Total</td><td>${fmtDollar(hk.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(ev.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(weekTotal)}</td><td>—</td></tr>
             </tbody>
@@ -2585,7 +2623,7 @@ function renderHourly() {
         <div class="card mb">
           <div class="card-header"><div><div class="card-title">By Location · Weekly</div></div></div>
           <div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th>Week</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>Daily Avg</th></tr></thead>
+            <thead><tr><th>Week</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>Daily Avg</th></tr></thead>
             <tbody>${tblRows}
               <tr class="total"><td>Month Total</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.hk.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.ev.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(monthTotal)}</td><td>$${(monthTotal/28).toFixed(0)}/day</td></tr>
             </tbody>
@@ -2658,7 +2696,7 @@ function renderHourly() {
       <div class="card mb">
         <div class="card-header"><div><div class="card-title">By Location · Monthly</div></div></div>
         <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>Month</th><th>Hells Kitchen</th><th>East Village</th><th>Total</th><th>MoM</th></tr></thead>
+          <thead><tr><th>Month</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>MoM</th></tr></thead>
           <tbody>${mTblRows}
             <tr class="total"><td>Total</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.hk,0)))}</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.ev,0)))}</td><td>${fmtDollar(Math.round(periodTotal))}</td><td>—</td></tr>
           </tbody>
@@ -3499,6 +3537,38 @@ function renderForecast() {
     + '</div></div>';
 }
 
+
+function updateCompletenessBar() {
+  var dc = state.dataCompleteness || {};
+  var sources = ['sales','labor','delivery','fixed'];
+  var labels = { sales:'Sales', labor:'Labor', delivery:'Delivery', fixed:'Fixed Costs' };
+  var connected = 0;
+  sources.forEach(function(s) {
+    var dot = document.getElementById('dot_' + s);
+    var label = document.getElementById('label_' + s);
+    var key = s === 'fixed' ? 'fixedCosts' : s;
+    if (dot && label) {
+      if (dc[key]) {
+        dot.className = 'completeness-dot on';
+        label.style.color = 'var(--green)';
+        connected++;
+      } else {
+        dot.className = 'completeness-dot off';
+        label.style.color = 'var(--muted)';
+      }
+    }
+  });
+  var msg = document.getElementById('completeness_msg');
+  if (msg) {
+    var missing = sources.filter(function(s){ return !dc[s === 'fixed' ? 'fixedCosts' : s]; });
+    if (missing.length > 0) {
+      msg.textContent = missing.length + ' source' + (missing.length > 1 ? 's' : '') + ' not connected — upload CSV in Settings';
+    } else {
+      msg.textContent = '';
+    }
+  }
+}
+
 function updateSidebarName(name) {
   var el = document.getElementById('sidebarName');
   if (el) el.textContent = name;
@@ -3547,6 +3617,7 @@ function navigate(pageKey) {
   document.querySelectorAll('.nav-item').forEach(function(n) {
     n.classList.toggle('active', n.dataset.page === pageKey);
   });
+  if (typeof updateCompletenessBar === 'function') updateCompletenessBar();
 }
 
 document.querySelectorAll('.nav-item').forEach(function(n) {
