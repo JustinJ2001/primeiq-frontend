@@ -804,6 +804,15 @@ body::before {
 .completeness-dot { width:6px; height:6px; border-radius:50%; }
 .completeness-dot.on { background:var(--green); }
 .completeness-dot.off { background:var(--border); }
+
+.freshness-bar {
+  display:flex; align-items:center; gap:10px; padding:6px 20px;
+  background:rgba(212,160,23,0.08); border-bottom:1px solid rgba(212,160,23,0.2);
+  font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--amber);
+}
+.freshness-bar.ok { background:rgba(45,122,79,0.06); border-color:rgba(45,122,79,0.15); color:var(--green); }
+.freshness-bar.stale { background:rgba(192,57,43,0.08); border-color:rgba(192,57,43,0.2); color:var(--red); }
+.freshness-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -963,6 +972,7 @@ body::before {
       ">☀ Light</button>
     </div>
   </div>
+  <div id="freshnessBanner" style="display:none"></div>
   <div class="completeness-bar" id="completenessBar">
     <span style="color:var(--muted);letter-spacing:0.08em">TRACKING:</span>
     <div class="completeness-item"><div class="completeness-dot on" id="dot_sales"></div><span id="label_sales" style="color:var(--green)">Sales</span></div>
@@ -1224,6 +1234,15 @@ function hideLoadingOverlay() {
 
 // ── MAIN DATA LOADER ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
+  // Track usage
+  var clientId = localStorage.getItem('rd_client_id');
+  if (clientId && !isDemoMode()) {
+    fetch(API_BASE + '/api/usage/ping', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ client_id: clientId, page: 'dashboard' })
+    }).catch(function(){});
+  }
   // Check for demo mode via URL param
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('demo') === '1') {
@@ -1270,6 +1289,7 @@ function showProductUpdate() {
 
 function showDemoBanner() {
   state.dataCompleteness = { sales: true, labor: true, delivery: true, fixedCosts: true };
+  state.lastSynced = new Date().toISOString();
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#1a1208;border-bottom:1px solid rgba(184,134,11,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;';
   banner.innerHTML = `
@@ -1322,6 +1342,7 @@ function showNoDataBanner_old() {
 
 let state = {
   name: 'The Local Group',
+  lastSynced: null, // ISO string of last successful data sync
   cuisine: 'Fast Casual Mexican',
   pos: 'Toast POS',
   payroll: 'Gusto',
@@ -3799,6 +3820,7 @@ function navigate(pageKey) {
   });
   if (typeof updateCompletenessBar === 'function') updateCompletenessBar();
   if (typeof showProductUpdate === 'function') showProductUpdate();
+  if (typeof checkDataFreshness === 'function') checkDataFreshness();
 
   // Hide period selector on static pages that don't use it
   var staticPages = ['menu', 'forecast', 'weekly'];
@@ -4031,6 +4053,49 @@ const PAGE_TOOLTIPS = {
     ]
   },
 };
+
+
+// ── DATA FRESHNESS ────────────────────────────────────────────────────────────
+function checkDataFreshness() {
+  if (isDemoMode()) return;
+  var banner = document.getElementById('freshnessBanner');
+  if (!banner) return;
+
+  var lastSynced = state.lastSynced;
+  if (!lastSynced) {
+    // No sync data at all
+    banner.style.display = 'flex';
+    banner.className = 'freshness-bar stale';
+    banner.innerHTML = '<div class="freshness-dot"></div>'
+      + '<span>No data synced yet — upload a CSV in <a href="/settings" style="color:inherit;text-decoration:underline">Settings</a> to populate your dashboard</span>';
+    return;
+  }
+
+  var syncDate = new Date(lastSynced);
+  var now = new Date();
+  var hoursAgo = (now - syncDate) / (1000 * 60 * 60);
+  var daysAgo = Math.floor(hoursAgo / 24);
+
+  if (hoursAgo < 26) {
+    // Fresh — synced within last 26 hours
+    banner.style.display = 'flex';
+    banner.className = 'freshness-bar ok';
+    banner.innerHTML = '<div class="freshness-dot"></div>'
+      + '<span>Data current · Last updated ' + (hoursAgo < 1 ? 'just now' : Math.round(hoursAgo) + ' hours ago') + '</span>';
+  } else if (hoursAgo < 72) {
+    // Slightly stale
+    banner.style.display = 'flex';
+    banner.className = 'freshness-bar';
+    banner.innerHTML = '<div class="freshness-dot"></div>'
+      + '<span>Data is ' + Math.round(hoursAgo) + ' hours old — upload a fresh CSV in <a href="/settings" style="color:inherit;text-decoration:underline">Settings</a> to update</span>';
+  } else {
+    // Stale
+    banner.style.display = 'flex';
+    banner.className = 'freshness-bar stale';
+    banner.innerHTML = '<div class="freshness-dot"></div>'
+      + '<span>Data is ' + daysAgo + ' days old — your numbers may not reflect current performance. <a href="/settings" style="color:inherit;text-decoration:underline">Upload fresh data →</a></span>';
+  }
+}
 
 function closePageTooltip() { var el = document.querySelector(".page-tooltip"); if(el) el.remove(); }
 function showPageTooltip() {
