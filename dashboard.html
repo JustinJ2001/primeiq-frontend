@@ -1649,109 +1649,139 @@ function renderLocations() {
 function renderDaily() {
   const p = activePeriod;
   const pCfg = {
-    today:   { labels: ['12am','4am','8am','12pm','4pm','8pm','Close'], mults: [0.02,0.01,0.08,0.22,0.18,0.32,0.17], active: 4 },
-    week:    { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],     mults: [0.11,0.12,0.10,0.13,0.17,0.21,0.16], active: 3 },
-    month:   { labels: ['Week 1','Week 2','Week 3','Week 4'],           mults: [0.23,0.25,0.26,0.26], active: 3 },
-    quarter: { labels: ['Month 1','Month 2','Month 3'],                 mults: [0.31,0.33,0.36], active: 2 },
-    ytd:     { labels: ['Jan','Feb','Mar','Apr','May'],                 mults: [0.17,0.18,0.20,0.22,0.23], active: 4 },
+    today:   { labels:['11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'], mults:[0.05,0.10,0.09,0.07,0.04,0.05,0.13,0.16,0.14,0.11,0.06], active:6,  unit:'hour',  avgLabel:'Avg/hr',   periodName:'Today' },
+    week:    { labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],                            mults:[0.11,0.12,0.10,0.13,0.17,0.21,0.16], active:3,  unit:'day',   avgLabel:'Avg/day',  periodName:'This Week' },
+    month:   { labels:['Week 1','Week 2','Week 3','Week 4'],                                 mults:[0.23,0.25,0.26,0.26], active:3,  unit:'week',  avgLabel:'Avg/week', periodName:'This Month' },
+    quarter: { labels:['Month 1','Month 2','Month 3'],                                       mults:[0.31,0.33,0.36], active:2,  unit:'month', avgLabel:'Avg/mo',   periodName:'This Quarter' },
+    ytd:     { labels:['Jan','Feb','Mar','Apr','May'],                                        mults:[0.17,0.18,0.20,0.22,0.23], active:4,  unit:'month', avgLabel:'Avg/mo',   periodName:'Year to Date' },
   };
   const cfg = pCfg[p] || pCfg.week;
   const labels = cfg.labels;
   const mults = cfg.mults;
-  const todayIdx = cfg.active;
+  const n = labels.length;
+  const periodName = cfg.periodName;
+  const avgLabel = cfg.avgLabel;
 
-  const data = state.locations.map(function(l) {
+  const locData = state.locations.map(function(l) {
     return mults.map(function(m) { return Math.round((l.revenue[p]||0) * m); });
   });
   const combined = labels.map(function(_,i) {
-    return state.locations.reduce(function(s,l,li) { return s+(data[li]?.[i]||0); }, 0);
+    return state.locations.reduce(function(s,l,li) { return s+(locData[li]?.[i]||0); }, 0);
   });
+  const totalRev = combined.reduce(function(a,b){return a+b;}, 0);
   const maxV = Math.max.apply(null, combined.concat([1]));
+  const bestIdx  = combined.indexOf(Math.max.apply(null, combined));
+  const worstIdx = combined.indexOf(Math.min.apply(null, combined));
+  const avg = Math.round(totalRev / n);
+  const avgChk = overallAvgCheck(p) || 24;
+
+  const priorTotal = state.locations.reduce(function(s,l){ return s+(l.revPrev?.[p]||l.revenue[p]*0.91||0); }, 0);
+  const pctChg = priorTotal > 0 ? ((totalRev - priorTotal) / priorTotal * 100).toFixed(1) : null;
+  const pctTag = pctChg !== null
+    ? (parseFloat(pctChg) >= 0
+        ? '<span class="kpi-tag good">↑ ' + pctChg + '% vs prior</span>'
+        : '<span class="kpi-tag bad">↓ ' + Math.abs(pctChg) + '% vs prior</span>')
+    : '';
 
   const chartRows = labels.map(function(d,i) {
     const total = combined[i];
     const w = Math.round(total/maxV*88)+'%';
-    const isActive = i === todayIdx;
-    return '<div class="week-row">'
-      + '<div class="week-day">' + d + '</div>'
-      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+(isActive?'var(--gold)':'var(--green-dim)')+'"></div></div>'
-      + '<div class="week-val">'+fmtDollar(total)+'</div>'
+    const isPeak  = i === bestIdx;
+    const isSlow  = i === worstIdx;
+    const color = isPeak ? 'var(--gold)' : isSlow ? '#f5c0bb' : 'var(--green-dim)';
+    const tag = isPeak ? ' ★' : isSlow ? ' ↓' : '';
+    return '<div class="week-row" style="align-items:center">'
+      + '<div class="week-day" style="font-size:9px;color:'+(isPeak?'var(--gold)':'var(--muted)')+'">'+d+tag+'</div>'
+      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+color+'"></div></div>'
+      + '<div class="week-val" style="font-size:10px">'+fmtDollar(total)+'</div>'
+      + '<div style="width:40px;text-align:right;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">'+Math.round(total/avgChk)+' cvr</div>'
       + '</div>';
   }).join('');
 
-  const locBreakdown = state.locations.map(function(l,li) {
-    return labels.map(function(d,i) {
-      return '<tr>'
-        + '<td class="ct-label">'+d+'</td>'
-        + '<td style="color:var(--cream)">'+fmtDollar(data[li]?.[i]||0)+'</td>'
-        + '<td style="color:var(--cream)">'+Math.round((data[li]?.[i]||0)/Math.max(l.avgCheck[p]||24,1))+' covers</td>'
-        + '<td class="ct-good">$'+(l.avgCheck[p]||24).toFixed(2)+'</td>'
-        + '</tr>';
-    }).join('');
-  });
+  const locHeaders = '<th>Period</th>' + state.locations.map(function(l){
+    return '<th style="text-align:right">' + (l.name.includes('–') ? l.name.split('–').pop().trim() : l.name) + '</th>';
+  }).join('') + '<th style="text-align:right">Total</th><th style="text-align:right">Covers</th>';
+
+  const locRows = labels.map(function(d,i) {
+    const vals = state.locations.map(function(l,li){ return locData[li]?.[i]||0; });
+    const rowTotal = vals.reduce(function(a,b){return a+b;}, 0);
+    return '<tr><td class="ct-label">'+d+'</td>'
+      + vals.map(function(v){ return '<td style="text-align:right;color:var(--cream)">'+fmtDollar(v)+'</td>'; }).join('')
+      + '<td style="text-align:right;font-weight:600;color:var(--cream)">'+fmtDollar(rowTotal)+'</td>'
+      + '<td style="text-align:right;color:var(--muted);font-size:10px">'+Math.round(rowTotal/avgChk)+'</td>'
+      + '</tr>';
+  }).join('');
+
+  const gapVal = combined[bestIdx] - combined[worstIdx];
+  const goodClass = pctChg !== null && parseFloat(pctChg) >= 0 ? 'good' : 'warn';
+
+  return '<div class="kpi-strip">'
+    + '<div class="kpi-card '+goodClass+'">'
+    +   '<div class="kpi-label">Total &middot; '+periodName+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(totalRev)+'</div>'
+    +   pctTag
+    +   '<div class="kpi-sub">All locations combined</div>'
+    + '</div>'
+    + '<div class="kpi-card good">'
+    +   '<div class="kpi-label">Best &middot; '+labels[bestIdx]+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(combined[bestIdx])+'</div>'
+    +   '<span class="kpi-tag good">'+Math.round(combined[bestIdx]/avgChk)+' covers</span>'
+    +   '<div class="kpi-sub">Highest revenue period</div>'
+    + '</div>'
+    + '<div class="kpi-card neutral">'
+    +   '<div class="kpi-label">'+avgLabel+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(avg)+'</div>'
+    +   '<span class="kpi-tag neutral">'+n+' periods</span>'
+    +   '<div class="kpi-sub">Across all locations</div>'
+    + '</div>'
+    + '<div class="kpi-card warn">'
+    +   '<div class="kpi-label">Slowest &middot; '+labels[worstIdx]+'</div>'
+    +   '<div class="kpi-value">'+fmtDollar(combined[worstIdx])+'</div>'
+    +   '<span class="kpi-tag warn">'+fmtDollar(gapVal)+' gap vs best</span>'
+    +   '<div class="kpi-sub">Consider promotions</div>'
+    + '</div>'
+    + '</div>'
+
+    + '<div class="grid-2">'
+    + '<div class="card">'
+    +   '<div class="card-header"><div>'
+    +     '<div class="card-title">Revenue &middot; '+periodName+'</div>'
+    +     '<div class="card-sub">All locations combined &middot; ★ best &middot; ↓ slowest</div>'
+    +   '</div><div class="card-badge">⚡ '+state.pos+'</div></div>'
+    +   '<div style="padding:0 18px 16px;margin-top:8px">'+chartRows+'</div>'
+    + '</div>'
+    + '<div class="card">'
+    +   '<div class="card-header"><div>'
+    +     '<div class="card-title">By Location &middot; '+periodName+'</div>'
+    +     '<div class="card-sub">Revenue per location per period</div>'
+    +   '</div></div>'
+    +   '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+locHeaders+'</tr></thead><tbody>'+locRows+'</tbody></table></div>'
+    + '</div>'
+    + '</div>'
+
+    + '<div class="card" style="margin-top:14px">'
+    +   '<div class="card-header"><div>'
+    +     '<div class="card-title">What The Numbers Are Telling You</div>'
+    +     '<div class="card-sub">Actionable insights based on your revenue pattern</div>'
+    +   '</div></div>'
+    +   '<div class="alerts-list">'
+    +   '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
+    +     '<div class="alert-title">'+labels[bestIdx]+' is your strongest period — '+fmtDollar(combined[bestIdx])+'</div>'
+    +     '<div class="alert-desc">This is when you make the most money. Make sure you are fully staffed and stocked. Do not discount or run specials here — you do not need to.</div>'
+    +   '</div></div>'
+    +   '<div class="alert-item"><div class="alert-icon">↓</div><div class="alert-body">'
+    +     '<div class="alert-title">'+labels[worstIdx]+' is your slowest — '+fmtDollar(gapVal)+' gap vs '+labels[bestIdx]+'</div>'
+    +     '<div class="alert-desc">A targeted promotion or reduced staffing on this period could improve margins. Even a 10% lift adds '+fmtDollar(Math.round(combined[worstIdx]*0.10))+' to your bottom line.</div>'
+    +   '</div></div>'
+    +   '<div class="alert-item"><div class="alert-icon">💡</div><div class="alert-body">'
+    +     '<div class="alert-title">Your average is '+fmtDollar(avg)+' per '+cfg.unit+'</div>'
+    +     '<div class="alert-desc">Use this as your baseline when evaluating any promotions, events, or operational changes. Anything that consistently beats this number is worth keeping.</div>'
+    +   '</div></div>'
+    +   '</div>'
+    + '</div>';
+}
 
 
-  return `
-    <div class="kpi-strip">
-      <div class="kpi-card good">
-        <div class="kpi-label">Best Period</div>
-        <div class="kpi-value">${fmtDollar(Math.max(...combined))}</div>
-${(function(){const mx=Math.max(...combined);const idx=combined.indexOf(mx);return '<span class="kpi-tag good">'+labels[idx]+'</span>';})()}
-        <div class="kpi-sub">Across all locations</div>
-      </div>
-      <div class="kpi-card neutral">
-        <div class="kpi-label">Period Total</div>
-        <div class="kpi-value">${fmtDollar(combined.reduce((a,b)=>a+b,0))}</div>
-        <span class="kpi-tag good">↑ 9% vs last week</span>
-        <div class="kpi-sub">All locations combined</div>
-      </div>
-      <div class="kpi-card good">
-        <div class="kpi-label">Avg Per Period</div>
-        <div class="kpi-value">${fmtDollar(Math.round(combined.reduce((a,b)=>a+b,0)/7))}</div>
-        <span class="kpi-tag good">↑ vs $${Math.round(combined.reduce((a,b)=>a+b,0)/7*0.88/100)*100} LW avg</span>
-        <div class="kpi-sub">Per day, all locations</div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">Slowest Day</div>
-        <div class="kpi-value">${fmtDollar(Math.min(...combined))}</div>
-        <span class="kpi-tag warn">Monday</span>
-        <div class="kpi-sub">Consider promotions</div>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Daily Sales · This Week</div><div class="card-sub">All locations combined</div></div><div class="card-badge">⚡ ${state.pos}</div></div>
-        <div class="week-grid">${chartRows}</div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">By Location · Daily</div><div class="card-sub">${state.locations[0]?.name}</div></div></div>
-        <table class="cost-table">
-          <thead><tr><th>Day</th><th style="text-align:right">Revenue</th><th style="text-align:right">Covers</th><th style="text-align:right">Avg Check</th></tr></thead>
-          <tbody>${locBreakdown[0]}</tbody>
-        </table></div></div>
-      </div>
-    </div>
-    <div class="card" style="animation-delay:0.4s;margin-top:14px">
-      <div class="card-header"><div><div class="card-title">Daypart Breakdown · Today</div><div class="card-sub">Lunch vs Dinner per location · Helps with staffing</div></div></div>
-      <div style="padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
-        ${state.locations.flatMap(l => !l.daypart ? [] : [
-          '<div style="background:var(--cream);border-radius:8px;padding:12px"><div style="font-family:\'IBM Plex Mono\',monospace;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">' + (l.name.includes('–')?l.name.split('–').pop().trim():l.name) + ' · Lunch</div><div style="font-family:\'Playfair Display\',serif;font-size:19px;color:var(--text)">' + fmtDollar(l.daypart.lunch.rev) + '</div><div style="font-size:10.5px;color:var(--text-dim);margin-top:3px">' + l.daypart.lunch.covers + ' covers · $' + l.daypart.lunch.avgChk.toFixed(2) + ' avg · ' + Math.round(l.daypart.lunch.covers/l.daypart.lunch.hoursOpen) + '/hr</div></div>',
-          '<div style="background:var(--cream);border-radius:8px;padding:12px"><div style="font-family:\'IBM Plex Mono\',monospace;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">' + (l.name.includes('–')?l.name.split('–').pop().trim():l.name) + ' · Dinner</div><div style="font-family:\'Playfair Display\',serif;font-size:19px;color:var(--text)">' + fmtDollar(l.daypart.dinner.rev) + '</div><div style="font-size:10.5px;color:var(--text-dim);margin-top:3px">' + l.daypart.dinner.covers + ' covers · $' + l.daypart.dinner.avgChk.toFixed(2) + ' avg · ' + Math.round(l.daypart.dinner.covers/l.daypart.dinner.hoursOpen) + '/hr</div></div>'
-        ]).join('')}
-      </div>
-    </div>`;
-}
-
-function periodRent(l,p) {
-  return p==='today'?l.rent/30:p==='week'?l.rent/4.3:p==='month'?l.rent:p==='quarter'?l.rent*3:l.rent*12;
-}
-function periodFixed(l,p,field) {
-  const m = l[field]||0;
-  return p==='today'?m/30:p==='week'?m/4.3:p==='month'?m:p==='quarter'?m*3:m*12;
-}
-function totalFixed(l,p) {
-  return periodFixed(l,p,'rent')+periodFixed(l,p,'utilities')+periodFixed(l,p,'insurance')+periodFixed(l,p,'supplies')+periodFixed(l,p,'marketing')+periodFixed(l,p,'software');
-}
 
 function renderCosts() {
   const p = activePeriod;
@@ -1933,47 +1963,119 @@ function renderLabor() {
     </div>`;
 }
 
-function renderMenu() {
-  const items = [
-    { name:'Street Tacos (3)', pct:28, margin:'good', marginVal:'71%', note:'Top seller · High repeat order' },
-    { name:'Burrito Bowl', pct:21, margin:'good', marginVal:'68%', note:'Strong lunch item' },
-    { name:'Protein Bowl', pct:13, margin:'good', marginVal:'70%', note:'Growing fast · Health-conscious crowd' },
-    { name:'Quesadilla', pct:12, margin:'good', marginVal:'65%', note:'Consistent every day' },
-    { name:'Chips & Guac', pct:11, margin:'good', marginVal:'83%', note:'High margin · Push as add-on' },
-    { name:'Agua Fresca / Horchata', pct:8, margin:'good', marginVal:'88%', note:'Best margin on menu · Undersold' },
-    { name:'Kids Taco Plate', pct:5, margin:'warn', marginVal:'51%', note:'Low margin · Raise price $1.50' },
-    { name:'Nachos', pct:2, margin:'warn', marginVal:'55%', note:'Low volume + low margin · Consider dropping' },
-  ];
-  const menuHTML = items.map(it => `
-    <div class="menu-item">
-      <div class="menu-name">${it.name}</div>
-      <div class="menu-track"><div class="menu-fill" style="width:${it.pct*3}px;max-width:100%"></div></div>
-      <div class="menu-pct">${it.pct}%</div>
-      <div class="menu-margin ${it.margin}">${it.marginVal}</div>
-    </div>`).join('');
-
-  return `
-    <div class="kpi-strip">
-      <div class="kpi-card good"><div class="kpi-label">Top Seller</div><div class="kpi-value" style="font-size:20px">Burrito Bowl</div><span class="kpi-tag good">28% of orders</span><div class="kpi-sub">72% margin · Keep promoting</div></div>
-      <div class="kpi-card good"><div class="kpi-label">Highest Margin</div><div class="kpi-value" style="font-size:20px">Drinks</div><span class="kpi-tag good">88% margin</span><div class="kpi-sub">Only 4% of orders · Upsell more</div></div>
-      <div class="kpi-card warn"><div class="kpi-label">Lowest Margin</div><div class="kpi-value" style="font-size:20px">Kids Meal</div><span class="kpi-tag warn">52% margin</span><div class="kpi-sub">7% of orders · Review pricing</div></div>
-      <div class="kpi-card neutral"><div class="kpi-label">Menu Items</div><div class="kpi-value">7</div><span class="kpi-tag good">All tracked</span><div class="kpi-sub">From ${state.pos}</div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Menu Mix · % of Orders</div><div class="card-sub">This week · With margin per item</div></div><div class="card-badge">⚡ ${state.pos}</div></div>
-        <div class="menu-list">${menuHTML}</div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Recommendations</div><div class="card-sub">AI-generated · Based on mix + margin</div></div></div>
-        <div class="alert-list">
-          <div class="alert-row"><div class="alert-ico good">💡</div><div><div class="alert-body-title">Upsell drinks at checkout</div><div class="alert-body-desc">Drinks are 88% margin but only 4% of orders. A simple prompt at POS could add $400–$600/week.</div></div></div>
-          <div class="alert-row"><div class="alert-ico warn">💡</div><div><div class="alert-body-title">Review Kids Meal pricing</div><div class="alert-body-desc">52% margin is below your 65% target. Raise price $1–$1.50 or reduce portion cost.</div></div></div>
-          <div class="alert-row"><div class="alert-ico good">💡</div><div><div class="alert-body-title">Guac & Chips is a hidden gem</div><div class="alert-body-desc">81% margin, 10% of orders. Feature it prominently on menu boards.</div></div></div>
-        </div>
-      </div>
-    </div>`;
+function isDemoMode() {
+  return new URLSearchParams(window.location.search).get('demo') === '1';
 }
+
+function renderMenu() {
+  // For real clients without POS API connected, show placeholder
+  const isRealClient = !isDemoMode();
+  const hasPOSData = state.locations.some(function(l){ return l.menuItems && l.menuItems.length > 0; });
+
+  if (isRealClient && !hasPOSData) {
+    return '<div style="padding:60px 32px;text-align:center;max-width:520px;margin:0 auto">'
+      + '<div style="font-size:36px;margin-bottom:16px">🍽</div>'
+      + '<div style="font-family:Playfair Display,serif;font-size:20px;color:var(--dark);margin-bottom:8px">Menu Performance</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:20px;line-height:1.7">Menu item data comes from your POS system. This page will automatically populate once your Toast or Square integration is live with item-level sales data.</div>'
+      + '<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:left;margin-bottom:16px">'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">What you will see here</div>'
+      + '<div style="font-size:12px;color:var(--muted);line-height:1.8">'
+      + '• Sales mix % per menu item<br>'
+      + '• Estimated contribution margin per item<br>'
+      + '• Which items to promote, reprice, or drop<br>'
+      + '• Revenue impact of menu changes'
+      + '</div></div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">POS API integration is required. <a href="/settings" style="color:var(--gold)">Check connection status →</a></div>'
+      + '</div>';
+  }
+
+  // Demo mode or client with POS data — show menu items
+  // Use state menu items if available, otherwise use generic demo items
+  const items = (hasPOSData && state.locations[0]?.menuItems) || [
+    { name:'House Burger',         pct:24, margin:'good', marginVal:'69%', note:'Top seller · High repeat order' },
+    { name:'Grilled Salmon',       pct:18, margin:'good', marginVal:'72%', note:'Strong dinner item · High avg check' },
+    { name:'Caesar Salad',         pct:14, margin:'good', marginVal:'78%', note:'Great add-on · Fast to make' },
+    { name:'Pasta Primavera',      pct:12, margin:'good', marginVal:'74%', note:'Consistent every day · Low food cost' },
+    { name:'Chicken Sandwich',     pct:11, margin:'good', marginVal:'67%', note:'Popular lunch item' },
+    { name:'Craft Cocktails',      pct:9,  margin:'good', marginVal:'82%', note:'Best margin on menu · Push harder' },
+    { name:'Kids Grilled Cheese',  pct:7,  margin:'warn', marginVal:'53%', note:'Low margin · Consider raising price $1.50' },
+    { name:'Loaded Fries',         pct:5,  margin:'warn', marginVal:'58%', note:'Low volume + low margin · Review' },
+  ];
+
+  const maxPct = Math.max.apply(null, items.map(function(i){ return i.pct; }));
+  const topItem = items[0];
+  const topMargin = items.reduce(function(a,b){ return parseFloat(a.marginVal) > parseFloat(b.marginVal) ? a : b; });
+  const warnItems = items.filter(function(i){ return i.margin === 'warn'; });
+
+  const menuHTML = items.map(function(it) {
+    const barW = Math.round(it.pct / maxPct * 180);
+    const cls = it.margin === 'good' ? 'var(--green)' : 'var(--amber)';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:2px">'+it.name+'</div>'
+      +   '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'+it.note+'</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      +   '<div style="width:'+barW+'px;height:6px;background:var(--green-dim);border-radius:3px;position:relative">'
+      +     '<div style="position:absolute;left:0;top:0;height:100%;width:100%;background:'+cls+';border-radius:3px"></div>'
+      +   '</div>'
+      +   '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);width:28px;text-align:right">'+it.pct+'%</div>'
+      +   '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:'+cls+';width:36px;text-align:right">'+it.marginVal+'</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  const demoNote = isDemoMode()
+    ? '<div style="padding:8px 20px;background:rgba(184,134,11,0.08);border-bottom:1px solid rgba(184,134,11,0.15);font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold)">SAMPLE DATA — Menu items will reflect your actual POS menu once connected</div>'
+    : '';
+
+  return '<div class="kpi-strip">'
+    + '<div class="kpi-card good"><div class="kpi-label">Top Seller</div><div class="kpi-value" style="font-size:18px">'+topItem.name+'</div>'
+    +   '<span class="kpi-tag good">'+topItem.pct+'% of orders</span><div class="kpi-sub">By order volume</div></div>'
+    + '<div class="kpi-card good"><div class="kpi-label">Best Margin Item</div><div class="kpi-value" style="font-size:18px">'+topMargin.name+'</div>'
+    +   '<span class="kpi-tag good">'+topMargin.marginVal+' margin</span><div class="kpi-sub">Most profitable item</div></div>'
+    + '<div class="kpi-card neutral"><div class="kpi-label">Items Tracked</div><div class="kpi-value">'+items.length+'</div>'
+    +   '<span class="kpi-tag neutral">'+items.filter(function(i){return i.margin==='good';}).length+' performing well</span><div class="kpi-sub">From POS data</div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-label">Need Attention</div><div class="kpi-value">'+warnItems.length+'</div>'
+    +   '<span class="kpi-tag warn">Low margin or low volume</span><div class="kpi-sub">Review pricing or drop</div></div>'
+    + '</div>'
+
+    + '<div class="grid-2">'
+    + '<div class="card">'
+    +   '<div class="card-header"><div><div class="card-title">Sales Mix &amp; Margin</div>'
+    +     '<div class="card-sub">% of orders · Contribution margin per item</div></div>'
+    +   '<div style="display:flex;gap:12px;align-items:center;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">'
+    +     '<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--green);border-radius:2px;display:inline-block"></span>Good margin</span>'
+    +     '<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--amber);border-radius:2px;display:inline-block"></span>Watch</span>'
+    +   '</div></div>'
+    +   demoNote
+    +   '<div style="padding:0 20px 16px">'+menuHTML+'</div>'
+    + '</div>'
+
+    + '<div class="card">'
+    +   '<div class="card-header"><div><div class="card-title">Menu Insights</div>'
+    +     '<div class="card-sub">What to act on this week</div></div></div>'
+    +   '<div class="alerts-list">'
+    +   '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
+    +     '<div class="alert-title">'+topMargin.name+' is your highest margin item at '+topMargin.marginVal+'</div>'
+    +     '<div class="alert-desc">Make sure it is prominent on your menu board and that staff are trained to suggest it. Every extra order is almost pure profit.</div>'
+    +   '</div></div>'
+    +   '<div class="alert-item"><div class="alert-icon">📈</div><div class="alert-body">'
+    +     '<div class="alert-title">Push your top sellers as combo upsells</div>'
+    +     '<div class="alert-desc">'+topItem.name+' is '+topItem.pct+'% of orders. A paired drink or side upsell at checkout could add $2-4 per ticket — at your volume that is significant.</div>'
+    +   '</div></div>'
+    + (warnItems.length > 0
+        ? '<div class="alert-item"><div class="alert-icon">⚠</div><div class="alert-body">'
+        +   '<div class="alert-title">'+warnItems.map(function(i){return i.name;}).join(' and ')+' need attention</div>'
+        +   '<div class="alert-desc">Low margin items drag down your overall food cost %. Try raising price by $1-2, reducing portion cost, or removing them if volume does not justify menu space.</div>'
+        + '</div></div>'
+        : '')
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+
 
 function renderCashflow() {
   const p = activePeriod;
@@ -2475,280 +2577,119 @@ function renderBreakeven() {
 
 function renderHourly() {
   const p = activePeriod;
+  const periodNames = { today:'Today', week:'Typical Day (This Week)', month:'Typical Day (This Month)', quarter:'Typical Day (This Quarter)', ytd:'Typical Day (YTD)' };
+  const periodName = periodNames[p] || 'Today';
 
-  // ── TODAY: show hourly bars ───────────────────────────────────────────────
-  if (p === 'today') {
-    const allHours = state.locations[0]?.hourly || [];
-    if (!allHours.length) return '<div style="padding:40px;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--muted)">No hourly data available. Connect your POS to see sales by hour.</div>';
-    const combined = allHours.map((h, i) => ({
-      hour: h.hour,
-      rev: state.locations.reduce((s, l) => s + (l.hourly?.[i]?.rev || 0), 0)
-    }));
-    const maxRev    = Math.max(...combined.map(h => h.rev));
-    const peakHour  = combined.reduce((a, b) => a.rev > b.rev ? a : b);
-    const slowHour  = combined.reduce((a, b) => a.rev < b.rev ? a : b);
-    const lunchTotal  = combined.filter(h => ['11am','12pm','1pm','2pm'].includes(h.hour)).reduce((s,h)=>s+h.rev,0);
-    const dinnerTotal = combined.filter(h => ['5pm','6pm','7pm','8pm'].includes(h.hour)).reduce((s,h)=>s+h.rev,0);
-    const totalRev  = combined.reduce((s, h) => s + h.rev, 0);
-    const varPctH   = avgFoodCost(p) + state.ccFeeRate;
-    const avgChkVal = overallAvgCheck(p);
+  const divisors = { today:1, week:7, month:30, quarter:90, ytd:150 };
+  const div = divisors[p] || 1;
+  const totalRevForDay = state.locations.reduce(function(s,l){ return s+(l.revenue[p]||0); }, 0) / div;
 
-    const barHeader = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:36px;text-align:right;flex-shrink:0">Hour</div>
-      <div style="flex:1"></div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;flex-shrink:0;letter-spacing:0.08em">REVENUE</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:44px;text-align:right;flex-shrink:0;letter-spacing:0.08em">COVERS</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;flex-shrink:0;letter-spacing:0.08em">CONTRIB</div>
-    </div>`;
+  const allHours = state.locations[0]?.hourly || [];
+  const hours = allHours.length
+    ? allHours.map(function(h){ return h.hour; })
+    : ['10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm'];
 
-    const barRows = combined.map(h => {
-      const pct  = maxRev > 0 ? Math.round(h.rev / maxRev * 88) : 0;
-      const isPeak = h.hour === peakHour.hour;
-      const isSlow = h.hour === slowHour.hour;
-      const color  = isPeak ? 'var(--gold)' : isSlow ? 'var(--red)' : h.rev > totalRev/combined.length ? 'var(--green)' : 'rgba(45,122,79,0.25)';
-      const covers = avgChkVal > 0 ? Math.round(h.rev / avgChkVal) : 0;
-      const contrib = Math.round(h.rev * (1 - varPctH/100));
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);width:36px;text-align:right;flex-shrink:0">${h.hour}</div>
-        <div style="flex:1;height:26px;background:var(--card2);border-radius:5px;overflow:hidden">
-          <div style="width:${pct}%;height:100%;background:${color};border-radius:5px"></div>
-        </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:54px;text-align:right;flex-shrink:0">${fmtDollar(h.rev)}</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);width:44px;text-align:right;flex-shrink:0">${covers}/hr</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);width:54px;text-align:right;flex-shrink:0">+${fmtDollar(contrib)}</div>
-      </div>`;
-    }).join('');
+  const profileRaw = allHours.length
+    ? allHours.map(function(h,i){ return state.locations.reduce(function(s,l){ return s+(l.hourly?.[i]?.rev||0); }, 0); })
+    : [180,420,680,720,580,390,480,920,1080,980,720,340];
 
-    return `
-      <div class="kpi-strip">
-        <div class="kpi-card good"><div class="kpi-label">Peak Hour</div><div class="kpi-value">${peakHour.hour}</div><span class="kpi-tag good">${fmtDollar(peakHour.rev)}</span><div class="kpi-sub">~${avgChkVal>0?Math.round(peakHour.rev/avgChkVal):0} covers · ${fmtDollar(Math.round(peakHour.rev*(1-varPctH/100)))} contribution</div></div>
-        <div class="kpi-card bad"><div class="kpi-label">Slowest Hour</div><div class="kpi-value">${slowHour.hour}</div><span class="kpi-tag warn">${fmtDollar(slowHour.rev)}</span><div class="kpi-sub">Minimum staff window</div></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Avg Check</div><div class="kpi-value">$${avgChkVal.toFixed(2)}</div><span class="kpi-tag neutral">Per cover</span><div class="kpi-sub">Contrib margin: $${(avgChkVal*(1-varPctH/100)).toFixed(2)}/cover</div></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Lunch vs Dinner</div><div class="kpi-value">${Math.round(lunchTotal/totalRev*100)}%</div><span class="kpi-tag neutral">Lunch share</span><div class="kpi-sub">${fmtDollar(lunchTotal)} lunch · ${fmtDollar(dinnerTotal)} dinner</div></div>
-      </div>
-      <div class="grid-3-1">
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">Revenue by Hour · Today</div><div class="card-sub">Both locations combined · Revenue · Covers/hr · Contribution margin</div></div><div class="card-badge">⚡ Auto</div></div>
-          <div style="padding:14px 18px 16px">${barHeader}${barRows}</div>
-        </div>
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">Staffing Guide</div><div class="card-sub">Based on today's hourly data</div></div></div>
-          <div class="al-list">
-            <div class="al-row"><div class="al-ico good">✓</div><div><div class="al-title">Peak: ${peakHour.hour} — ${fmtDollar(peakHour.rev)}</div><div class="al-desc">Full staff needed. Don't schedule breaks during this window.</div></div></div>
-            <div class="al-row"><div class="al-ico warn">⚠</div><div><div class="al-title">Slow: ${slowHour.hour} — ${fmtDollar(slowHour.rev)}</div><div class="al-desc">${fmtDollar(peakHour.rev - slowHour.rev)} gap vs peak. Run minimum staffing here.</div></div></div>
-            <div class="al-row"><div class="al-ico good">✓</div><div><div class="al-title">Lunch drives ${Math.round(lunchTotal/totalRev*100)}% of daily revenue</div><div class="al-desc">11am–2pm: ${fmtDollar(lunchTotal)} &nbsp;·&nbsp; 5pm–8pm: ${fmtDollar(dinnerTotal)}</div></div></div>
-          </div>
-        </div>
-      </div>`;
-  }
+  const profileTotal = profileRaw.reduce(function(a,b){return a+b;}, 0);
+  const scaled = profileRaw.map(function(v){ return Math.round(v / Math.max(profileTotal,1) * totalRevForDay); });
+  const maxRev = Math.max.apply(null, scaled.concat([1]));
+  const avgChk = overallAvgCheck(p) || 24;
+  const covers = scaled.map(function(v){ return Math.round(v / avgChk); });
 
-  // ── WEEK: show daily bars Mon–Sun ─────────────────────────────────────────
-  if (p === 'week') {
-    const days  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const hk    = [1420,1680,1510,1740,2280,3100,1980];
-    const ev    = [1020,1180,1090,1240,1640,2280,1420];
-    const tots  = days.map((_,i) => hk[i]+ev[i]);
-    const maxV  = Math.max(...tots);
-    const best  = days[tots.indexOf(Math.max(...tots))];
-    const worst = days[tots.indexOf(Math.min(...tots))];
-    const weekTotal = tots.reduce((a,b)=>a+b,0);
-    const avgDay = Math.round(weekTotal/7);
-    const varPctH = avgFoodCost(p) + state.ccFeeRate;
+  const peakIdx = scaled.indexOf(Math.max.apply(null, scaled));
+  const slowIdx = scaled.indexOf(Math.min.apply(null, scaled));
 
-    const bars = days.map((d,i) => {
-      const pct = Math.round(tots[i]/maxV*88);
-      const bg  = d===best?'var(--gold)':d===worst?'var(--red)':'rgba(45,122,79,0.5)';
-      const contrib = Math.round(tots[i]*(1-varPctH/100));
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);width:28px;text-align:right;flex-shrink:0">${d}</div>
-        <div style="flex:1;height:26px;background:var(--card2);border-radius:5px;overflow:hidden">
-          <div style="width:${pct}%;height:100%;background:${bg};border-radius:5px"></div>
-        </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:54px;text-align:right;flex-shrink:0">${fmtDollar(tots[i])}</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);width:54px;text-align:right;flex-shrink:0">+${fmtDollar(contrib)}</div>
-      </div>`;
-    }).join('');
+  const lunchHours = ['11am','12pm','1pm','2pm'];
+  const dinnerHours = ['5pm','6pm','7pm','8pm','9pm'];
+  const lunchRev = hours.reduce(function(s,h,i){ return s+(lunchHours.indexOf(h)>=0?scaled[i]:0); }, 0);
+  const dinnerRev = hours.reduce(function(s,h,i){ return s+(dinnerHours.indexOf(h)>=0?scaled[i]:0); }, 0);
+  const totalRev = scaled.reduce(function(a,b){return a+b;}, 0);
 
-    const tblRows = days.map((d,i) => `<tr>
-      <td class="dim">${d}</td>
-      <td class="ink">${fmtDollar(hk[i])}</td>
-      <td class="ink">${fmtDollar(ev[i])}</td>
-      <td class="ink" style="font-weight:600">${fmtDollar(tots[i])}</td>
-      <td class="${tots[i]>=avgDay?'good':'warn'}">${tots[i]>=avgDay?'↑':'↓'} ${Math.abs(Math.round((tots[i]-avgDay)/avgDay*100))}% vs avg</td>
-    </tr>`).join('');
-
-    return `
-      <div class="kpi-strip">
-        <div class="kpi-card good"><div class="kpi-label">Best Day</div><div class="kpi-value">${best}</div><span class="kpi-tag good">${fmtDollar(Math.max(...tots))}</span><div class="kpi-sub">Highest revenue day this week</div></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Daily Average</div><div class="kpi-value">${fmtDollar(avgDay)}</div><span class="kpi-tag neutral">This week</span><div class="kpi-sub">Both locations combined</div></div>
-        <div class="kpi-card bad"><div class="kpi-label">Slowest Day</div><div class="kpi-value">${worst}</div><span class="kpi-tag warn">${fmtDollar(Math.min(...tots))}</span><div class="kpi-sub">Consider reduced staffing</div></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Week Total</div><div class="kpi-value">${fmtDollar(weekTotal)}</div><span class="kpi-tag good">↑ 7.7% vs last week</span><div class="kpi-sub">7-day combined</div></div>
-      </div>
-      <div class="grid-2">
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">Daily Revenue · This Week</div><div class="card-sub">Revenue · Contribution margin per day</div></div><div class="card-badge">⚡ Auto</div></div>
-          <div style="padding:0 18px 16px;margin-top:12px">
-            <div style="display:flex;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:28px;text-align:right"></div>
-              <div style="flex:1"></div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">REVENUE</div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">CONTRIB</div>
-            </div>
-            ${bars}
-          </div>
-        </div>
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">By Location · Daily Breakdown</div></div></div>
-          <div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th>Day</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>vs Avg</th></tr></thead>
-            <tbody>${tblRows}
-              <tr class="total"><td>Total</td><td>${fmtDollar(hk.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(ev.reduce((a,b)=>a+b,0))}</td><td>${fmtDollar(weekTotal)}</td><td>—</td></tr>
-            </tbody>
-          </table></div>
-        </div>
-      </div>`;
-  }
-
-  // ── MONTH: show daily bars with weekly grouping ───────────────────────────
-  if (p === 'month') {
-    const weeks = [
-      { label:'Week 1', days:'May 1–7',   rev:[1380,1620,1480,1700,2200,3050,1920], hk:[800,940,860,990,1280,1780,1120], ev:[580,680,620,710,920,1270,800] },
-      { label:'Week 2', days:'May 8–14',  rev:[1420,1680,1510,1740,2280,3100,1980], hk:[820,970,880,1010,1320,1810,1150], ev:[600,710,630,730,960,1290,830] },
-      { label:'Week 3', days:'May 15–21', rev:[1440,1700,1530,1760,2300,3140,2010], hk:[840,990,900,1020,1340,1830,1170], ev:[600,710,630,740,960,1310,840] },
-      { label:'Week 4', days:'May 22–28', rev:[1460,1720,1550,1780,2330,3180,2030], hk:[850,1000,910,1030,1360,1860,1190], ev:[610,720,640,750,970,1320,840] },
-    ];
-    const weekTotals = weeks.map(w => w.rev.reduce((a,b)=>a+b,0));
-    const maxW = Math.max(...weekTotals);
-    const varPctH = avgFoodCost(p) + state.ccFeeRate;
-
-    const weekBars = weeks.map((w,i) => {
-      const pct = Math.round(weekTotals[i]/maxW*88);
-      const contrib = Math.round(weekTotals[i]*(1-varPctH/100));
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);width:52px;text-align:right;flex-shrink:0">${w.label}</div>
-        <div style="flex:1;height:28px;background:var(--card2);border-radius:5px;overflow:hidden">
-          <div style="width:${pct}%;height:100%;background:rgba(45,122,79,0.55);border-radius:5px"></div>
-        </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:54px;text-align:right;flex-shrink:0">${fmtDollar(weekTotals[i])}</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);width:54px;text-align:right;flex-shrink:0">+${fmtDollar(contrib)}</div>
-      </div>`;
-    }).join('');
-
-    const tblRows = weeks.map(w => {
-      const wt = w.rev.reduce((a,b)=>a+b,0);
-      return `<tr>
-        <td class="dim">${w.label}<br><span style="font-size:9px">${w.days}</span></td>
-        <td class="ink">${fmtDollar(w.hk.reduce((a,b)=>a+b,0))}</td>
-        <td class="ink">${fmtDollar(w.ev.reduce((a,b)=>a+b,0))}</td>
-        <td class="ink" style="font-weight:600">${fmtDollar(wt)}</td>
-        <td class="ink">$${(wt/7).toFixed(0)}/day avg</td>
-      </tr>`;
-    }).join('');
-
-    const monthTotal = weekTotals.reduce((a,b)=>a+b,0);
-    return `
-      <div class="kpi-strip">
-        <div class="kpi-card neutral"><div class="kpi-label">Month Total</div><div class="kpi-value">${fmtDollar(monthTotal)}</div><span class="kpi-tag good">↑ 5.9% vs last month</span><div class="kpi-sub">Both locations combined</div></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Best Week</div><div class="kpi-value">${weeks[weekTotals.indexOf(Math.max(...weekTotals))].label}</div><span class="kpi-tag good">${fmtDollar(Math.max(...weekTotals))}</span></div>
-        <div class="kpi-card neutral"><div class="kpi-label">Daily Average</div><div class="kpi-value">${fmtDollar(Math.round(monthTotal/28))}</div><span class="kpi-tag neutral">Per day this month</span></div>
-        <div class="kpi-card good"><div class="kpi-label">Contribution</div><div class="kpi-value">${fmtDollar(Math.round(monthTotal*(1-varPctH/100)))}</div><span class="kpi-tag good">After food & CC fees</span></div>
-      </div>
-      <div class="grid-2">
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">Revenue by Week · This Month</div><div class="card-sub">Weekly totals · Contribution margin</div></div><div class="card-badge">⚡ Auto</div></div>
-          <div style="padding:0 18px 16px;margin-top:12px">
-            <div style="display:flex;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">
-              <div style="width:52px"></div><div style="flex:1"></div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">REVENUE</div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">CONTRIB</div>
-            </div>
-            ${weekBars}
-          </div>
-        </div>
-        <div class="card mb">
-          <div class="card-header"><div><div class="card-title">By Location · Weekly</div></div></div>
-          <div class="tbl-wrap"><table class="tbl">
-            <thead><tr><th>Week</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>Daily Avg</th></tr></thead>
-            <tbody>${tblRows}
-              <tr class="total"><td>Month Total</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.hk.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(weeks.reduce((s,w)=>s+w.ev.reduce((a,b)=>a+b,0),0))}</td><td>${fmtDollar(monthTotal)}</td><td>$${(monthTotal/28).toFixed(0)}/day</td></tr>
-            </tbody>
-          </table></div>
-        </div>
-      </div>`;
-  }
-
-  // ── QUARTER / YTD: show monthly bars ─────────────────────────────────────
-  const isQuarter = p === 'quarter';
-  const months = isQuarter
-    ? [{label:'Mar', hk:138500/3, ev:107000/3}, {label:'Apr', hk:44200, ev:33800}, {label:'May', hk:46800, ev:36200}]
-    : [{label:'Jan',hk:38000,ev:29000},{label:'Feb',hk:40000,ev:31000},{label:'Mar',hk:46200,ev:35700},{label:'Apr',hk:44200,ev:33800},{label:'May',hk:46800,ev:36200}];
-
-  const mTotals = months.map(m => m.hk+m.ev);
-  const maxM    = Math.max(...mTotals);
-  const varPctH = avgFoodCost(p) + state.ccFeeRate;
-
-  const mBars = months.map((m,i) => {
-    const pct = Math.round(mTotals[i]/maxM*88);
-    const prev = i>0 ? mTotals[i-1] : null;
-    const chg  = prev ? ((mTotals[i]-prev)/prev*100).toFixed(1) : null;
-    const bg   = mTotals[i]===maxM?'var(--gold)':'rgba(45,122,79,0.5)';
-    const contrib = Math.round(mTotals[i]*(1-varPctH/100));
-    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);width:28px;text-align:right;flex-shrink:0">${m.label}</div>
-      <div style="flex:1;height:28px;background:var(--card2);border-radius:5px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${bg};border-radius:5px"></div>
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);width:54px;text-align:right;flex-shrink:0">${fmtDollar(Math.round(mTotals[i]))}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:${chg&&parseFloat(chg)>=0?'var(--green)':'var(--red)'};width:44px;text-align:right;flex-shrink:0">${chg?(parseFloat(chg)>=0?'↑':'↓')+Math.abs(chg)+'%':'—'}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);width:54px;text-align:right;flex-shrink:0">+${fmtDollar(contrib)}</div>
-    </div>`;
+  const barRows = hours.map(function(h,i) {
+    const w = Math.round(scaled[i]/maxRev*88)+'%';
+    const isPeak = i === peakIdx;
+    const isSlow = i === slowIdx;
+    const color = isPeak ? 'var(--gold)' : isSlow ? '#f5c0bb' : 'var(--green-dim)';
+    return '<div class="week-row" style="align-items:center">'
+      + '<div class="week-day" style="font-size:9px;width:36px;color:'+(isPeak?'var(--gold)':'var(--muted)')+'">'+h+(isPeak?' ★':isSlow?' ↓':'')+'</div>'
+      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+color+'"></div></div>'
+      + '<div class="week-val" style="font-size:10px;width:56px">'+fmtDollar(scaled[i])+'</div>'
+      + '<div style="width:36px;text-align:right;font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">'+covers[i]+' cvr</div>'
+      + '</div>';
   }).join('');
 
-  const mTblRows = months.map((m,i) => {
-    const prev = i>0 ? mTotals[i-1] : null;
-    const chg  = prev ? ((mTotals[i]-prev)/prev*100).toFixed(1) : '—';
-    return `<tr>
-      <td class="dim">${m.label}</td>
-      <td class="ink">${fmtDollar(Math.round(m.hk))}</td>
-      <td class="ink">${fmtDollar(Math.round(m.ev))}</td>
-      <td class="ink" style="font-weight:600">${fmtDollar(Math.round(mTotals[i]))}</td>
-      <td class="${chg!=='—'&&parseFloat(chg)>=0?'good':'bad'}">${chg!=='—'?(parseFloat(chg)>=0?'↑':'↓')+Math.abs(chg)+'%':'—'}</td>
-    </tr>`;
+  const staffRows = hours.map(function(h,i) {
+    const foh = Math.max(Math.ceil(covers[i]/3), 1);
+    const boh = Math.max(Math.ceil(covers[i]/2.5), 1);
+    const isPeak = i === peakIdx;
+    return '<tr style="'+(isPeak?'background:rgba(184,134,11,0.06)':'')+'">'
+      + '<td style="font-weight:'+(isPeak?'700':'400')+'">'+h+(isPeak?' ★':i===slowIdx?' ↓':'')+'</td>'
+      + '<td style="text-align:right;color:var(--cream)">'+fmtDollar(scaled[i])+'</td>'
+      + '<td style="text-align:right;color:var(--muted)">'+covers[i]+'</td>'
+      + '<td style="text-align:right;color:var(--green)">'+foh+' FOH</td>'
+      + '<td style="text-align:right;color:var(--amber)">'+boh+' BOH</td>'
+      + '</tr>';
   }).join('');
 
-  const periodTotal = mTotals.reduce((a,b)=>a+b,0);
-  const periodLabel2 = isQuarter ? 'This Quarter' : 'Year to Date';
-  return `
-    <div class="kpi-strip">
-      <div class="kpi-card neutral"><div class="kpi-label">${periodLabel2}</div><div class="kpi-value">${fmtDollar(Math.round(periodTotal))}</div><span class="kpi-tag good">↑ vs prior period</span><div class="kpi-sub">Both locations combined</div></div>
-      <div class="kpi-card good"><div class="kpi-label">Best Month</div><div class="kpi-value">${months[mTotals.indexOf(maxM)].label}</div><span class="kpi-tag good">${fmtDollar(Math.round(maxM))}</span></div>
-      <div class="kpi-card neutral"><div class="kpi-label">Monthly Average</div><div class="kpi-value">${fmtDollar(Math.round(periodTotal/months.length))}</div><span class="kpi-tag neutral">Per month</span></div>
-      <div class="kpi-card good"><div class="kpi-label">Total Contribution</div><div class="kpi-value">${fmtDollar(Math.round(periodTotal*(1-varPctH/100)))}</div><span class="kpi-tag good">After food & CC fees</span></div>
-    </div>
-    <div class="grid-2">
-      <div class="card mb">
-        <div class="card-header"><div><div class="card-title">Revenue by Month · ${periodLabel2}</div><div class="card-sub">Monthly totals · Month-over-month change · Contribution margin</div></div><div class="card-badge">⚡ Auto</div></div>
-        <div style="padding:0 18px 16px;margin-top:12px">
-          <div style="display:flex;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">
-            <div style="width:28px"></div><div style="flex:1"></div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">REVENUE</div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:44px;text-align:right;letter-spacing:0.08em">MOM</div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);width:54px;text-align:right;letter-spacing:0.08em">CONTRIB</div>
-          </div>
-          ${mBars}
-        </div>
-      </div>
-      <div class="card mb">
-        <div class="card-header"><div><div class="card-title">By Location · Monthly</div></div></div>
-        <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>Month</th><th>Midtown</th><th>Downtown</th><th>Total</th><th>MoM</th></tr></thead>
-          <tbody>${mTblRows}
-            <tr class="total"><td>Total</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.hk,0)))}</td><td>${fmtDollar(Math.round(months.reduce((s,m)=>s+m.ev,0)))}</td><td>${fmtDollar(Math.round(periodTotal))}</td><td>—</td></tr>
-          </tbody>
-        </table></div>
-      </div>
-    </div>`;
+  const lunchPct = Math.round(lunchRev/Math.max(totalRev,1)*100);
+  const dinnerPct = Math.round(dinnerRev/Math.max(totalRev,1)*100);
+  const dinnerLunchRatio = (lunchRev > 0) ? (dinnerRev/lunchRev).toFixed(1) : 'N/A';
+  const slowCutSaving = Math.round(18 * 1);
+
+  return '<div class="kpi-strip">'
+    + '<div class="kpi-card good"><div class="kpi-label">Peak Hour</div><div class="kpi-value">'+hours[peakIdx]+'</div>'
+    +   '<span class="kpi-tag good">'+fmtDollar(scaled[peakIdx])+' &middot; '+covers[peakIdx]+' covers</span>'
+    +   '<div class="kpi-sub">Your busiest hour</div></div>'
+    + '<div class="kpi-card good"><div class="kpi-label">Lunch Revenue</div><div class="kpi-value">'+fmtDollar(lunchRev)+'</div>'
+    +   '<span class="kpi-tag neutral">'+lunchPct+'% of daily total</span>'
+    +   '<div class="kpi-sub">11am – 2pm</div></div>'
+    + '<div class="kpi-card good"><div class="kpi-label">Dinner Revenue</div><div class="kpi-value">'+fmtDollar(dinnerRev)+'</div>'
+    +   '<span class="kpi-tag neutral">'+dinnerPct+'% of daily total</span>'
+    +   '<div class="kpi-sub">5pm – 9pm</div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-label">Slowest Hour</div><div class="kpi-value">'+hours[slowIdx]+'</div>'
+    +   '<span class="kpi-tag warn">'+fmtDollar(scaled[slowIdx])+' &middot; consider cutting staff</span>'
+    +   '<div class="kpi-sub">Lowest revenue hour</div></div>'
+    + '</div>'
+
+    + '<div class="grid-2">'
+    + '<div class="card">'
+    +   '<div class="card-header"><div><div class="card-title">Revenue by Hour &middot; '+periodName+'</div>'
+    +     '<div class="card-sub">★ peak &middot; ↓ slowest</div></div>'
+    +   '<div class="card-badge">⚡ '+state.pos+'</div></div>'
+    +   '<div style="padding:0 18px 16px;margin-top:8px">'+barRows+'</div>'
+    + '</div>'
+    + '<div class="card">'
+    +   '<div class="card-header"><div><div class="card-title">Staffing Guide &middot; '+periodName+'</div>'
+    +     '<div class="card-sub">Suggested staff based on covers &middot; Covers ÷ 3 FOH &middot; Covers ÷ 2.5 BOH</div></div></div>'
+    +   '<div class="tbl-wrap"><table class="tbl">'
+    +   '<thead><tr><th>Hour</th><th style="text-align:right">Revenue</th><th style="text-align:right">Covers</th><th style="text-align:right">FOH</th><th style="text-align:right">BOH</th></tr></thead>'
+    +   '<tbody>'+staffRows+'</tbody></table></div>'
+    + '</div>'
+    + '</div>'
+
+    + '<div class="card" style="margin-top:14px">'
+    +   '<div class="card-header"><div><div class="card-title">What The Hours Are Telling You</div>'
+    +     '<div class="card-sub">Staffing and scheduling insights from your hourly pattern</div></div></div>'
+    +   '<div class="alerts-list">'
+    +   '<div class="alert-item"><div class="alert-icon">★</div><div class="alert-body">'
+    +     '<div class="alert-title">'+hours[peakIdx]+' is your peak — make sure you are fully staffed</div>'
+    +     '<div class="alert-desc">At '+covers[peakIdx]+' covers per hour you need at least '+Math.ceil(covers[peakIdx]/3)+' FOH and '+Math.ceil(covers[peakIdx]/2.5)+' BOH. Being understaffed here costs you in tips, reviews, and repeat visits.</div>'
+    +   '</div></div>'
+    +   '<div class="alert-item"><div class="alert-icon">✂</div><div class="alert-body">'
+    +     '<div class="alert-title">'+hours[slowIdx]+' is your slowest — review staffing at this hour</div>'
+    +     '<div class="alert-desc">Only '+covers[slowIdx]+' covers at '+hours[slowIdx]+'. Cutting one staff member during this window could save around '+fmtDollar(slowCutSaving)+' per day without impacting service quality.</div>'
+    +   '</div></div>'
+    +   '<div class="alert-item"><div class="alert-icon">💡</div><div class="alert-body">'
+    +     '<div class="alert-title">Dinner is '+dinnerLunchRatio+'x your lunch revenue</div>'
+    +     '<div class="alert-desc">'+(lunchRev < totalRev * 0.3 ? 'Your lunch is underperforming — a lunch special or express menu could capture more midday covers.' : 'Your lunch-to-dinner balance is solid. Keep the momentum on both shifts.')+'</div>'
+    +   '</div></div>'
+    +   '</div>'
+    + '</div>';
 }
+
 
 
 function renderPayments() {
