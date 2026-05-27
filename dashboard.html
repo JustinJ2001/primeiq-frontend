@@ -964,12 +964,12 @@ body::before {
     </div>
   </div>
   <div class="completeness-bar" id="completenessBar">
-    <span style="color:var(--muted);letter-spacing:0.08em">DATA SOURCES:</span>
+    <span style="color:var(--muted);letter-spacing:0.08em">TRACKING:</span>
     <div class="completeness-item"><div class="completeness-dot on" id="dot_sales"></div><span id="label_sales" style="color:var(--green)">Sales</span></div>
     <div class="completeness-item"><div class="completeness-dot off" id="dot_labor"></div><span id="label_labor" style="color:var(--muted)">Labor</span></div>
     <div class="completeness-item"><div class="completeness-dot off" id="dot_delivery"></div><span id="label_delivery" style="color:var(--muted)">Delivery</span></div>
     <div class="completeness-item"><div class="completeness-dot off" id="dot_fixed"></div><span id="label_fixed" style="color:var(--muted)">Fixed Costs</span></div>
-    <span id="completeness_msg" style="margin-left:auto;color:var(--amber)"></span>
+    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Estimates based on tracked costs only</span>
   </div>
   <div class="content" id="mainContent"></div>
 </main>
@@ -998,7 +998,12 @@ async function apiFetch(path, method = 'GET', body = null) {
     headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) }
   };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API_BASE + path, opts);
+  var res;
+  try {
+    res = await fetch(API_BASE + path, opts);
+  } catch(fetchErr) {
+    throw new Error('Connection failed. The server may be starting up — please wait a moment and try again.');
+  }
   if (res.status === 401 || res.status === 403) {
     localStorage.removeItem('rd_token');
     window.location.href = '/login';
@@ -1260,6 +1265,31 @@ function showDemoBanner() {
 }
 
 function showNoDataBanner() {
+  var content = document.getElementById('mainContent');
+  if (!content) return;
+  content.innerHTML = [
+    '<div style="padding:40px 32px;max-width:600px">',
+    '<div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:8px">Your dashboard is ready</div>',
+    '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:24px">Upload your data to see your real numbers</div>',
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px">',
+    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 1 — Upload your sales data</div>',
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Export a CSV from your POS. Instructions are in Settings → Upload Data.</div>',
+    '<button onclick="goToSettings()" style="padding:9px 18px;background:var(--gold);color:white;border:none;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer">Go to Settings →</button>',
+    '</div>',
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px">',
+    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 2 — Add your fixed costs</div>',
+    '<div style="font-size:12px;color:var(--muted)">Enter rent, utilities, and insurance in Settings → Locations so we can calculate your estimated P&L.</div>',
+    '</div>',
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">',
+    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 3 — Explore the demo</div>',
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">See what your dashboard will look like with a sample restaurant.</div>',
+    '<button onclick="goToDemo()" style="padding:9px 18px;background:transparent;color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer">View Demo →</button>',
+    '</div></div>'
+  ].join('');
+}
+function goToSettings() { window.location.href = '/settings'; }
+function goToDemo() { window.location.href = '/dashboard?demo=1'; }
+function showNoDataBanner_old() {
   const banner = document.createElement('div');
   banner.style.cssText = 'background:var(--amber-bg);border-bottom:1px solid rgba(192,112,0,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;';
   banner.innerHTML = `
@@ -2152,7 +2182,7 @@ function renderExpenses() {
   return `
     <div class="kpi-strip">
       <div class="kpi-card neutral"><div class="kpi-label">Total Revenue</div><div class="kpi-value">${fmtDollar(Math.round(rev))}</div><span class="kpi-tag good">All locations</span><div class="kpi-sub">${periodLabel[p]}</div></div>
-      <div class="kpi-card bad"><div class="kpi-label">Total Expenses</div><div class="kpi-value">${fmtDollar(totalExp)}</div><span class="kpi-tag bad">${fmtPct(totalExp/rev*100)} of revenue</span><div class="kpi-sub">${rows.length} expense categories</div></div>
+      <div class="kpi-card bad"><div class="kpi-label">Tracked Expenses</div><div class="kpi-value">${fmtDollar(totalExp)}</div><span class="kpi-tag bad">${fmtPct(totalExp/rev*100)} of revenue</span><div class="kpi-sub">${rows.length} expense categories</div></div>
       <div class="kpi-card ${net>0?'good':'bad'}"><div class="kpi-label">Net Profit / Loss</div><div class="kpi-value">${net<0?'–':''}${fmtDollar(Math.abs(Math.round(net)))}</div><span class="kpi-tag ${net>0?'good':'bad'}">${fmtPct(Math.abs(net/rev*100))} margin</span><div class="kpi-sub">${net>0?'Profitable':'Operating at a loss'}</div></div>
       <div class="kpi-card warn"><div class="kpi-label">Biggest Cost</div><div class="kpi-value" style="font-size:18px">Labor</div><span class="kpi-tag warn">${fmtPct(avgLaborCost(p))} of revenue</span><div class="kpi-sub">${fmtDollar(Math.round(rev*avgLaborCost(p)/100))} · ${periodLabel[p]}</div></div>
     </div>
@@ -3073,7 +3103,7 @@ function renderBenchmark() {
     + oppSection
     + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Metric-by-metric breakdown · ' + periodLabel[p] + '</div>'
     + bmRow('primeCost') + bmRow('foodCost') + bmRow('laborCost') + bmRow('netMargin') + bmRow('avgCheck') + bmRow('voidsPct') + bmRow('deliveryPct') + bmRow('fixedPct')
-    + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Data sources: NRA 2026 State of Industry · Toast 2025 NYC Dataset · BLS Food Services 2025 · Black Box Intelligence NYC Metro · OpenTable NYC 2025 · Whipplewood Financial Benchmarks 2026 · DoorDash NYC Merchant Report 2025. All benchmarks represent 2-6 location independent <strong>' + activeSegment + '</strong> operators in the US metro markets. Updated Q1 2026.</div></div>';
+    + '<div style="margin-top:16px;padding:14px 18px;background:var(--bg);border:1px solid var(--border);border-radius:9px"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);line-height:1.6">Benchmarks are industry estimates based on publicly available data from NRA, BLS, Toast, and Black Box Intelligence reports. They represent approximate ranges for 2-5 location independent <strong>' + activeSegment + '</strong> operators. Individual results vary significantly. Use as directional guidance only — not a substitute for verified industry research.</div></div>';
 }
 
 
@@ -3541,8 +3571,6 @@ function renderForecast() {
 function updateCompletenessBar() {
   var dc = state.dataCompleteness || {};
   var sources = ['sales','labor','delivery','fixed'];
-  var labels = { sales:'Sales', labor:'Labor', delivery:'Delivery', fixed:'Fixed Costs' };
-  var connected = 0;
   sources.forEach(function(s) {
     var dot = document.getElementById('dot_' + s);
     var label = document.getElementById('label_' + s);
@@ -3551,22 +3579,12 @@ function updateCompletenessBar() {
       if (dc[key]) {
         dot.className = 'completeness-dot on';
         label.style.color = 'var(--green)';
-        connected++;
       } else {
         dot.className = 'completeness-dot off';
         label.style.color = 'var(--muted)';
       }
     }
   });
-  var msg = document.getElementById('completeness_msg');
-  if (msg) {
-    var missing = sources.filter(function(s){ return !dc[s === 'fixed' ? 'fixedCosts' : s]; });
-    if (missing.length > 0) {
-      msg.textContent = missing.length + ' source' + (missing.length > 1 ? 's' : '') + ' not connected — upload CSV in Settings';
-    } else {
-      msg.textContent = '';
-    }
-  }
 }
 
 function updateSidebarName(name) {
@@ -3592,7 +3610,7 @@ const pageMap = {
   delivery:  { title:'Delivery & Online Orders', sub:function(){return periodLabel[activePeriod]+' · '+state.delivery;},                  render: renderDelivery },
   expenses:  { title:'All Expenses',             sub:function(){return periodLabel[activePeriod]+' · Every cost broken down';},           render: renderExpenses },
   cashflow:  { title:'Cash Flow',                sub:function(){return periodLabel[activePeriod]+' · Full cash in / out';},               render: renderCashflow },
-  pl:        { title:'P&L Statement',            sub:function(){return periodLabel[activePeriod]+' · Auto-generated';},                   render: renderPL },
+  pl:        { title:'P&L Statement (Estimated)',            sub:function(){return periodLabel[activePeriod]+' · Estimated — tracked costs only';},                   render: renderPL },
   weekly:    { title:'Weekly Report',            sub:function(){return 'Auto-generated every Monday · '+state.name;},                    render: renderWeekly },
   voids:     { title:'Voids & Comps',            sub:function(){return periodLabel[activePeriod]+' · From '+state.pos;},                  render: renderVoids },
   breakeven: { title:'Break-even Calculator',    sub:function(){return periodLabel[activePeriod]+' · Per location';},                    render: renderBreakeven },
