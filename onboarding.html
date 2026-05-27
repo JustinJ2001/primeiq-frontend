@@ -482,6 +482,7 @@ let state = {
   step: 1,
   userId: null,
   clientId: null,
+  referredBy: new URLSearchParams(window.location.search).get('ref') || null,
   email: '',
   restaurantName: '',
   categories: [],        // selected restaurant type categories
@@ -661,7 +662,8 @@ async function createAccount() {
       user_id: state.userId,
       name,
       email,
-      status: 'pending_payment'
+      status: 'pending_payment',
+      ...(state.referredBy ? { referred_by: state.referredBy } : {})
     });
     state.clientId = clientRes.id;
     state.restaurantName = name;

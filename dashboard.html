@@ -1251,6 +1251,23 @@ async function loadDashboardData() {
   }
 }
 
+function dismissUpdate(btn) { localStorage.setItem("rd_last_update", window._lastUpdateId||"0"); btn.parentElement.remove(); }
+function showProductUpdate() {
+  var lastSeen = localStorage.getItem('rd_last_update') || '0';
+  var updates = [
+    { id:'2026-05-26', msg:'New: Sales by Hour now shows staffing recommendations per shift. Check the Sales by Hour tab.' },
+  ];
+  var unseen = updates.filter(function(u){ return u.id > lastSeen; });
+  if (unseen.length > 0) window._lastUpdateId = unseen[0].id;
+  if (unseen.length === 0 || isDemoMode()) return;
+  var banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;bottom:70px;right:20px;max-width:320px;background:var(--dark);border:1px solid rgba(184,134,11,0.3);border-radius:10px;padding:14px 16px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+  banner.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px">UPDATES</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;margin-bottom:10px">' + unseen[0].msg + '</div>'
+    + '<button onclick="dismissUpdate(this)" style="padding:5px 12px;background:var(--gold);color:white;border:none;border-radius:5px;font-family:IBM Plex Mono,monospace;font-size:8px;cursor:pointer">Got it</button>';
+  document.body.appendChild(banner);
+}
+
 function showDemoBanner() {
   state.dataCompleteness = { sales: true, labor: true, delivery: true, fixedCosts: true };
   const banner = document.createElement('div');
@@ -2582,10 +2599,10 @@ function renderVoids() {
         <div class="kpi-sub">Staff meals, mistakes, goodwill</div>
       </div>
       <div class="kpi-card neutral">
-        <div class="kpi-label">Annualized Impact</div>
+        <div class="kpi-label">Est. Annual Impact</div>
         <div class="kpi-value">${fmtDollar(Math.round(totalLeak*annFactor))}</div>
-        <span class="kpi-tag warn">If trend continues</span>
-        <div class="kpi-sub">Full year projection</div>
+        <span class="kpi-tag warn">Projection — if trend continues</span>
+        <div class="kpi-sub">Estimated — based on tracked data only</div>
       </div>
     </div>
     <div class="card" style="margin-bottom:14px">
@@ -2618,6 +2635,15 @@ function renderBreakeven() {
   const p = activePeriod;
   const daysInPeriod = {today:1,week:7,month:30,quarter:91,ytd:365}[p]||7;
 
+  const hasFixedCosts = state.locations.some(l => (l.rent||0)+(l.utilities||0)+(l.insurance||0) > 0);
+  if (!hasFixedCosts && !isDemoMode()) {
+    return '<div style="padding:60px 32px;text-align:center;max-width:480px;margin:0 auto">'
+      + '<div style="font-size:36px;margin-bottom:16px">⚖</div>'
+      + '<div style="font-family:Playfair Display,serif;font-size:20px;color:var(--dark);margin-bottom:8px">Fixed costs not set up</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:20px;line-height:1.7">The break-even calculator needs your fixed costs — rent, utilities, and insurance — to calculate how many covers you need each day.</div>'
+      + '<button onclick="goToSettings()" style="padding:10px 22px;background:var(--gold);color:white;border:none;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer;font-weight:600">Add Fixed Costs in Settings →</button>'
+      + '</div>';
+  }
   const locData = state.locations.map(l => {
     const fixedCosts = ['rent','utilities','insurance','supplies','marketing','software']
       .reduce((s,f) => {
@@ -3496,6 +3522,7 @@ function renderForecast() {
   // Day-of-week multipliers (how each day compares to week average)
   var weeklyTotal = totalRevenue('week');
   var dowMult = [0.118,0.132,0.122,0.140,0.175,0.226,0.087];
+  var hasLimitedData = !isDemoMode() && weeklyTotal < 5000;
 
   // 4-week history by day
   var weeks4 = [weeklyTotal*0.88, weeklyTotal*0.93, weeklyTotal*0.97, weeklyTotal];
@@ -3736,7 +3763,7 @@ function updateSidebarName(name) {
 const pageMap = {
   overview:  { title:'Dashboard Overview',       sub:function(){return 'Today · All locations · Auto-synced from '+state.pos;},         render: renderOverview },
   locations: { title:'Location Performance',     sub:function(){return state.locations.length+' locations · '+periodLabel[activePeriod];}, render: renderLocations },
-  daily:     { title:'Revenue',                  sub:function(){return 'This week · Auto-synced from '+state.pos;},                       render: renderDaily },
+  daily:     { title:'Revenue Over Time',                  sub:function(){return 'This week · Auto-synced from '+state.pos;},                       render: renderDaily },
   hourly:    { title:'Sales by Hour',            sub:function(){return 'Today · Both locations · From '+state.pos;},                      render: renderHourly },
   payments:  { title:'Payment Methods',          sub:function(){return periodLabel[activePeriod]+' · Processing fees';},                  render: renderPayments },
   costs:     { title:'Cost Breakdown',           sub:function(){return periodLabel[activePeriod]+' · Food, Labor, Prime Cost';},           render: renderCosts },
@@ -3771,6 +3798,7 @@ function navigate(pageKey) {
     n.classList.toggle('active', n.dataset.page === pageKey);
   });
   if (typeof updateCompletenessBar === 'function') updateCompletenessBar();
+  if (typeof showProductUpdate === 'function') showProductUpdate();
 
   // Hide period selector on static pages that don't use it
   var staticPages = ['menu', 'forecast', 'weekly'];
@@ -4035,5 +4063,10 @@ navigate('overview');
 // Then try to load real data in background if logged in
 loadDashboardData();
 </script>
+<div style="text-align:center;padding:24px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#b0a090">
+  <a href="/terms" style="color:#b0a090;margin-right:16px">Terms of Service</a>
+  <a href="/privacy" style="color:#b0a090;margin-right:16px">Privacy Policy</a>
+  <span>© 2026 PrimeIQ</span>
+</div>
 </body>
 </html>
