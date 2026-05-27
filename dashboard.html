@@ -3636,6 +3636,13 @@ function navigate(pageKey) {
     n.classList.toggle('active', n.dataset.page === pageKey);
   });
   if (typeof updateCompletenessBar === 'function') updateCompletenessBar();
+
+  // Hide period selector on static pages that don't use it
+  var staticPages = ['menu', 'forecast'];
+  var periodBar = document.querySelector('.period-selector');
+  if (periodBar) {
+    periodBar.style.display = staticPages.indexOf(pageKey) >= 0 ? 'none' : '';
+  }
 }
 
 document.querySelectorAll('.nav-item').forEach(function(n) {
