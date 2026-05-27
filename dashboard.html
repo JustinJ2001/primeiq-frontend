@@ -1647,51 +1647,66 @@ function renderLocations() {
 }
 
 function renderDaily() {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const data = [
-    [2100,2400,1980,2520,3800,4200,2900],
-    [1700,1800,1920,1980,3000,4000,2200]
-  ];
-  const combined = days.map((_,i) => state.locations.reduce((s,l,li) => s+(data[li]?.[i]||0), 0));
-  const maxV = Math.max(...combined);
+  const p = activePeriod;
+  const pCfg = {
+    today:   { labels: ['12am','4am','8am','12pm','4pm','8pm','Close'], mults: [0.02,0.01,0.08,0.22,0.18,0.32,0.17], active: 4 },
+    week:    { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],     mults: [0.11,0.12,0.10,0.13,0.17,0.21,0.16], active: 3 },
+    month:   { labels: ['Week 1','Week 2','Week 3','Week 4'],           mults: [0.23,0.25,0.26,0.26], active: 3 },
+    quarter: { labels: ['Month 1','Month 2','Month 3'],                 mults: [0.31,0.33,0.36], active: 2 },
+    ytd:     { labels: ['Jan','Feb','Mar','Apr','May'],                 mults: [0.17,0.18,0.20,0.22,0.23], active: 4 },
+  };
+  const cfg = pCfg[p] || pCfg.week;
+  const labels = cfg.labels;
+  const mults = cfg.mults;
+  const todayIdx = cfg.active;
 
-  const chartRows = days.map((d,i) => {
+  const data = state.locations.map(function(l) {
+    return mults.map(function(m) { return Math.round((l.revenue[p]||0) * m); });
+  });
+  const combined = labels.map(function(_,i) {
+    return state.locations.reduce(function(s,l,li) { return s+(data[li]?.[i]||0); }, 0);
+  });
+  const maxV = Math.max.apply(null, combined.concat([1]));
+
+  const chartRows = labels.map(function(d,i) {
     const total = combined[i];
     const w = Math.round(total/maxV*88)+'%';
-    const isToday = d === 'Thu';
-    return `<div class="week-row">
-      <div class="week-day">${d}</div>
-      <div class="week-track">
-        <div class="week-fill" style="width:${w};background:${isToday ? 'var(--gold)' : 'var(--green-dim)'}"></div>
-      </div>
-      <div class="week-val">${fmtDollar(total)}</div>
-    </div>`;
+    const isActive = i === todayIdx;
+    return '<div class="week-row">'
+      + '<div class="week-day">' + d + '</div>'
+      + '<div class="week-track"><div class="week-fill" style="width:'+w+';background:'+(isActive?'var(--gold)':'var(--green-dim)')+'"></div></div>'
+      + '<div class="week-val">'+fmtDollar(total)+'</div>'
+      + '</div>';
   }).join('');
 
-  const locBreakdown = state.locations.map((l,li) => days.map((d,i) => `
-    <tr>
-      <td class="ct-label">${d}</td>
-      <td style="color:var(--cream)">${fmtDollar(data[li]?.[i]||0)}</td>
-      <td style="color:var(--cream)">${Math.round((data[li]?.[i]||0)/l.avgCheck[activePeriod])} covers</td>
-      <td class="ct-good">$${l.avgCheck[activePeriod].toFixed(2)}</td>
-    </tr>`).join(''));
+  const locBreakdown = state.locations.map(function(l,li) {
+    return labels.map(function(d,i) {
+      return '<tr>'
+        + '<td class="ct-label">'+d+'</td>'
+        + '<td style="color:var(--cream)">'+fmtDollar(data[li]?.[i]||0)+'</td>'
+        + '<td style="color:var(--cream)">'+Math.round((data[li]?.[i]||0)/Math.max(l.avgCheck[p]||24,1))+' covers</td>'
+        + '<td class="ct-good">$'+(l.avgCheck[p]||24).toFixed(2)+'</td>'
+        + '</tr>';
+    }).join('');
+  });
+
 
   return `
     <div class="kpi-strip">
       <div class="kpi-card good">
-        <div class="kpi-label">Best Day This Week</div>
+        <div class="kpi-label">Best Period</div>
         <div class="kpi-value">${fmtDollar(Math.max(...combined))}</div>
-        <span class="kpi-tag good">Saturday</span>
+${(function(){const mx=Math.max(...combined);const idx=combined.indexOf(mx);return '<span class="kpi-tag good">'+labels[idx]+'</span>';})()}
         <div class="kpi-sub">Across all locations</div>
       </div>
       <div class="kpi-card neutral">
-        <div class="kpi-label">Weekly Total</div>
+        <div class="kpi-label">Period Total</div>
         <div class="kpi-value">${fmtDollar(combined.reduce((a,b)=>a+b,0))}</div>
         <span class="kpi-tag good">↑ 9% vs last week</span>
-        <div class="kpi-sub">7-day combined</div>
+        <div class="kpi-sub">All locations combined</div>
       </div>
       <div class="kpi-card good">
-        <div class="kpi-label">Daily Average</div>
+        <div class="kpi-label">Avg Per Period</div>
         <div class="kpi-value">${fmtDollar(Math.round(combined.reduce((a,b)=>a+b,0)/7))}</div>
         <span class="kpi-tag good">↑ vs $${Math.round(combined.reduce((a,b)=>a+b,0)/7*0.88/100)*100} LW avg</span>
         <div class="kpi-sub">Per day, all locations</div>
@@ -3638,7 +3653,7 @@ function navigate(pageKey) {
   if (typeof updateCompletenessBar === 'function') updateCompletenessBar();
 
   // Hide period selector on static pages that don't use it
-  var staticPages = ['menu', 'forecast'];
+  var staticPages = ['menu', 'forecast', 'weekly'];
   var periodBar = document.querySelector('.period-selector');
   if (periodBar) {
     periodBar.style.display = staticPages.indexOf(pageKey) >= 0 ? 'none' : '';
