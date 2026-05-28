@@ -803,7 +803,7 @@ async function saveLocations() {
 
 // ── STEP 3: POS ───────────────────────────────────────────────────────────────
 const POS_SYSTEMS = [
-  { id:'toast',      icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF6B35"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">T</text></svg>', name:'Toast POS',      desc:'Most common in NYC restaurants', live: true },
+  { id:'toast',      icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF6B35"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">T</text></svg>', name:'Toast POS',      desc:'Coming soon — use CSV for now', live: false },
   { id:'square',     icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#006AFF"/><rect x="7" y="7" width="14" height="14" rx="2" fill="white"/><rect x="11" y="11" width="6" height="6" fill="#006AFF"/></svg>', name:'Square',          desc:'Easy setup · Auto-connects',      live: true },
   { id:'clover',     icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#1DA462"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="16" font-weight="900" fill="white">C</text></svg>', name:'Clover',          desc:'Coming soon — use CSV for now',   live: false },
   { id:'lightspeed', icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#E8222B"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">LS</text></svg>', name:'Lightspeed',      desc:'Coming soon — use CSV for now',   live: false },
@@ -1191,24 +1191,28 @@ function skipDelivery() {
 const PAYROLL_SYSTEMS = [
   { id:'homebase',       icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#6C4BFF"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">HB</text></svg>', name:'Homebase',         desc:'Most common in restaurants · Scheduling + payroll' , live:false},
   { id:'gusto', live:false,          icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#F45D48"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">G</text></svg>', name:'Gusto',            desc:'Popular for small businesses' },
-  { id:'7shifts',        icon:'7️⃣',  name:'7shifts',         desc:'Restaurant-specific scheduling' , live:false},
+  { id:'7shifts',        icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#1B6FE4"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">7S</text></svg>',  name:'7shifts',         desc:'Restaurant-specific scheduling' , live:false},
   { id:'square_payroll', icon:'⬛', name:'Square Payroll',   desc:'If you use Square POS' },
-  { id:'toast_payroll',  icon:'🍞', name:'Toast Payroll',    desc:'Built into Toast — auto-synced' , live:false},
+  { id:'toast_payroll',  icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF6B35"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="white">TP</text></svg>', name:'Toast Payroll',    desc:'Built into Toast — auto-synced' , live:false},
   { id:'adp', live:false,            icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#CC0000"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">ADP</text></svg>', name:'ADP',              desc:'Enterprise payroll' , live:false},
   { id:'csv',            icon:'📄', name:'CSV Export',       desc:'Export weekly hours manually' },
 ];
 
 function renderPayrollStep() {
   const grid = document.getElementById('payroll_grid');
-  grid.innerHTML = PAYROLL_SYSTEMS.map(p => `
-    <div class="conn-card ${state.connectedPayroll === p.id ? 'connected' : ''}" onclick="selectPayroll('${p.id}')" id="pay_card_${p.id}">
-      <div class="conn-icon">${p.icon}</div>
-      <div>
-        <div class="conn-name">${p.name}</div>
-        <div class="conn-desc">${p.desc}</div>
-        <div class="conn-status">${state.connectedPayroll === p.id ? '✓ Connected' : 'Click to connect'}</div>
-      </div>
-    </div>`).join('');
+  grid.innerHTML = PAYROLL_SYSTEMS.map(function(p) {
+    var isConn = state.connectedPayroll && state.connectedPayroll[state.locations[0] && state.locations[0].id] && state.connectedPayroll[state.locations[0].id].provider === p.id;
+    var isLive = p.live !== false;
+    return '<div class="conn-card ' + (isConn ? 'connected' : '') + '" '
+      + (isLive ? 'onclick="selectPayroll(\'' + p.id + '\')"' : '')
+      + ' id="pay_card_' + p.id + '" style="' + (isLive ? '' : 'opacity:0.45;cursor:not-allowed') + '">'
+      + '<div class="conn-icon">' + p.icon + '</div>'
+      + '<div>'
+      + '<div class="conn-name">' + p.name + (isLive ? '' : ' <span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);background:#f0ece4;padding:2px 6px;border-radius:10px">soon</span>') + '</div>'
+      + '<div class="conn-desc">' + p.desc + '</div>'
+      + '<div class="conn-status">' + (isConn ? '\u2713 Connected' : isLive ? 'Click to connect' : 'Use CSV upload instead') + '</div>'
+      + '</div></div>';
+  }).join('');
 }
 
 function selectPayroll(provider) {
