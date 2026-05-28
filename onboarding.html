@@ -529,6 +529,12 @@ const oauthState = urlParams.get('state');
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  // Clear any stale Supabase sessions so they don't redirect mid-onboarding
+  if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
+    Object.keys(localStorage).forEach(function(k) {
+      if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
+    });
+  }
   // Handle OAuth callbacks
   if (oauthCallback && oauthCode) {
     await handleOAuthCallback(oauthCallback, oauthCode, oauthState);
@@ -677,13 +683,12 @@ async function createAccount() {
     state.userId = authRes.user?.id || authRes.id;
     state.token  = authRes.access_token;
 
-    // If email confirmation is required, Supabase returns user but no session
-    // Store what we have and move forward — we will create the client record after confirmation
+    // Email confirmation is OFF - Supabase returns token immediately
+    // If somehow no token (rare edge case), show clear message
     if (!state.token) {
-      // Show email confirmation message and stop here
-      localStorage.setItem('rd_onboard_state', JSON.stringify(state));
-      document.getElementById('panel1').innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">✉</div><div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:10px">Check your email</div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:20px">We sent a confirmation link to <strong>' + email + '</strong>.<br>Click the link in that email, then come back and<br>sign in at primeiq.io/login to continue setup.</div><a href="/login" style="display:inline-block;padding:12px 28px;background:var(--gold);color:white;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;text-decoration:none">Go to Sign In →</a></div>';
+      showAlert('s1_alert', 'Account created! Please sign in at primeiq.io/login to continue.', 'success');
       setLoading('s1_btn', false);
+      setTimeout(function(){ window.location.href = '/login'; }, 2000);
       return;
     }
 
