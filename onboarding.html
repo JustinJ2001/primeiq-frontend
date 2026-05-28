@@ -603,15 +603,20 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function goToDashboard() { window.location.href = "/dashboard"; }
 function renderStep1() {
-  // Repopulate fields from saved state
-  if (state.restaurantName) {
+  // Restore state from localStorage if not in memory
+  if (!state.restaurantName || !state.email) {
+    var saved = localStorage.getItem('rd_onboard_state');
+    if (saved) {
+      try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
+    }
+  }
+  // Always repopulate fields
+  setTimeout(function() {
     var nameEl = document.getElementById('s1_name');
-    if (nameEl) nameEl.value = state.restaurantName;
-  }
-  if (state.email) {
     var emailEl = document.getElementById('s1_email');
-    if (emailEl) emailEl.value = state.email;
-  }
+    if (nameEl && state.restaurantName) nameEl.value = state.restaurantName;
+    if (emailEl && state.email) emailEl.value = state.email;
+  }, 50);
 }
 
 function goToStep(n) {
@@ -626,9 +631,14 @@ function goToStep(n) {
 // Handle browser back/forward
 window.addEventListener('popstate', function(e) {
   var step = e.state && e.state.step ? e.state.step : 1;
+  // Restore full state from localStorage on back navigation
+  var saved = localStorage.getItem('rd_onboard_state');
+  if (saved) {
+    try { Object.assign(state, JSON.parse(saved)); } catch(e2) {}
+  }
   state.step = step;
   renderStep(step);
-  if (step === 1) renderStep1();
+  if (step === 1 || step === '1') renderStep1();
 });
 
 function renderCategoryGrid() {
