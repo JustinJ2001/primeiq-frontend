@@ -542,12 +542,15 @@ window.addEventListener('DOMContentLoaded', async () => {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       // Issue 3: handle expired token (401)
-      if (clientResp.status === 401) {
+      if (clientResp.status === 401 || clientResp.status === 404) {
         localStorage.removeItem('rd_token');
         localStorage.removeItem('rd_client_id');
+        localStorage.removeItem('rd_onboard_state');
+        localStorage.removeItem('rd_locations_draft');
+        localStorage.removeItem('rd_onboarding');
         renderStep(1);
         document.getElementById('page_loader').style.display = 'none';
-        showAlert('s1_alert', 'Your session expired. Please sign in again.', 'info');
+        if (clientResp.status === 401) showAlert('s1_alert', 'Your session expired. Please sign in again.', 'info');
         return;
       }
       var client = await clientResp.json();
@@ -585,10 +588,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
       }
     } catch(e) {
-      // Issue 26: API/network down
+      // If client not found (404) or any error — clear stale session silently
+      localStorage.removeItem('rd_token');
+      localStorage.removeItem('rd_client_id');
+      localStorage.removeItem('rd_onboard_state');
+      localStorage.removeItem('rd_locations_draft');
+      localStorage.removeItem('rd_onboarding');
       renderStep(1);
       document.getElementById('page_loader').style.display = 'none';
-      showAlert('s1_alert', 'Having trouble connecting. Please check your internet and try again.', 'info');
       return;
     }
   }
