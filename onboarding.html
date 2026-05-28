@@ -544,8 +544,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function goToStep(n) {
   state.step = n;
+  // Push to browser history so back button works
+  window.history.pushState({ step: n }, '', '?step=' + n);
   renderStep(n);
 }
+
+// Handle browser back/forward
+window.addEventListener('popstate', function(e) {
+  var step = e.state && e.state.step ? e.state.step : 1;
+  state.step = step;
+  renderStep(step);
+});
 
 function renderCategoryGrid() {
   const grid = document.getElementById('category_grid');
@@ -978,7 +987,12 @@ async function showCSVPreview(file, type) {
 }
 
 async function doCSVUpload(type) {
-  if (!window._pendingCSVFile) return;
+  type = type || window._pendingCSVType || 'sales';
+  if (!window._pendingCSVFile) {
+    console.error('No pending CSV file found');
+    showAlert('pos_alert', 'Please select a file first.', 'error');
+    return;
+  }
   const text = await window._pendingCSVFile.text();
   const locId = state.locations[0]?.id;
   try {
@@ -1321,7 +1335,14 @@ function renderStep(n) {
     const c = document.getElementById('conn' + i);
     if (!s) continue;
     s.classList.remove('active','done');
-    if (i < n) s.classList.add('done');
+    if (i < n) {
+      s.classList.add('done');
+      s.style.cursor = 'pointer';
+      s.onclick = (function(step){ return function(){ goToStep(step); }; })(i);
+    } else {
+      s.style.cursor = 'default';
+      s.onclick = null;
+    }
     if (i === n) s.classList.add('active');
     if (c) c.classList.toggle('done', i < n);
   }
