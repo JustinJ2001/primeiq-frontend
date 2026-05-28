@@ -1255,6 +1255,22 @@ async function loadDashboardData() {
     window.location.href = '/login';
     return;
   }
+  // Check if onboarding is complete via API
+  try {
+    const clientId = localStorage.getItem('rd_client_id');
+    if (clientId) {
+      const check = await apiFetch('/api/clients/' + clientId);
+      if (check && check.setup_complete === false) {
+        window.location.href = '/onboarding';
+        return;
+      }
+    } else {
+      window.location.href = '/onboarding';
+      return;
+    }
+  } catch(e) {
+    // API check failed - continue and let dashboard handle it
+  }
   // Pilot accounts get full access without Stripe subscription
   const isPilot = localStorage.getItem('rd_pilot') === 'true';
   try {

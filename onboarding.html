@@ -250,13 +250,13 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       </div>
 
       <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
-        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="uploadCSV('sales',this)">
+        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Accepts .csv files · Your data stays private</div>
       </div>
 
-      <div id="csv_preview" style="display:none;margin-top:12px"></div>
+      <div id="csv_preview" style="margin-top:12px"></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:10px">
@@ -536,6 +536,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
     });
   }
+  // If there's a token but no onboarding flag, we're mid-onboarding - set it
+  if (localStorage.getItem('rd_token') && !urlParams.get('payment')) {
+    localStorage.setItem('rd_onboarding', 'true');
+  }
   // Handle OAuth callbacks
   if (oauthCallback && oauthCode) {
     await handleOAuthCallback(oauthCallback, oauthCode, oauthState);
@@ -679,31 +683,28 @@ async function createAccount() {
     // Create Supabase auth user
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
     if (authRes.error) {
-      var errMsg = authRes.error.message || 'Signup failed';
-      // User already exists - sign them in and continue onboarding
-      if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('registered') || errMsg.toLowerCase().includes('existing')) {
-        var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
-        if (signInRes.error) {
-          showAlert('s1_alert', 'Account already exists — please sign in at primeiq.io/login to continue setup.', 'error');
-          setLoading('s1_btn', false);
-          return;
-        }
-        state.email = email;
-        state.userId = signInRes.user?.id;
-        state.token = signInRes.access_token;
-        localStorage.setItem('rd_token', state.token);
-        // Check if client record exists
-        var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-        if (existing && existing.id) {
-          state.clientId = existing.id;
-          localStorage.setItem('rd_client_id', existing.id);
-        }
-        // Continue to next step
-        goToStep(2);
+      // Any signup error — try signing in instead (handles already registered case)
+      var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
+      if (signInRes.error) {
+        // Wrong password or other real error
+        showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
         setLoading('s1_btn', false);
         return;
       }
-      throw new Error(errMsg);
+      // Signed in successfully — continue onboarding
+      state.email = email;
+      state.userId = signInRes.user?.id;
+      state.token = signInRes.access_token;
+      localStorage.setItem('rd_token', state.token);
+      localStorage.setItem('rd_onboarding', 'true');
+      var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
+      if (existing && existing.id) {
+        state.clientId = existing.id;
+        localStorage.setItem('rd_client_id', existing.id);
+      }
+      goToStep(2);
+      setLoading('s1_btn', false);
+      return;
     }
 
     state.email = email;
@@ -735,6 +736,7 @@ async function createAccount() {
     // Store token for subsequent requests
     localStorage.setItem('rd_token', state.token);
     localStorage.setItem('rd_client_id', state.clientId);
+    localStorage.setItem('rd_onboarding', 'true'); // Prevent dashboard redirect mid-onboarding
 
     goToStep(2);
   } catch (e) {
@@ -1031,61 +1033,13 @@ function handleCSVDrop(event, type) {
 }
 
 async function showCSVPreview(file, type) {
-  const text = await file.text();
-  const lines = text.trim().split('\n').slice(0, 4);
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-  const preview = document.getElementById('csv_preview');
-  preview.style.display = 'block';
-  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
-    + '<div style="overflow-x:auto"><table class="csv-preview-table"><thead><tr>'
-    + headers.map(h => '<th>' + h.slice(0,20) + '</th>').join('')
-    + '</tr></thead><tbody>'
-    + lines.slice(1, 4).map(row => '<tr>' + row.split(',').map(c => '<td>' + c.replace(/"/g,'').trim().slice(0,20) + '</td>').join('') + '</tr>').join('')
-    + '</tbody></table></div>'
-    + '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'
-    + '<button class="btn-gold" style="padding:8px 18px" onclick="doCSVUpload(' + JSON.stringify(type) + ')">✓ Upload This File</button>'
-    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
-    + '</div>';
-  window._pendingCSVFile = file;
+  // Route through previewGenericCSV for consistent behavior
+  await previewGenericCSV(file, type || 'sales', 'csv_preview', 'pos_alert');
 }
 
 async function doCSVUpload(type) {
-  type = type || window._pendingCSVType || 'sales';
-  if (!window._pendingCSVFile) {
-    console.error('No pending CSV file found');
-    showAlert('pos_alert', 'Please select a file first.', 'error');
-    return;
-  }
-  const text = await window._pendingCSVFile.text();
-  const locId = state.locations[0]?.id;
-  try {
-    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
-    document.getElementById('csv_preview').innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded successfully — your dashboard will update within a few minutes.</div>';
-    state.connectedPOS[locId] = { provider: 'csv_' + (document.getElementById('csv_pos_type')?.value || 'manual'), status: 'connected' };
-    renderPOSStep();
-  } catch(e) {
-    showAlert('pos_alert', e.message, 'error');
-  }
-}
-
-
-function showCSVInstructions() {
-  const type = document.getElementById('csv_pos_type').value;
-  const instructDiv = document.getElementById('csv_instructions');
-  if (!type) { instructDiv.style.display = 'none'; return; }
-  const data = CSV_INSTRUCTIONS[type];
-  document.getElementById('csv_pos_name').textContent = data.name;
-  document.getElementById('csv_steps').innerHTML = data.steps.map(s => '<li>' + s + '</li>').join('');
-  document.getElementById('csv_columns_note').textContent = data.columns;
-  instructDiv.style.display = 'block';
-}
-
-function handleCSVDrop(event, type) {
-  event.preventDefault();
-  document.getElementById('csv_drop_zone').style.borderColor = '';
-  const file = event.dataTransfer.files[0];
-  if (!file) return;
-  showCSVPreview(file, type);
+  // Route through doGenericUpload for consistent behavior
+  await doGenericUpload(type || 'sales', 'csv_preview', 'pos_alert');
 }
 
 async function uploadCSV(type, input) {
@@ -1260,6 +1214,9 @@ async function startCheckout() {
       if (clientData && clientData.is_pilot) {
         // Pilot account - skip billing, go straight to dashboard
         localStorage.setItem('rd_pilot', 'true');
+        localStorage.removeItem('rd_onboarding');
+        // Mark onboarding complete
+        await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
         window.location.href = '/dashboard';
         return;
       }
@@ -1278,6 +1235,7 @@ async function startCheckout() {
 }
 
 async function handlePaymentSuccess(sessionId) {
+  localStorage.removeItem('rd_onboarding');
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   document.getElementById('panel_success').style.display = 'block';
   // Trigger initial data sync
@@ -1538,11 +1496,11 @@ function showPayrollCSVInstructions() {
 function handlePayrollCSVDrop(event) {
   event.preventDefault();
   var file = event.dataTransfer.files[0];
-  if (file) previewGenericCSV(file, 'labor', 'pay_csv_preview', 'pay_alert');
+  if (file) previewGenericCSV(file, 'labor', 'payroll_csv_preview', 'pay_alert');
 }
 
 function previewPayrollCSV(input) {
-  if (input.files[0]) previewGenericCSV(input.files[0], 'labor', 'pay_csv_preview', 'pay_alert');
+  if (input.files[0]) previewGenericCSV(input.files[0], 'labor', 'payroll_csv_preview', 'pay_alert');
 }
 
 // ── GENERIC CSV PREVIEW + UPLOAD ─────────────────────────────────────────────
@@ -1571,8 +1529,15 @@ async function previewGenericCSV(file, type, previewId, alertId) {
 
 async function doGenericUpload(type, previewId, alertId) {
   var pending = window['_pendingCSV_' + type];
-  if (!pending) return;
-  var locId = state.locations[0]?.id;
+  if (!pending) {
+    showAlert(alertId || 'pos_alert', 'Please select a file first.', 'error');
+    return;
+  }
+  if (!state.clientId) {
+    showAlert(alertId || 'pos_alert', 'Please complete account setup first.', 'error');
+    return;
+  }
+  var locId = state.locations[0]?.id || localStorage.getItem('rd_client_id');
   var previewEl = document.getElementById(previewId);
   try {
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';
@@ -1586,7 +1551,10 @@ async function doGenericUpload(type, previewId, alertId) {
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows uploaded — your dashboard will update within a few minutes.</div>';
     showAlert(alertId, 'Data uploaded successfully.', 'success');
   } catch(e) {
-    showAlert(alertId, e.message, 'error');
+    var errMsg = e.message || 'Upload failed. Please try again.';
+    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px">Upload failed: ' + errMsg + '</div>';
+    showAlert(alertId || 'pos_alert', errMsg, 'error');
+    console.error('Upload error:', e);
   }
 }
 
