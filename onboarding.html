@@ -101,7 +101,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 
 </style>
 </head>
-<body>
+<body style="visibility:hidden">
 
 <div class="header">
   <div>
@@ -567,12 +567,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Handle OAuth callbacks
   if (oauthCallback && oauthCode) {
     await handleOAuthCallback(oauthCallback, oauthCode, oauthState);
-    return;
+    document.body.style.visibility = 'visible'; return;
   }
   // Handle Stripe success
   if (urlParams.get('payment') === 'success') {
     await handlePaymentSuccess(urlParams.get('session_id'));
-    return;
+    document.body.style.visibility = 'visible'; return;
   }
   // If already has token and client ID - mid onboarding, restore and skip to last step
   var existingToken = localStorage.getItem('rd_token');
@@ -595,7 +595,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         // Go to the step they were on, or step 2 minimum
         var resumeStep = (state.step && state.step > 1) ? state.step : 2;
         goToStep(resumeStep);
-        return;
+        document.body.style.visibility = 'visible'; return;
       }
     } catch(e) {}
   }
@@ -622,6 +622,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   renderStep(1);
   renderStep1();
+  document.body.style.visibility = 'visible';
 });
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
