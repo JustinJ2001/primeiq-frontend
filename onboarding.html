@@ -767,12 +767,18 @@ async function createAccount() {
     state.userId = authRes.user?.id || authRes.id;
     state.token  = authRes.access_token;
 
-    // Email confirmation is OFF - Supabase returns token immediately
-    // If somehow no token (rare edge case), show clear message
+    // If no token, email confirmation is required
     if (!state.token) {
-      showAlert('s1_alert', 'Account created! Please sign in at primeiq.io/login to continue.', 'success');
+      document.getElementById('panel1').innerHTML = '<div style="text-align:center;padding:40px 20px">'
+        + '<div style="font-size:48px;margin-bottom:16px">✉</div>'
+        + '<div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:10px">Check your email</div>'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:20px">'
+        + 'We sent a confirmation link to <strong>' + email + '</strong>.<br>'
+        + 'Click the link to verify your email, then sign in to continue setup.</div>'
+        + '<a href="/login" style="display:inline-block;padding:12px 28px;background:var(--gold);color:white;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;text-decoration:none">Go to Sign In →</a>'
+        + '</div>';
+      document.body.style.visibility = 'visible';
       setLoading('s1_btn', false);
-      setTimeout(function(){ window.location.href = '/login'; }, 2000);
       return;
     }
 
