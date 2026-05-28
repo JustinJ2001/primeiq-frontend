@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurant Dashboard — Get Started</title>
+<title>PrimeIQ — Get Started</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -105,8 +105,8 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 
 <div class="header">
   <div>
-    <div class="logo"><em>Restaurant</em> Dashboard</div>
-    <div class="logo-sub">Financial Intelligence Platform</div>
+    <div class="logo"><em>Prime</em>IQ</div>
+    <div class="logo-sub">Restaurant Analytics</div>
   </div>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4)">Secure · Encrypted · Auto-synced</div>
 </div>
@@ -650,7 +650,7 @@ async function createAccount() {
     // Store what we have and move forward — we will create the client record after confirmation
     if (!state.token) {
       // Show email confirmation message and stop here
-      showAlert('s1_alert', 'Account created! Check your email and click the confirmation link, then come back and sign in at primeiq.io/login to continue setup.', 'success');
+      document.getElementById('panel1').innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">✉</div><div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:10px">Check your email</div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:20px">We sent a confirmation link to <strong>' + email + '</strong>.<br>Click the link in that email, then come back and<br>sign in at primeiq.io/login to continue setup.</div><a href="/login" style="display:inline-block;padding:12px 28px;background:var(--gold);color:white;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;text-decoration:none">Go to Sign In →</a></div>';
       setLoading('s1_btn', false);
       return;
     }
