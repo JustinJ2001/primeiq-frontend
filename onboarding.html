@@ -554,15 +554,11 @@ var panel1Observer = new MutationObserver(function() {
 window.addEventListener('DOMContentLoaded', async () => {
   var panel1 = document.getElementById('panel1');
   if (panel1) panel1Observer.observe(panel1, { attributes: true, attributeFilter: ['class'] });
-  // Clear any stale Supabase sessions so they don't redirect mid-onboarding
+  // Clear any stale Supabase sessions
   if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
     Object.keys(localStorage).forEach(function(k) {
       if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
     });
-  }
-  // If there's a token but no onboarding flag, we're mid-onboarding - set it
-  if (localStorage.getItem('rd_token') && !urlParams.get('payment')) {
-    localStorage.setItem('rd_onboarding', 'true');
   }
   // Handle OAuth callbacks
   if (oauthCallback && oauthCode) {
@@ -741,11 +737,6 @@ function renderStep(n) {
 
 // ── STEP 1: ACCOUNT ───────────────────────────────────────────────────────────
 async function createAccount() {
-  // Already signed up — just continue to step 2
-  if (localStorage.getItem('rd_token') && localStorage.getItem('rd_client_id')) {
-    goToStep(2);
-    return;
-  }
   const email    = val('s1_email');
   const password = val('s1_password');
   const confirm  = val('s1_confirm');
