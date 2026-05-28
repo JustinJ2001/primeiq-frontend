@@ -571,6 +571,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
   renderStep(1);
+  renderStep1();
 });
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -601,6 +602,7 @@ window.addEventListener('popstate', function(e) {
   var step = e.state && e.state.step ? e.state.step : 1;
   state.step = step;
   renderStep(step);
+  if (step === 1) renderStep1();
 });
 
 function renderCategoryGrid() {
