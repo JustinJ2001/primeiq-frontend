@@ -814,6 +814,17 @@ body::before {
 .freshness-bar.stale { background:rgba(192,57,43,0.08); border-color:rgba(192,57,43,0.2); color:var(--red); }
 .freshness-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
 </style>
+<script>
+// Instant redirect before any rendering - prevents flash
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('demo') === '1') return; // demo mode - no redirect
+  var token = localStorage.getItem('rd_token');
+  var clientId = localStorage.getItem('rd_client_id');
+  if (!token) { window.location.replace('/login'); return; }
+  if (!clientId) { window.location.replace('/onboarding'); return; }
+})();
+</script>
 </head>
 <body>
 

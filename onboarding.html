@@ -550,20 +550,27 @@ window.addEventListener('DOMContentLoaded', async () => {
     await handlePaymentSuccess(urlParams.get('session_id'));
     return;
   }
-  // If already has token and client ID - mid onboarding, skip to step 2
+  // If already has token and client ID - mid onboarding, restore and skip to last step
   var existingToken = localStorage.getItem('rd_token');
   var existingClient = localStorage.getItem('rd_client_id');
   if (existingToken && existingClient && !urlParams.get('payment') && !urlParams.get('callback') && !urlParams.get('confirmed')) {
-    // Restore name from API
     try {
       var clientData = await apiFetch('/api/clients/' + existingClient);
       if (clientData && clientData.setup_complete === false) {
+        // Restore full saved state first
+        var savedState = localStorage.getItem('rd_onboard_state');
+        if (savedState) {
+          try { Object.assign(state, JSON.parse(savedState)); } catch(e) {}
+        }
+        // Ensure critical fields are set
         state.token = existingToken;
         state.clientId = existingClient;
         state.userId = clientData.user_id;
-        state.email = clientData.email;
-        state.restaurantName = clientData.name;
-        goToStep(2);
+        state.email = clientData.email || state.email;
+        state.restaurantName = clientData.name || state.restaurantName;
+        // Go to the step they were on, or step 2 minimum
+        var resumeStep = (state.step && state.step > 1) ? state.step : 2;
+        goToStep(resumeStep);
         return;
       }
     } catch(e) {}
@@ -610,6 +617,8 @@ function renderStep1() {
 
 function goToStep(n) {
   state.step = n;
+  // Save full state so it survives page reloads
+  localStorage.setItem('rd_onboard_state', JSON.stringify(state));
   // Push to browser history so back button works
   window.history.pushState({ step: n }, '', '?step=' + n);
   renderStep(n);
