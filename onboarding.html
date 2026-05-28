@@ -701,7 +701,12 @@ function renderStep(n) {
 
   // Render dynamic content
   if (n === '1b') renderCategoryGrid();
-  if (n === 1 || n === '1') renderStep1();
+  if (n === 1 || n === '1') {
+    var nameEl = document.getElementById('s1_name');
+    var emailEl = document.getElementById('s1_email');
+    if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || '';
+    if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || '';
+  }
   if (n === 2) renderLocationForms();
   if (n === 3) renderPOSStep();
   if (n === 4) renderDeliveryStep();
