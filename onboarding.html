@@ -933,14 +933,15 @@ async function createAccount() {
       return;
     }
     if (!state.userId) throw new Error('Could not create account. Please try again.');
+    // Save token immediately — before any API calls so it's never lost
+    state.token && lsSet('rd_token', state.token);
+    state.restaurantName = name;
     const clientRes = await apiFetch('/api/clients', 'POST', {
       user_id: state.userId, name, email, status: 'pending_payment',
       ...(state.referredBy ? { referred_by: state.referredBy } : {})
     });
     if (!clientRes || !clientRes.id) throw new Error('Account setup failed. Please try again.');
     state.clientId = clientRes.id;
-    state.restaurantName = name;
-    state.token && lsSet('rd_token', state.token);
     lsSet('rd_client_id', state.clientId);
     lsSet('rd_onboarding', 'true');
     // Issue 37: store email for welcome note on next step
