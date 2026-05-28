@@ -13,27 +13,19 @@
   --green:#2d7a4f;--red:#c0392b;--amber:#c9820a;
 }
 body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-height:100vh;}
-/* NAV */
 .nav{background:var(--dark);padding:16px 40px;display:flex;align-items:center;justify-content:space-between;}
 .logo{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold-lt);}
 .logo em{font-style:italic;color:var(--cream);}
-/* LAYOUT */
 .wrap{max-width:680px;margin:0 auto;padding:40px 24px 80px;}
-/* PROGRESS */
 .progress{display:flex;align-items:center;margin-bottom:36px;}
-.prog-step{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);
-  flex-shrink:0;transition:all 0.2s;background:var(--bg);}
+.prog-step{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;transition:all 0.2s;background:var(--bg);}
 .prog-step.active{border-color:var(--gold);color:var(--gold);background:#fdf3db;}
 .prog-step.done{border-color:var(--green);background:var(--green);color:#fff;}
 .prog-conn{flex:1;height:2px;background:var(--border);transition:background 0.2s;}
 .prog-conn.done{background:var(--green);}
-/* CARDS */
 .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:16px;}
 .panel-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark);margin-bottom:6px;}
 .panel-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.06em;margin-bottom:28px;}
-/* FORMS */
 .f-group{margin-bottom:16px;}
 .f-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
 .f-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Lato',sans-serif;background:#fff;color:var(--dark);transition:border-color 0.2s;outline:none;}
@@ -41,28 +33,19 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .f-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;}
 .f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
-/* BUTTONS */
-.btn-gold{padding:12px 24px;background:var(--gold);color:#fff;border:none;border-radius:9px;
-  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;
-  text-transform:uppercase;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-gold{padding:12px 24px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .btn-gold:hover{background:#9a7009;}
 .btn-gold:disabled{opacity:0.6;cursor:not-allowed;}
-.btn-outline{padding:12px 24px;background:transparent;color:var(--muted);
-  border:1.5px solid var(--border);border-radius:9px;
-  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;
-  text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-outline{padding:12px 24px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .btn-outline:hover{border-color:var(--muted);}
 .btn-row{display:flex;gap:10px;margin-top:24px;}
-/* ALERT */
 .alert{padding:11px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;display:none;}
 .alert.show{display:block;}
 .alert.error{background:#fdf0ee;color:var(--red);}
 .alert.success{background:#e8f5ee;color:var(--green);}
 .alert.info{background:#fdf3db;color:var(--amber);}
-/* CONN CARDS */
 .conn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-.conn-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;
-  text-align:center;cursor:pointer;transition:all 0.15s;}
+.conn-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.15s;}
 .conn-card:hover{border-color:var(--gold);}
 .conn-card.selected{border-color:var(--gold);background:#fdf3db;}
 .conn-card.connected{border-color:var(--green);background:#e8f5ee;}
@@ -70,62 +53,38 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .conn-icon{margin-bottom:6px;display:flex;justify-content:center;}
 .conn-name{font-size:10px;font-weight:700;color:var(--dark);}
 .conn-desc{font-size:9px;color:var(--muted);margin-top:2px;line-height:1.3;}
-.conn-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:7px;
-  background:#f0ece4;color:var(--muted);padding:1px 5px;border-radius:4px;margin-top:3px;}
-/* DETAIL PANEL */
-.detail{background:var(--bg);border:1px solid var(--border);border-radius:10px;
-  padding:20px;margin-bottom:16px;display:none;}
+.conn-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:7px;background:#f0ece4;color:var(--muted);padding:1px 5px;border-radius:4px;margin-top:3px;}
+.detail{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;display:none;}
 .detail.open{display:block;}
 .detail-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:4px;}
 .detail-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:14px;}
-.oauth-btn{padding:10px 20px;background:var(--dark);color:#fff;border:none;border-radius:8px;
-  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.08em;
-  cursor:pointer;transition:background 0.2s;}
+.oauth-btn{padding:10px 20px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.08em;cursor:pointer;transition:background 0.2s;}
 .oauth-btn:hover{background:#2a1a05;}
-/* CSV */
-.csv-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;
-  cursor:pointer;transition:border-color 0.2s;background:#faf8f4;}
+.csv-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:#faf8f4;}
 .csv-zone:hover{border-color:var(--gold);}
 .csv-zone-icon{font-size:32px;margin-bottom:8px;}
 .csv-zone-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
 .csv-preview{margin-top:12px;}
-/* SELECT */
-.f-select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;
-  font-size:13px;font-family:'Lato',sans-serif;background:#fff;color:var(--dark);outline:none;}
-/* LOC BLOCK */
+.f-select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Lato',sans-serif;background:#fff;color:var(--dark);outline:none;}
 .loc-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px;}
 .loc-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;}
-/* CAT GRID */
 .cat-group{margin-bottom:18px;}
 .cat-group-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
-.cat-btn{padding:8px 14px;border:1.5px solid var(--border);border-radius:7px;background:#fff;
-  font-size:12px;cursor:pointer;transition:all 0.15s;margin:3px;display:inline-block;}
+.cat-btn{padding:8px 14px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;transition:all 0.15s;margin:3px;display:inline-block;}
 .cat-btn:hover{border-color:var(--gold);}
 .cat-btn.sel{border-color:var(--gold);background:rgba(184,134,11,0.1);color:var(--gold);}
-/* SECTION DIVIDER */
-.section-div{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);
-  letter-spacing:0.12em;text-transform:uppercase;margin:20px 0 12px;
-  display:flex;align-items:center;gap:10px;}
+.section-div{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin:20px 0 12px;display:flex;align-items:center;gap:10px;}
 .section-div::before,.section-div::after{content:'';flex:1;height:1px;background:var(--border);}
-/* SKIP */
-.skip-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);
-  cursor:pointer;text-decoration:underline;display:block;text-align:center;margin-top:10px;}
-/* REVIEW */
-.review-row{display:flex;justify-content:space-between;padding:10px 0;
-  border-bottom:1px solid var(--border);font-size:13px;}
+.skip-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;text-decoration:underline;display:block;text-align:center;margin-top:10px;}
+.review-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
 .review-row:last-child{border-bottom:none;}
 .review-label{color:var(--muted);}
 .review-val{font-weight:700;}
-/* INSTRUCTIONS */
-.inst-box{background:#fdf3db;border-left:3px solid var(--gold);border-radius:4px;
-  padding:14px;margin-bottom:14px;display:none;}
+.inst-box{background:#fdf3db;border-left:3px solid var(--gold);border-radius:4px;padding:14px;margin-bottom:14px;display:none;}
 .inst-box.open{display:block;}
-.inst-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);
-  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.inst-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
 .inst-steps{padding-left:16px;font-size:12px;line-height:1.9;}
-/* SUCCESS */
 .success-box{text-align:center;padding:60px 20px;}
-/* RESPONSIVE */
 @media(max-width:600px){
   .f-row,.f-row3{grid-template-columns:1fr;}
   .conn-grid{grid-template-columns:repeat(2,1fr);}
@@ -142,7 +101,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 </nav>
 
 <div class="wrap">
-  <!-- PROGRESS BAR -->
   <div class="progress" id="progressBar">
     <div class="prog-step active" id="prog1">1</div>
     <div class="prog-conn" id="conn1"></div>
@@ -157,7 +115,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div class="prog-step" id="prog6">6</div>
   </div>
 
-  <!-- STEP 1: ACCOUNT -->
   <div id="step1">
     <div class="panel-title">Create your account</div>
     <div class="panel-sub">Takes 2 minutes · No card required yet</div>
@@ -184,7 +141,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <button class="btn-gold" id="s1_btn" onclick="createAccount()" style="width:100%;margin-top:8px">Create Account →</button>
     </div>
     <script>
-      // Populate on load from localStorage
       (function(){
         var n=localStorage.getItem('rd_s1_name');
         var e=localStorage.getItem('rd_s1_email');
@@ -194,7 +150,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     </script>
   </div>
 
-  <!-- STEP 1B: CATEGORIES -->
   <div id="step1b" style="display:none">
     <div class="panel-title">What kind of restaurant?</div>
     <div class="panel-sub">Select all that apply · Used to personalize your benchmarks</div>
@@ -208,7 +163,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     </div>
   </div>
 
-  <!-- STEP 2: LOCATIONS -->
   <div id="step2" style="display:none">
     <div class="panel-title">Your locations</div>
     <div class="panel-sub">Enter each restaurant location separately</div>
@@ -221,13 +175,11 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     </div>
   </div>
 
-  <!-- STEP 3: POS -->
   <div id="step3" style="display:none">
     <div class="panel-title">Connect your POS</div>
     <div class="panel-sub">We pull daily sales, covers, payment mix, voids and comps automatically</div>
     <div id="alert3" class="alert"></div>
     <div class="conn-grid" id="pos_grid"></div>
-    <!-- Detail panels populated by JS -->
     <div id="pos_details"></div>
     <div class="btn-row">
       <button class="btn-gold" onclick="show(4)">Continue →</button>
@@ -236,7 +188,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <span class="skip-link" onclick="show(4)">Skip — connect from Settings later</span>
   </div>
 
-  <!-- STEP 4: DELIVERY -->
   <div id="step4" style="display:none">
     <div class="panel-title">Delivery platforms</div>
     <div class="panel-sub">Upload payout reports or connect automatically</div>
@@ -250,7 +201,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <span class="skip-link" onclick="show(5)">Skip — connect from Settings later</span>
   </div>
 
-  <!-- STEP 5: PAYROLL -->
   <div id="step5" style="display:none">
     <div class="panel-title">Payroll & scheduling</div>
     <div class="panel-sub">We use this to calculate labor cost and prime cost</div>
@@ -264,7 +214,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <span class="skip-link" onclick="show(6)">Skip — connect from Settings later</span>
   </div>
 
-  <!-- STEP 6: REVIEW + SUBSCRIBE -->
   <div id="step6" style="display:none">
     <div class="panel-title">Review and subscribe</div>
     <div class="panel-sub">30-day free pilot · No credit card charged today</div>
@@ -280,7 +229,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     </div>
   </div>
 
-  <!-- SUCCESS -->
   <div id="step_success" style="display:none">
     <div class="success-box">
       <div style="font-size:48px;margin-bottom:16px">🎉</div>
@@ -294,7 +242,6 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 </div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
 const SB_URL  = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw';
 const API     = 'https://restaurant-api-68re.onrender.com';
@@ -302,7 +249,6 @@ const STRIPE_KEY = 'pk_live_51TYwBfC3joyyq2YKgQzwaCheBkZcPmBz7XvBN4VCGuJBnpZVx7H
 const PRICE_ID   = 'price_1TYwFNCJnKt2Oid7wbFeIrXY';
 const SQ_APP_ID  = 'sq0idp-hjt3iIFTh3nBFHJ_tZXvEw';
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
 var state = {
   step: 1,
   userId: null,
@@ -315,14 +261,7 @@ var state = {
   referredBy: new URLSearchParams(window.location.search).get('ref') || null,
 };
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 function val(id){ return (document.getElementById(id)||{}).value || ''; }
-function setBtn(id, loading){
-  var b = document.getElementById(id);
-  if(!b) return;
-  b.disabled = loading;
-  b.textContent = loading ? 'Please wait...' : b.dataset.label || b.textContent;
-}
 function showAlert(id, msg, type){
   var el = document.getElementById(id);
   if(!el) return;
@@ -363,20 +302,15 @@ async function apiFetch(path, method, body){
   return data;
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────────────────────
 function show(n){
-  // Hide all
   ['1','1b','2','3','4','5','6','_success'].forEach(function(s){
     var el = document.getElementById('step' + s);
     if(el) el.style.display = 'none';
   });
-  // Show target
   var target = document.getElementById('step' + n);
   if(target) target.style.display = 'block';
-  // Update state
   state.step = n;
   saveState();
-  // Update progress bar
   var stepNum = parseInt(n) || (n === '1b' ? 1 : 1);
   for(var i=1; i<=6; i++){
     var s = document.getElementById('prog' + i);
@@ -388,7 +322,6 @@ function show(n){
     if(c) c.className = 'prog-conn' + (i < stepNum ? ' done' : '');
   }
   window.scrollTo(0,0);
-  // Render dynamic content
   if(n === '1b') renderCategories();
   if(n === 2)    renderLocations();
   if(n === 3)    renderPOS();
@@ -397,7 +330,6 @@ function show(n){
   if(n === 6)    renderReview();
 }
 
-// ── STEP 1: ACCOUNT ───────────────────────────────────────────────────────────
 async function createAccount(){
   clearAlert('alert1');
   var email = val('s1_email').trim();
@@ -438,7 +370,6 @@ async function createAccount(){
 
     localStorage.setItem('rd_token', state.token);
 
-    // Create client record
     btn.textContent = 'Setting up...';
     var clientRes = await apiFetch('/api/clients', 'POST', {
       user_id: state.userId,
@@ -460,7 +391,6 @@ async function createAccount(){
   }
 }
 
-// ── STEP 1B: CATEGORIES ───────────────────────────────────────────────────────
 var ALL_CATS = [
   { group: 'Restaurant Type', items: ['Fast Casual','Quick Service (QSR)','Full Service / Casual Dining','Fine Dining','Café / Coffee Shop','Bar & Grill','Bakery','Food Hall'] },
   { group: 'Cuisine', items: ['American','Italian / Pizza','Mexican / Latin','Asian','Mediterranean','Breakfast / Brunch','Burgers','Seafood','BBQ','Other'] },
@@ -495,7 +425,6 @@ async function saveCategories(){
   show(2);
 }
 
-// ── STEP 2: LOCATIONS ─────────────────────────────────────────────────────────
 function addLocation(){
   state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', foodTarget:31, laborTarget:34 });
   renderLocations();
@@ -578,7 +507,6 @@ async function saveLocations(){
   btn.disabled = false; btn.textContent = 'Save & Continue →';
 }
 
-// ── SYSTEMS DATA ──────────────────────────────────────────────────────────────
 function svgIcon(bg, text, size){
   size = size || 13;
   return '<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="' + bg + '"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="' + size + '" font-weight="900" fill="white">' + text + '</text></svg>';
@@ -604,9 +532,7 @@ var PAY_SYSTEMS = [
   { id:'csv',      icon:svgIcon('#4A5568','CSV',10), name:'CSV Upload', desc:'Any payroll', live:true },
 ];
 
-// ── CSV UPLOAD ────────────────────────────────────────────────────────────────
 function renderCSVUpload(type, alertId, previewId, instructions){
-  var locId = (state.locations[0] || {}).id || '';
   return '<div class="section-div">CSV Upload</div>'
     + (instructions || '')
     + '<div class="csv-zone" onclick="document.getElementById(\'file_' + type + '\').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event,\'' + type + '\',\'' + alertId + '\',\'' + previewId + '\')">'
@@ -631,14 +557,11 @@ function handleFile(input, type, alertId, previewId){
 async function processCSV(file, type, alertId, previewId){
   var prev = document.getElementById(previewId);
   if(prev) prev.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);padding:8px">Reading file...</div>';
-
   var text = await file.text();
   var lines = text.trim().split('\n');
   var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
-
-  // Show preview
   if(prev){
-    var previewHtml = '<div style="overflow-x:auto;margin:10px 0"><table style="font-size:10px;border-collapse:collapse;width:100%"><thead><tr>'
+    prev.innerHTML = '<div style="overflow-x:auto;margin:10px 0"><table style="font-size:10px;border-collapse:collapse;width:100%"><thead><tr>'
       + headers.slice(0,5).map(function(h){ return '<th style="padding:4px 8px;background:var(--dark);color:#fff;text-align:left;font-family:IBM Plex Mono,monospace;font-size:8px">' + h.slice(0,16) + '</th>'; }).join('')
       + '</tr></thead><tbody>'
       + lines.slice(1,3).map(function(row){
@@ -649,7 +572,6 @@ async function processCSV(file, type, alertId, previewId){
       + '</tbody></table></div>'
       + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">' + (lines.length-1) + ' rows · ' + file.name + '</div>'
       + '<button class="btn-gold" onclick="uploadCSV(\'' + type + '\',\'' + alertId + '\',\'' + previewId + '\')" style="font-size:9px;padding:8px 16px">✓ Upload This File</button>';
-    prev.innerHTML = previewHtml;
     window['_csv_' + type] = { text: text, name: file.name };
   }
 }
@@ -657,10 +579,8 @@ async function processCSV(file, type, alertId, previewId){
 async function uploadCSV(type, alertId, previewId){
   var pending = window['_csv_' + type];
   if(!pending) return;
-
   var prev = document.getElementById(previewId);
   if(prev) prev.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);padding:8px">Uploading...</div>';
-
   try {
     var clientId = state.clientId || localStorage.getItem('rd_client_id');
     var locId = (state.locations[0] || {}).id || '';
@@ -678,12 +598,10 @@ async function uploadCSV(type, alertId, previewId){
   }
 }
 
-// ── STEP 3: POS ───────────────────────────────────────────────────────────────
 function renderPOS(){
   var grid = document.getElementById('pos_grid');
   var details = document.getElementById('pos_details');
   if(!grid) return;
-
   grid.innerHTML = POS_SYSTEMS.map(function(p){
     var cs = !p.live;
     return '<div class="conn-card' + (cs?' coming-soon':'') + '" id="pcard_' + p.id + '"'
@@ -694,7 +612,6 @@ function renderPOS(){
       + (cs ? '<div class="conn-badge">soon</div>' : '')
       + '</div>';
   }).join('');
-
   details.innerHTML = ''
     + '<div class="detail" id="pd_square"><div class="detail-title">Connect Square</div><div class="detail-sub">One-click OAuth — authorize in 30 seconds</div><button class="oauth-btn" onclick="connectSquare()">🔗 Connect with Square →</button></div>'
     + '<div class="detail" id="pd_csv">'
@@ -742,12 +659,10 @@ function connectSquare(){
   window.location.href = 'https://connect.squareup.com/oauth2/authorize?client_id=' + SQ_APP_ID + '&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+EMPLOYEES_READ&redirect_uri=' + redir + '&state=' + oauthState;
 }
 
-// ── STEP 4: DELIVERY ──────────────────────────────────────────────────────────
 function renderDelivery(){
   var grid = document.getElementById('del_grid');
   var details = document.getElementById('del_details');
   if(!grid) return;
-
   grid.innerHTML = DEL_SYSTEMS.map(function(p){
     return '<div class="conn-card" id="dcard_' + p.id + '" onclick="selectDel(\'' + p.id + '\')">'
       + '<div class="conn-icon">' + p.icon + '</div>'
@@ -755,7 +670,6 @@ function renderDelivery(){
       + '<div class="conn-desc">' + p.desc + '</div>'
       + '</div>';
   }).join('');
-
   details.innerHTML = DEL_SYSTEMS.map(function(p){
     return '<div class="detail" id="dd_' + p.id + '">'
       + renderCSVUpload(p.id + '_delivery', 'alert4', 'dprev_' + p.id,
@@ -773,12 +687,10 @@ function selectDel(id){
   if(det) det.classList.add('open');
 }
 
-// ── STEP 5: PAYROLL ───────────────────────────────────────────────────────────
 function renderPayroll(){
   var grid = document.getElementById('pay_grid');
   var details = document.getElementById('pay_details');
   if(!grid) return;
-
   grid.innerHTML = PAY_SYSTEMS.map(function(p){
     var cs = !p.live;
     return '<div class="conn-card' + (cs?' coming-soon':'') + '" id="pycard_' + p.id + '"'
@@ -789,7 +701,6 @@ function renderPayroll(){
       + (cs ? '<div class="conn-badge">soon</div>' : '')
       + '</div>';
   }).join('');
-
   details.innerHTML = '<div class="detail" id="pyd_csv">'
     + renderCSVUpload('labor', 'alert5', 'payprev',
         '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Payroll System</label>'
@@ -808,12 +719,10 @@ function selectPay(id){
   if(det) det.classList.add('open');
 }
 
-// ── STEP 6: REVIEW ────────────────────────────────────────────────────────────
 function renderReview(){
   var card = document.getElementById('review_card');
   if(!card) return;
   var locs = state.locations.length;
-  var posConn = Object.keys(window._csv_sales || {}).length > 0 ? 'CSV uploaded' : 'Not connected yet';
   card.innerHTML = '<div class="panel-title" style="font-size:18px;margin-bottom:16px">Summary</div>'
     + '<div class="review-row"><span class="review-label">Restaurant</span><span class="review-val">' + (state.restaurantName||'—') + '</span></div>'
     + '<div class="review-row"><span class="review-label">Locations</span><span class="review-val">' + locs + ' location' + (locs!==1?'s':'') + '</span></div>'
@@ -824,12 +733,9 @@ function renderReview(){
 async function startCheckout(){
   var btn = document.getElementById('s6_btn');
   btn.disabled = true; btn.textContent = 'Setting up...';
-
   try {
     var clientId = state.clientId || localStorage.getItem('rd_client_id');
     if(!clientId) throw new Error('Session issue — please refresh.');
-
-    // Check for pilot
     var clientData = await apiFetch('/api/clients/' + clientId);
     if(clientData && clientData.is_pilot){
       localStorage.setItem('rd_pilot','true');
@@ -838,8 +744,6 @@ async function startCheckout(){
       window.location.href = '/dashboard';
       return;
     }
-
-    // Stripe checkout
     var res = await apiFetch('/api/create-checkout-session', 'POST', {
       user_id: state.userId || clientData.user_id,
       email: state.email || clientData.email,
@@ -852,29 +756,22 @@ async function startCheckout(){
   }
 }
 
-// ── OAUTH CALLBACK ────────────────────────────────────────────────────────────
 async function handleOAuthCallback(provider, code, stateParam){
   try {
     var savedState = JSON.parse(atob(stateParam || btoa('{}')));
     var clientId = savedState.clientId || localStorage.getItem('rd_client_id');
     var locId = savedState.locId || ((state.locations[0]||{}).id||'');
     var token = state.token || localStorage.getItem('rd_token');
-
     var res = await fetch(API + '/api/oauth/exchange', {
       method: 'POST',
       headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+token},
       body: JSON.stringify({ provider: provider, code: code, location_id: locId, client_id: clientId }),
     });
     var data = await res.json();
-    if(data.success){
-      show(3);
-    } else {
-      show(3);
-    }
+    show(3);
   } catch(e){ show(3); }
 }
 
-// ── PAYMENT SUCCESS ───────────────────────────────────────────────────────────
 async function handlePaymentSuccess(sessionId){
   localStorage.setItem('rd_setup_complete','true');
   var clientId = state.clientId || localStorage.getItem('rd_client_id');
@@ -882,7 +779,6 @@ async function handlePaymentSuccess(sessionId){
   show('_success');
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async function(){
   var params = new URLSearchParams(window.location.search);
   var callback = params.get('callback');
@@ -890,19 +786,16 @@ window.addEventListener('DOMContentLoaded', async function(){
   var oauthState = params.get('state');
   var payment = params.get('payment');
 
-  // Handle OAuth callback
   if(callback && code){
     await handleOAuthCallback(callback, code, oauthState);
     return;
   }
 
-  // Handle Stripe success
   if(payment === 'success'){
     await handlePaymentSuccess(params.get('session_id'));
     return;
   }
 
-  // Resume if mid-onboarding
   var token = localStorage.getItem('rd_token');
   var clientId = localStorage.getItem('rd_client_id');
   if(token && clientId){
@@ -910,9 +803,7 @@ window.addEventListener('DOMContentLoaded', async function(){
       var client = await fetch(API + '/api/clients/' + clientId, {
         headers: {'Authorization':'Bearer '+token}
       }).then(function(r){ return r.json(); });
-
       if(client && client.setup_complete === false){
-        // Restore state
         var saved = localStorage.getItem('rd_onboard_state');
         if(saved){ try{ Object.assign(state, JSON.parse(saved)); }catch(e){} }
         state.token = token;
@@ -926,7 +817,6 @@ window.addEventListener('DOMContentLoaded', async function(){
     } catch(e){}
   }
 
-  // Fresh start
   show(1);
 });
 </script>
