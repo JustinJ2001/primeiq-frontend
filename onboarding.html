@@ -689,8 +689,8 @@ function renderLocationForms() {
       <div class="loc-num">Location ${i + 1}${i === 0 ? ' · Primary' : ''}</div>
       ${i > 0 ? `<button class="remove-loc" onclick="removeLocation(${i})">✕ Remove</button>` : ''}
       <div class="f-row">
-        <div class="f-group"><label class="f-label">Location Name</label>
-          <input class="f-input" placeholder="e.g. Hells Kitchen" value="${loc.name || ''}" oninput="updateLocation(${i},'name',this.value)"></div>
+        <div class="f-group"><label class="f-label">Location Nickname</label>
+          <input class="f-input" placeholder="e.g. Downtown, Midtown, West Loop" value="${loc.name || ''}" oninput="updateLocation(${i},'name',this.value)"></div>
         <div class="f-group"><label class="f-label">Address</label>
           <input class="f-input" placeholder="458 W 46th St, New York" value="${loc.address || ''}" oninput="updateLocation(${i},'address',this.value)"></div>
       </div>
@@ -713,19 +713,19 @@ function renderLocationForms() {
       <div class="f-row3">
         <div class="f-group"><label class="f-label">Food Cost Target %</label>
           <input class="f-input" type="number" placeholder="31" value="${loc.foodTarget || ''}" oninput="updateLocation(${i},'foodTarget',this.value)">
-          <div class="f-hint">Industry: 28–35%</div></div>
+          <div class="f-hint">Typical range: 28–35% (varies by concept)</div></div>
         <div class="f-group"><label class="f-label">Labor Cost Target %</label>
           <input class="f-input" type="number" placeholder="34" value="${loc.laborTarget || ''}" oninput="updateLocation(${i},'laborTarget',this.value)">
-          <div class="f-hint">Industry: 28–35%</div></div>
+          <div class="f-hint">Typical range: 28–38% (varies by concept)</div></div>
         <div class="f-group"><label class="f-label">Prime Cost Target %</label>
-          <input class="f-input" type="number" placeholder="65" value="${loc.primeTarget || ''}" oninput="updateLocation(${i},'primeTarget',this.value)">
-          <div class="f-hint">Food + Labor. Under 65%</div></div>
+          <div class="f-input" style="background:#f5f0e8;color:var(--muted);cursor:default;display:flex;align-items:center">${((loc.foodTarget||31) + (loc.laborTarget||34))}% <span style="margin-left:8px;font-size:9px;color:var(--muted)">(auto)</span></div>
+          <div class="f-hint">Food + Labor combined — updates automatically</div></div>
       </div>
     </div>`).join('');
 }
 
 function addLocation() {
-  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', supplies:'', marketing:'', software:'', foodTarget:31, laborTarget:34, primeTarget:65 });
+  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', supplies:'', marketing:'', software:'', foodTarget:31, laborTarget:34 });
   renderLocationForms();
 }
 
