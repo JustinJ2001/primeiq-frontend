@@ -821,48 +821,43 @@ async function createAccount() {
     return;
   }
   window._lastCreateAttempt = now;
-  // If token+clientId exist, first verify account still exists in DB
-  // This prevents stale localStorage from blocking fresh signups (e.g. after deleting test account)
+  // If token+clientId exist in localStorage, handle returning user
   if (lsGet('rd_token') && lsGet('rd_client_id')) {
-    setLoading('s1_btn', true);
-    var accountExists = false;
-    try {
-      // Check Supabase auth directly — this tells us if the auth user still exists
-      var authCheck = await fetch(CONFIG.supabaseUrl + '/auth/v1/user', {
-        headers: { 'Authorization': 'Bearer ' + lsGet('rd_token'), 'apikey': CONFIG.supabaseKey }
-      });
-      accountExists = (authCheck.status === 200);
-      if (!accountExists) {
-        // Auth user gone — clear stale session, fall through to fresh signup
-        lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-      }
-    } catch(e) {
-      // Network error — clear session and try fresh signup
-      lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-    }
-    setLoading('s1_btn', false);
+    const emailVal = val('s1_email');
+    const pwVal = val('s1_password');
 
-    if (accountExists) {
-      const emailVal = val('s1_email');
-      const pwVal = val('s1_password');
-      // Issue 10: different email entered — clear session and start fresh
-      var storedEmail = lsGet('rd_s1_email');
-      if (emailVal && storedEmail && emailVal.toLowerCase() !== storedEmail.toLowerCase()) {
+    // Always require email+password when returning to step 1
+    // This covers: same account continuing, wrong password, deleted account, different email
+    if (!emailVal || !pwVal) {
+      showAlert('s1_alert', 'Please enter your email and password to continue.', 'info');
+      return;
+    }
+
+    setLoading('s1_btn', true);
+
+    // Issue 10: different email — clear session and do fresh signup below
+    var storedEmail = lsGet('rd_s1_email');
+    if (storedEmail && emailVal.toLowerCase() !== storedEmail.toLowerCase()) {
+      lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
+      setLoading('s1_btn', false);
+      // Fall through to fresh signup
+    } else {
+      // Same email — try to sign in with provided password
+      var signInCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: emailVal, password: pwVal });
+
+      if (signInCheck.error) {
+        // Wrong password OR account deleted (Supabase returns error for both)
+        // Try fresh signup to handle the deleted account case
+        setLoading('s1_btn', false);
         lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-        // Fall through to fresh signup below
-      } else if (emailVal && pwVal) {
-        // Verify password is correct
-        setLoading('s1_btn', true);
-        var signInCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: emailVal, password: pwVal });
-        if (signInCheck.error) {
-          showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
-          setLoading('s1_btn', false);
-          return;
-        }
-        // Password correct — refresh token and continue
+        // Fall through to fresh signup below — if account exists Supabase will error and we handle it there
+      } else {
+        // Sign in succeeded — account exists and password correct
         state.token = signInCheck.access_token;
         state.userId = signInCheck.user?.id;
         lsSet('rd_token', state.token);
+        lsSet('rd_client_id', lsGet('rd_client_id')); // keep existing client ID
+        // Update name if changed
         var newName = val('s1_name');
         if (newName && newName !== lsGet('rd_s1_name')) {
           var cid = lsGet('rd_client_id');
@@ -870,13 +865,9 @@ async function createAccount() {
           lsSet('rd_s1_name', newName);
           state.restaurantName = newName;
         }
+        state.clientId = lsGet('rd_client_id');
         setLoading('s1_btn', false);
         goToStep(2);
-        return;
-      } else {
-        // No credentials entered
-        showAlert('s1_alert', 'Already have an account — please enter your email and password to continue.', 'info');
-        setLoading('s1_btn', false);
         return;
       }
     }
