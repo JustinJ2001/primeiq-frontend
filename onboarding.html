@@ -678,7 +678,33 @@ async function createAccount() {
   try {
     // Create Supabase auth user
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
-    if (authRes.error) throw new Error(authRes.error.message || 'Signup failed');
+    if (authRes.error) {
+      var errMsg = authRes.error.message || 'Signup failed';
+      // User already exists - sign them in and continue onboarding
+      if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('registered') || errMsg.toLowerCase().includes('existing')) {
+        var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
+        if (signInRes.error) {
+          showAlert('s1_alert', 'Account already exists — please sign in at primeiq.io/login to continue setup.', 'error');
+          setLoading('s1_btn', false);
+          return;
+        }
+        state.email = email;
+        state.userId = signInRes.user?.id;
+        state.token = signInRes.access_token;
+        localStorage.setItem('rd_token', state.token);
+        // Check if client record exists
+        var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
+        if (existing && existing.id) {
+          state.clientId = existing.id;
+          localStorage.setItem('rd_client_id', existing.id);
+        }
+        // Continue to next step
+        goToStep(2);
+        setLoading('s1_btn', false);
+        return;
+      }
+      throw new Error(errMsg);
+    }
 
     state.email = email;
     state.userId = authRes.user?.id || authRes.id;
