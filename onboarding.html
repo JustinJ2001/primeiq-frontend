@@ -684,12 +684,6 @@ function renderStep(n) {
 
 // ── STEP 1: ACCOUNT ───────────────────────────────────────────────────────────
 async function createAccount() {
-  // If already signed up this session, just continue
-  if (localStorage.getItem('rd_token') && localStorage.getItem('rd_client_id')) {
-    goToStep(2);
-    return;
-  }
-
   const email    = val('s1_email');
   const password = val('s1_password');
   const confirm  = val('s1_confirm');
