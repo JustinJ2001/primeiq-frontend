@@ -148,6 +148,17 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
     </div>
   </div>
+  <script>
+    // Runs immediately when HTML is parsed - always populate step 1 fields
+    (function() {
+      var n = localStorage.getItem('rd_s1_name');
+      var e = localStorage.getItem('rd_s1_email');
+      var nameEl = document.getElementById('s1_name');
+      var emailEl = document.getElementById('s1_email');
+      if (nameEl && n) nameEl.value = n;
+      if (emailEl && e) emailEl.value = e;
+    })();
+  </script>
 
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
@@ -529,7 +540,20 @@ const oauthCode = urlParams.get('code');
 const oauthState = urlParams.get('state');
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// Watch panel1 for when it becomes visible and populate fields
+var panel1Observer = new MutationObserver(function() {
+  var panel = document.getElementById('panel1');
+  if (panel && panel.classList.contains('active')) {
+    var nameEl = document.getElementById('s1_name');
+    var emailEl = document.getElementById('s1_email');
+    if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || '';
+    if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || '';
+  }
+});
+
 window.addEventListener('DOMContentLoaded', async () => {
+  var panel1 = document.getElementById('panel1');
+  if (panel1) panel1Observer.observe(panel1, { attributes: true, attributeFilter: ['class'] });
   // Clear any stale Supabase sessions so they don't redirect mid-onboarding
   if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
     Object.keys(localStorage).forEach(function(k) {
