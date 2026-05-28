@@ -131,9 +131,16 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 <div id="page_loader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s">
   <div style="text-align:center">
     <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div>
-    <div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em">Loading...</div>
+    <div id="loader_msg" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em">Loading...</div>
   </div>
 </div>
+<script>
+  // Show slow connection message after 5s
+  var loaderTimer = setTimeout(function(){
+    var el = document.getElementById('loader_msg');
+    if (el) el.textContent = 'First load may take up to 30 seconds...';
+  }, 5000);
+</script>
 <div class="main">
   <div id="cb_alert" class="alert"></div>
   <!-- STEP 1: ACCOUNT -->
@@ -143,9 +150,9 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="s1_alert" class="alert"></div>
     <div class="card">
       <div class="f-group"><label class="f-label">Restaurant Group Name</label>
-        <input class="f-input" id="s1_name" name="organization" placeholder="e.g. Planet Taco" autocomplete="organization" oninput="localStorage.setItem('rd_s1_name',this.value)"></div>
+        <input class="f-input" id="s1_name" name="organization" placeholder="e.g. Planet Taco" autocomplete="organization" oninput="lsSet('rd_s1_name',this.value)"></div>
       <div class="f-group"><label class="f-label">Your Email</label>
-        <input class="f-input" id="s1_email" name="email" type="email" placeholder="owner@yourrestaurant.com" autocomplete="email" oninput="localStorage.setItem('rd_s1_email',this.value)"></div>
+        <input class="f-input" id="s1_email" name="email" type="email" placeholder="owner@yourrestaurant.com" autocomplete="email" oninput="lsSet('rd_s1_email',this.value)"></div>
       <div class="f-row">
         <div class="f-group"><label class="f-label">Password</label>
           <div style="position:relative">
@@ -165,7 +172,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
     </div>
   </div>
-  <script>(function(){var n=localStorage.getItem("rd_s1_name"),e=localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}})()</script>
+  <script>(function(){try{var n=window.localStorage.getItem("rd_s1_name"),e=window.localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}}catch(ex){};})()</script>
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
     <div class="panel-title">What kind of restaurant are you?</div>
@@ -173,9 +180,11 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="welcome_note" style="background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-bottom:16px;display:none">✓ Account created · Welcome email sent</div>
     <script>
       (function(){
-        var e=localStorage.getItem('rd_s1_email');
-        var el=document.getElementById('welcome_note');
-        if(e&&el){el.textContent='✓ Account created · Welcome email sent to '+e;el.style.display='block';}
+        try{
+          var e=window.localStorage.getItem('rd_s1_email');
+          var el=document.getElementById('welcome_note');
+          if(e&&el){el.textContent='✓ Account created · Welcome email sent to '+e;el.style.display='block';}
+        }catch(ex){}
       })();
     </script>
     <div id="s1b_alert" class="alert"></div>
@@ -479,7 +488,7 @@ let state = {
   step: 1,
   userId: null,
   clientId: null,
-  referredBy: new URLSearchParams(window.location.search).get('ref') || localStorage.getItem('rd_referred_by') || null,
+  referredBy: new URLSearchParams(window.location.search).get('ref') || lsGet('rd_referred_by') || null,
   email: '',
   restaurantName: '',
   categories: [],
@@ -504,14 +513,28 @@ const oauthState = urlParams.get('state');
 window.addEventListener('DOMContentLoaded', async () => {
   // Issue 57: save referral param immediately
   var refParam = new URLSearchParams(window.location.search).get('ref');
-  if (refParam) localStorage.setItem('rd_referred_by', refParam);
-  if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
-    Object.keys(localStorage).forEach(function(k) {
-      if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
-    });
+  if (refParam) {
+    lsSet('rd_referred_by', refParam);
+    // Update existing client record if already created
+    var existingClientId = lsGet('rd_client_id');
+    var existingToken = lsGet('rd_token');
+    if (existingClientId && existingToken) {
+      fetch(CONFIG.apiBase + '/api/clients/' + existingClientId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + existingToken },
+        body: JSON.stringify({ referred_by: refParam })
+      }).catch(function(){});
+    }
   }
-  if (localStorage.getItem('rd_token') && !urlParams.get('payment')) {
-    localStorage.setItem('rd_onboarding', 'true');
+  if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
+    try {
+      Object.keys(window.localStorage).forEach(function(k) {
+        if (k.startsWith('sb-') && k.endsWith('-auth-token')) lsRemove(k);
+      });
+    } catch(e) {}
+  }
+  if (lsGet('rd_token') && !urlParams.get('payment')) {
+    lsSet('rd_onboarding', 'true');
   }
   if (oauthCallback && oauthCode) {
     await handleOAuthCallback(oauthCallback, oauthCode, oauthState);
@@ -522,92 +545,172 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
   if (urlParams.get('confirmed') === '1') {
-    var saved = localStorage.getItem('rd_onboard_state');
-    if (saved) { try { Object.assign(state, JSON.parse(saved)); } catch(e) {} }
+    var saved = lsGet('rd_onboard_state');
+    if (saved) {
+      try {
+        var parsedConfirmed = JSON.parse(saved);
+        // Issue G: don't overwrite auth fields from stale state
+        delete parsedConfirmed.token;
+        delete parsedConfirmed.clientId;
+        delete parsedConfirmed.userId;
+        Object.assign(state, parsedConfirmed);
+      } catch(e) {}
+    }
     var hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
-      var params = new URLSearchParams(hash.replace('#',''));
-      var token = params.get('access_token');
-      if (token) { state.token = token; localStorage.setItem('rd_token', token); }
+      var hashParams = new URLSearchParams(hash.replace('#',''));
+      var confirmedToken = hashParams.get('access_token');
+      if (confirmedToken) { state.token = confirmedToken; lsSet('rd_token', confirmedToken); }
     }
-    renderStep(state.step > 1 ? state.step : 2);
+    var confirmedStep = (state.step && state.step !== 1) ? state.step : 2;
+    renderStep(confirmedStep);
+    // Issue F: hide loader on confirmed path
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
     return;
   }
-  // Resume if mid-onboarding
-  var token = localStorage.getItem('rd_token');
-  var clientId = localStorage.getItem('rd_client_id');
-  if (token && clientId) {
-    try {
-      var clientResp = await fetch(CONFIG.apiBase + '/api/clients/' + clientId, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      // Issue 3: handle expired token (401)
-      if (clientResp.status === 401 || clientResp.status === 404) {
-        localStorage.removeItem('rd_token');
-        localStorage.removeItem('rd_client_id');
-        localStorage.removeItem('rd_onboard_state');
-        localStorage.removeItem('rd_locations_draft');
-        localStorage.removeItem('rd_onboarding');
-        renderStep(1);
-        document.getElementById('page_loader').style.display = 'none';
-        if (clientResp.status === 401) showAlert('s1_alert', 'Your session expired. Please sign in again.', 'info');
-        return;
-      }
-      var client = await clientResp.json();
-      if (client && client.setup_complete === true) {
-        // Already finished onboarding — go to dashboard
-        document.getElementById('page_loader').style.display = 'none';
-        window.location.replace('/dashboard');
-        return;
-      }
-      if (client && client.setup_complete === false) {
-        var saved = localStorage.getItem('rd_onboard_state');
-        if (saved) { try { Object.assign(state, JSON.parse(saved)); } catch(e) {} }
-        // Issue 13: restore location draft if state.locations empty
-        if (!state.locations || !state.locations.length) {
-          var locDraft = localStorage.getItem('rd_locations_draft');
-          if (locDraft) { try { state.locations = JSON.parse(locDraft); } catch(e) {} }
-        }
-        state.token = token;
-        state.clientId = clientId;
-        state.email = client.email || state.email;
-        state.restaurantName = client.name || state.restaurantName;
-        // Issue 12: restore referral from localStorage
-        state.referredBy = state.referredBy || localStorage.getItem('rd_referred_by');
-        // Handle step 1b correctly — any step including 1b resumes properly
-        // Issue 25: fetch fresh locations from API to ensure IDs are present
-        if (!state.locations || !state.locations.length || !state.locations[0].id) {
-          try {
-            var locs = await apiFetch('/api/locations?client_id=' + clientId);
-            if (locs && locs.locations && locs.locations.length) state.locations = locs.locations;
-          } catch(e2) {}
-        }
-        var resumeStep = state.step && state.step !== 1 ? state.step : 2;
-        renderStep(resumeStep);
-        document.getElementById('page_loader').style.display = 'none';
-        return;
-      }
-    } catch(e) {
-      // If client not found (404) or any error — clear stale session silently
-      localStorage.removeItem('rd_token');
-      localStorage.removeItem('rd_client_id');
-      localStorage.removeItem('rd_onboard_state');
-      localStorage.removeItem('rd_locations_draft');
-      localStorage.removeItem('rd_onboarding');
-      renderStep(1);
-      document.getElementById('page_loader').style.display = 'none';
-      return;
-    }
+  // ── RESUME CHECK ─────────────────────────────────────────────────────────────
+  var token = lsGet('rd_token');
+  var clientId = lsGet('rd_client_id');
+
+  // Case 10: validate token and clientId are real (not empty/null/undefined strings)
+  if (!token || !clientId || clientId.length < 10) {
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    return;
   }
-  renderStep(1);
+
+  // Make API call to check client status
+  var clientResp;
+  try {
+    var abortCtrl = new AbortController();
+    var abortTimer = setTimeout(function(){ abortCtrl.abort(); }, 15000);
+    clientResp = await fetch(CONFIG.apiBase + '/api/clients/' + clientId, {
+      headers: { 'Authorization': 'Bearer ' + token },
+      signal: abortCtrl.signal
+    });
+    clearTimeout(abortTimer);
+  } catch(networkErr) {
+    // Network error or timeout — keep localStorage, let them retry
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    showAlert('s1_alert', 'Having trouble connecting. Please check your internet and try again.', 'info');
+    return;
+  }
+
+  // Case 2: token expired
+  if (clientResp.status === 401) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete']);
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    showAlert('s1_alert', 'Your session expired. Please sign in again.', 'info');
+    return;
+  }
+
+  // Case 1: client deleted or never created
+  if (clientResp.status === 404) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete']);
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    return;
+  }
+
+  // Cases 8+9: other HTTP errors (500, 403, etc)
+  if (clientResp.status >= 400) {
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    showAlert('s1_alert', 'Having trouble connecting. Please try again.', 'info');
+    return;
+  }
+
+  // Case 6: parse response body
+  var client;
+  try {
+    client = await clientResp.json();
+  } catch(jsonErr) {
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    showAlert('s1_alert', 'Having trouble connecting. Please try again.', 'info');
+    return;
+  }
+
+  // Case 19: API returns 200 with error body e.g. {detail: "Not found"} or empty {}
+  if (!client || client.detail || client.error || !client.id) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete']);
+    renderStep(1);
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    return;
+  }
+
+  // Case 5: already completed onboarding
+  if (client.setup_complete === true) {
+    lsSet('rd_setup_complete', 'true');
+    clearTimeout(loaderTimer);
+    document.getElementById('page_loader').style.display = 'none';
+    window.location.replace('/dashboard');
+    return;
+  }
+
+  // Cases 4+7: mid-onboarding (setup_complete is false, null, or undefined)
+  // Restore saved state
+  var savedRaw = lsGet('rd_onboard_state');
+  if (savedRaw) {
+    try {
+      var parsed = JSON.parse(savedRaw);
+      // Case 26: delete auth fields from saved state before applying
+      // so they can never overwrite the fresh values we just got
+      delete parsed.token;
+      delete parsed.clientId;
+      delete parsed.userId;
+      if (parsed && typeof parsed === 'object') Object.assign(state, parsed);
+    } catch(e) {}
+  }
+
+  // Restore location draft if locations missing
+  if (!state.locations || !state.locations.length) {
+    var locDraft = lsGet('rd_locations_draft');
+    if (locDraft) { try { state.locations = JSON.parse(locDraft); } catch(e) {} }
+  }
+
+  // Set auth fields AFTER Object.assign — cannot be overwritten by stale state
+  state.token = token;
+  state.clientId = clientId;
+  state.userId = client.user_id || state.userId;
+  state.email = client.email || state.email;
+  state.restaurantName = client.name || state.restaurantName;
+  state.referredBy = state.referredBy || lsGet('rd_referred_by');
+
+  // Case 25: fetch fresh locations from API to ensure IDs are present
+  if (!state.locations || !state.locations.length || !state.locations[0] || !state.locations[0].id) {
+    try {
+      var locs = await apiFetch('/api/locations?client_id=' + clientId);
+      if (locs && locs.locations && locs.locations.length) state.locations = locs.locations;
+    } catch(e2) {}
+  }
+
+  // Case 38: clamp step to valid range
+  var validSteps = ['1b', 2, 3, 4, 5, 6];
+  var resumeStep = validSteps.indexOf(state.step) >= 0 ? state.step : 2;
+
+  renderStep(resumeStep);
+  clearTimeout(loaderTimer);
   document.getElementById('page_loader').style.display = 'none';
 });
 
 function goToStep(n) {
   state.step = n;
+  // Issue R: save state on every navigation so refresh resumes at correct step
+  lsSet('rd_onboard_state', JSON.stringify(state));
   window.history.pushState({ step: n }, '', '/onboarding');
   // Issue 53: track funnel step
-  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  var clientId = state.clientId || lsGet('rd_client_id');
   if (clientId) {
     apiFetch('/api/usage/ping', 'POST', { client_id: clientId, page: 'onboarding_step_' + n }).catch(function(){});
   }
@@ -625,7 +728,7 @@ function renderCategoryGrid() {
   if (!grid) return;
   // Restore categories from localStorage if state is empty
   if (!state.categories.length) {
-    var saved = localStorage.getItem('rd_categories');
+    var saved = lsGet('rd_categories');
     if (saved) { try { state.categories = JSON.parse(saved); } catch(e) {} }
   }
   grid.innerHTML = ALL_CATEGORIES.map(group => {
@@ -654,7 +757,7 @@ function toggleCategory(btn, item) {
 }
 
 function skipCategories() {
-  localStorage.setItem('rd_categories', JSON.stringify([]));
+  lsSet('rd_categories', JSON.stringify([]));
   goToStep(2);
 }
 
@@ -663,10 +766,10 @@ async function saveCategories() {
   setLoading('s1b_btn', true);
   try {
     if (state.clientId) { await apiFetch('/api/clients/' + state.clientId, 'PATCH', { categories: state.categories }); }
-    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
+    lsSet('rd_categories', JSON.stringify(state.categories));
     goToStep(2);
   } catch(e) {
-    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
+    lsSet('rd_categories', JSON.stringify(state.categories));
     goToStep(2);
   }
   setLoading('s1b_btn', false);
@@ -719,16 +822,16 @@ async function createAccount() {
   }
   window._lastCreateAttempt = now;
   // If already signed up, verify password if provided
-  if (localStorage.getItem('rd_token') && localStorage.getItem('rd_client_id')) {
+  if (lsGet('rd_token') && lsGet('rd_client_id')) {
     const emailVal = val('s1_email');
     const pwVal = val('s1_password');
     // Issue 10: if different email entered, clear session and start fresh
-    var storedEmail = localStorage.getItem('rd_s1_email');
+    var storedEmail = lsGet('rd_s1_email');
     if (emailVal && storedEmail && emailVal.toLowerCase() !== storedEmail.toLowerCase()) {
-      localStorage.removeItem('rd_token');
-      localStorage.removeItem('rd_client_id');
-      localStorage.removeItem('rd_onboard_state');
-      localStorage.removeItem('rd_locations_draft');
+      lsRemove('rd_token');
+      lsRemove('rd_client_id');
+      lsRemove('rd_onboard_state');
+      lsRemove('rd_locations_draft');
       // Continue to fresh signup below
     } else {
     if (emailVal && pwVal) {
@@ -743,13 +846,13 @@ async function createAccount() {
       // Password correct — refresh token
       state.token = signInCheck.access_token;
       state.userId = signInCheck.user?.id;
-      localStorage.setItem('rd_token', state.token);
+      lsSet('rd_token', state.token);
       // Issue 32: update name in DB if changed
       var newName = val('s1_name');
-      if (newName && newName !== localStorage.getItem('rd_s1_name')) {
-        var cid = localStorage.getItem('rd_client_id');
+      if (newName && newName !== lsGet('rd_s1_name')) {
+        var cid = lsGet('rd_client_id');
         if (cid) apiFetch('/api/clients/' + cid, 'PATCH', { name: newName }).catch(function(){});
-        localStorage.setItem('rd_s1_name', newName);
+        lsSet('rd_s1_name', newName);
         state.restaurantName = newName;
       }
       setLoading('s1_btn', false);
@@ -775,6 +878,12 @@ async function createAccount() {
   try {
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
     if (authRes.error) {
+      // Handle rate limiting
+      if (authRes.error.status === 429) {
+        showAlert('s1_alert', 'Too many attempts. Please wait a minute and try again.', 'error');
+        setLoading('s1_btn', false);
+        return;
+      }
       var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
       if (signInRes.error) {
         showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
@@ -784,12 +893,12 @@ async function createAccount() {
       state.email = email;
       state.userId = signInRes.user?.id;
       state.token = signInRes.access_token;
-      localStorage.setItem('rd_token', state.token);
-      localStorage.setItem('rd_onboarding', 'true');
+      lsSet('rd_token', state.token);
+      lsSet('rd_onboarding', 'true');
       var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
       if (existing && existing.id) {
         state.clientId = existing.id;
-        localStorage.setItem('rd_client_id', existing.id);
+        lsSet('rd_client_id', existing.id);
       } else {
         // Issue 11: client record missing — create it now
         try {
@@ -798,7 +907,7 @@ async function createAccount() {
             status: 'pending_payment', referred_by: state.referredBy || undefined
           });
           state.clientId = newClient.id;
-          localStorage.setItem('rd_client_id', newClient.id);
+          lsSet('rd_client_id', newClient.id);
         } catch(e2) {}
       }
       goToStep(2);
@@ -819,13 +928,14 @@ async function createAccount() {
       user_id: state.userId, name, email, status: 'pending_payment',
       ...(state.referredBy ? { referred_by: state.referredBy } : {})
     });
+    if (!clientRes || !clientRes.id) throw new Error('Account setup failed. Please try again.');
     state.clientId = clientRes.id;
     state.restaurantName = name;
-    state.token && localStorage.setItem('rd_token', state.token);
-    localStorage.setItem('rd_client_id', state.clientId);
-    localStorage.setItem('rd_onboarding', 'true');
+    state.token && lsSet('rd_token', state.token);
+    lsSet('rd_client_id', state.clientId);
+    lsSet('rd_onboarding', 'true');
     // Issue 37: store email for welcome note on next step
-    localStorage.setItem('rd_s1_email', email);
+    lsSet('rd_s1_email', email);
     goToStep('1b');
   } catch (e) {
     showAlert('s1_alert', e.message, 'error');
@@ -840,7 +950,7 @@ function escapeHtml(str) {
 
 function renderLocationForms() {
   // Issue 45: check pilot status and show banner
-  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  var clientId = state.clientId || lsGet('rd_client_id');
   if (clientId && !window._pilotChecked) {
     window._pilotChecked = true;
     apiFetch('/api/clients/' + clientId).then(function(d){
@@ -913,6 +1023,10 @@ async function saveLocations() {
   clearAlerts();
   const valid = state.locations.every(l => l.name && l.address);
   if (!valid) return showAlert('s2_alert', 'Please enter a name and address for every location.', 'error');
+  // Fix 16: check for duplicate location names
+  var names = state.locations.map(function(l){ return l.name.trim().toLowerCase(); });
+  var uniqueNames = new Set(names);
+  if (uniqueNames.size !== names.length) return showAlert('s2_alert', 'Each location must have a unique name.', 'error');
   // Issue 15+48: validate fixed costs are positive numbers
   const costFields = ['rent','utilities','insurance','supplies','marketing','software'];
   for (var li = 0; li < state.locations.length; li++) {
@@ -926,8 +1040,12 @@ async function saveLocations() {
   setLoading('s2_btn', true);
   try {
     const saved = await apiFetch('/api/locations/bulk', 'POST', { client_id: state.clientId, locations: state.locations });
-    // Issue 49: merge saved locations carefully preserving all fields
-    if (saved.locations && saved.locations.length) state.locations = saved.locations.map(function(sl,i){ return Object.assign({}, state.locations[i]||{}, sl); });
+    // Issue 49: merge saved locations, validate response
+    if (saved && saved.locations && saved.locations.length) {
+      state.locations = saved.locations.map(function(sl,i){ return Object.assign({}, state.locations[i]||{}, sl); });
+    } else if (!saved || !saved.locations) {
+      throw new Error('Location save failed — unexpected response. Please try again.');
+    }
     window._unsavedChanges = false;
     goToStep(3);
   } catch(e) { showAlert('s2_alert', e.message, 'error'); }
@@ -987,7 +1105,7 @@ function selectPOS(posId) {
 
 function connectPOSOAuth(provider) {
   const locId = document.getElementById('pos_loc_id')?.value || state.locations[0]?.id;
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, locId, step: 3 }));
+  lsSet('rd_oauth_state', JSON.stringify({ provider, locId, step: 3 }));
   const redirectUri = encodeURIComponent('https://primeiq.io/onboarding');
   const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
   const urls = {
@@ -1000,17 +1118,20 @@ function connectPOSOAuth(provider) {
 }
 
 async function handleOAuthCallback(provider, code, encodedState) {
+  // Issue L: hide loader
+  clearTimeout(loaderTimer);
+  document.getElementById('page_loader').style.display = 'none';
   showAlert('cb_alert', `Connecting ${provider}...`, 'info');
   try {
     const savedState = JSON.parse(atob(encodedState || '{}'));
-    const clientId = savedState.clientId || localStorage.getItem('rd_client_id');
+    const clientId = savedState.clientId || lsGet('rd_client_id');
     const locId = savedState.locId;
-    state.token = localStorage.getItem('rd_token');
+    state.token = lsGet('rd_token');
     state.clientId = clientId;
     const res = await apiFetch('/api/oauth/exchange', 'POST', { provider, code, location_id: locId, client_id: clientId });
     if (res.success) {
       showAlert('cb_alert', `${provider} connected successfully! Redirecting...`, 'success');
-      const savedOnboardState = localStorage.getItem('rd_onboard_state');
+      const savedOnboardState = lsGet('rd_onboard_state');
       if (savedOnboardState) Object.assign(state, JSON.parse(savedOnboardState));
       state.connectedPOS[locId] = { provider, status: 'connected' };
       setTimeout(() => { window.history.replaceState({}, '', window.location.pathname); renderStep(3); }, 1500);
@@ -1086,7 +1207,7 @@ function selectDelivery(platformId) {
 
 async function connectDeliveryOAuth(platform) {
   const locId = state.locations[0]?.id;
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider: platform, locId, step: 4 }));
+  lsSet('rd_oauth_state', JSON.stringify({ provider: platform, locId, step: 4 }));
   const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + platform);
   const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
   const urls = {
@@ -1149,7 +1270,7 @@ function selectPayroll(provider) {
 }
 
 async function connectPayrollOAuth(provider) {
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, step: 5 }));
+  lsSet('rd_oauth_state', JSON.stringify({ provider, step: 5 }));
   const redirectUri = encodeURIComponent('https://primeiq.io/onboarding');
   const oauthState2 = btoa(JSON.stringify({ clientId: state.clientId }));
   const urls = {
@@ -1169,54 +1290,84 @@ function renderReviewStep() {
   const posCount = Object.keys(state.connectedPOS).length;
   const delCount = Object.values(state.connectedDelivery).reduce((s, d) => s + (d.providers?.length || 0), 0);
   document.getElementById('review_content').innerHTML = `
-    <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName || localStorage.getItem('rd_s1_name') || '—'}</span></div>
+    <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName || lsGet('rd_s1_name') || '—'}</span></div>
     <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}</span></div>
     <div class="summary-row"><span class="summary-label">POS Connected</span><span class="summary-val ${posCount > 0 ? 'good' : 'warn'}">${posCount > 0 ? posCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Delivery Platforms</span><span class="summary-val ${delCount > 0 ? 'good' : 'warn'}">${delCount > 0 ? delCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email || localStorage.getItem('rd_s1_email')} <span style='font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)'>(wrong email? <a href="mailto:justin@primeiq.io" style="color:var(--gold)">contact us</a>)</span></span></div>`;
+    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email || lsGet('rd_s1_email') || '—'} <span style='font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)'>(wrong email? <a href="mailto:justin@primeiq.io" style="color:var(--gold)">contact us</a>)</span></span></div>`;
 }
 
 async function startCheckout() {
   // Issue 8: always generate fresh checkout session — never reuse old URLs
   setLoading('checkout_btn', true);
   try {
-    localStorage.setItem('rd_onboard_state', JSON.stringify(state));
-    const clientId = state.clientId || localStorage.getItem('rd_client_id');
-    if (clientId) {
+    lsSet('rd_onboard_state', JSON.stringify(state));
+    const clientId = state.clientId || lsGet('rd_client_id');
+    if (!clientId) throw new Error('Session issue — please refresh.');
+    // Ensure at least one location is saved before subscribing
+    if (!state.locations || !state.locations.length || !state.locations[0] || !state.locations[0].id) {
+      showAlert('review_alert', 'Please complete your location setup before subscribing.', 'error');
+      setLoading('checkout_btn', false);
+      setTimeout(function(){ goToStep(2); }, 1500);
+      return;
+    }
+    // Check pilot status and process checkout
       const clientData = await apiFetch('/api/clients/' + clientId);
       if (clientData && clientData.is_pilot) {
-        localStorage.setItem('rd_pilot', 'true');
-        localStorage.removeItem('rd_onboarding');
-        localStorage.setItem('rd_setup_complete', 'true');
+        lsSet('rd_pilot', 'true');
+        lsRemove('rd_onboarding');
+        lsSet('rd_setup_complete', 'true');
         await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
         window.location.href = '/dashboard';
         return;
       }
-    }
     const res = await apiFetch('/api/create-checkout-session', 'POST', { user_id: state.userId, email: state.email, price_id: CONFIG.priceId });
     window.location.href = res.url;
   } catch(e) { showAlert('review_alert', e.message, 'error'); setLoading('checkout_btn', false); }
 }
 
 async function handlePaymentSuccess(sessionId) {
+  // Issue K: hide loader
+  clearTimeout(loaderTimer);
+  document.getElementById('page_loader').style.display = 'none';
   // Issue 44: restore state so success screen can show restaurant name
-  var saved = localStorage.getItem('rd_onboard_state');
+  var saved = lsGet('rd_onboard_state');
   if (saved) { try { Object.assign(state, JSON.parse(saved)); } catch(e) {} }
-  localStorage.removeItem('rd_onboarding');
-  localStorage.setItem('rd_setup_complete', 'true');
-  const clientId = localStorage.getItem('rd_client_id');
+  lsRemove('rd_onboarding');
+  lsSet('rd_setup_complete', 'true');
+  const clientId = lsGet('rd_client_id');
   if (clientId) await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
   // Issue 36: mark all progress steps as done
   document.querySelectorAll('.prog-step').forEach(function(s){ s.classList.remove('active'); s.classList.add('done'); s.querySelector('.prog-num').textContent = '✓'; });
   document.querySelectorAll('.prog-conn').forEach(function(c){ c.classList.add('done'); });
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   document.getElementById('panel_success').style.display = 'block';
-  document.getElementById('page_loader').style.display = 'none';
+  clearTimeout(loaderTimer); document.getElementById('page_loader').style.display = 'none';
   try { await apiFetch('/api/sync/trigger', 'POST', { client_id: clientId }); } catch(e) {}
 }
 
 const val = id => document.getElementById(id)?.value?.trim() || '';
+
+// Safe localStorage helpers — handle disabled/full localStorage gracefully
+function lsGet(key) {
+  try { return window.localStorage.getItem(key); } catch(e) { return null; }
+}
+function lsSet(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch(e) {
+    if (e && e.name === 'QuotaExceededError') {
+      try { window.localStorage.removeItem('rd_locations_draft'); window.localStorage.setItem(key, value); } catch(e2) {}
+    }
+  }
+}
+function lsRemove(key) {
+  try { window.localStorage.removeItem(key); } catch(e) {}
+}
+function lsClear(keys) {
+  keys.forEach(function(k){ try { window.localStorage.removeItem(k); } catch(e) {} });
+}
 
 // Issue 24: toggle password visibility
 function togglePw(id, btn) {
@@ -1289,7 +1440,7 @@ async function supabaseFetch(path, method, body) {
 }
 
 async function apiFetch(path, method = 'GET', body = null) {
-  const token = state.token || localStorage.getItem('rd_token');
+  const token = state.token || lsGet('rd_token');
   const opts = { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) } };
   if (body) opts.body = JSON.stringify(body);
   // Issue 33: 15 second timeout
@@ -1383,9 +1534,16 @@ async function previewGenericCSV(file, type, previewId, alertId) {
     showAlert(alertId, 'File is too large. Please upload a CSV under 10MB.', 'error');
     return;
   }
-  var text = await file.text();
-  var lines = text.trim().split('\n').slice(0, 4);
+  var text;
+  try { text = await file.text(); } catch(e) {
+    showAlert(alertId, 'Could not read this file. Please try a different file.', 'error'); return;
+  }
+  if (!text || !text.trim()) { showAlert(alertId, 'This file is empty. Please export a file with data.', 'error'); return; }
+  var allLines = text.trim().split('\n');
+  if (allLines.length < 2) { showAlert(alertId, 'This file has no data rows. Please export a file with data.', 'error'); return; }
+  var lines = allLines.slice(0, 4);
   var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+  if (headers.length < 2) { showAlert(alertId, 'Could not read column headers. Make sure you exported a CSV file.', 'error'); return; }
   var preview = document.getElementById(previewId);
   preview.style.display = 'block';
   preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
@@ -1393,8 +1551,19 @@ async function previewGenericCSV(file, type, previewId, alertId) {
     + headers.map(function(h){ return '<th style="padding:5px 8px;background:var(--dark);color:white;font-size:8px;font-family:IBM Plex Mono,monospace;text-align:left">' + h.slice(0,16) + '</th>'; }).join('')
     + '</tr></thead><tbody>'
     + lines.slice(1,4).map(function(row){
-        return '<tr>' + row.split(',').map(function(cell){
-          return '<td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px">' + cell.replace(/"/g,'').trim().slice(0,16) + '</td>';
+        // Issue W: handle quoted CSV fields containing commas
+        var cells = [];
+        var inQuote = false;
+        var current = '';
+        for (var ci = 0; ci < row.length; ci++) {
+          var ch = row[ci];
+          if (ch === '"') { inQuote = !inQuote; }
+          else if (ch === ',' && !inQuote) { cells.push(current.trim()); current = ''; }
+          else { current += ch; }
+        }
+        cells.push(current.trim());
+        return '<tr>' + cells.slice(0,5).map(function(cell){
+          return '<td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px">' + cell.replace(/"/g,'').slice(0,16) + '</td>';
         }).join('') + '</tr>';
       }).join('')
     + '</tbody></table></div>'
@@ -1402,14 +1571,14 @@ async function previewGenericCSV(file, type, previewId, alertId) {
     + '<button class="btn-gold" style="padding:8px 18px" onclick="doGenericUpload(' + JSON.stringify(type) + ',' + JSON.stringify(previewId) + ',' + JSON.stringify(alertId) + ')">✓ Upload This File</button>'
     + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
     + '</div>';
-  window['_pendingCSV_' + type] = { file: file, text: text };
+  window['_pendingCSV_' + type] = { file: file, text: text, rowCount: allLines.length - 1 };
 }
 
 async function doGenericUpload(type, previewId, alertId) {
   var pending = window['_pendingCSV_' + type];
   if (!pending) { showAlert(alertId || 'pos_alert', 'Please select a file first.', 'error'); return; }
   if (!state.clientId) { showAlert(alertId || 'pos_alert', 'Please complete account setup first.', 'error'); return; }
-  var csvLocEl = document.getElementById('csv_loc_id'); var locId = (csvLocEl && csvLocEl.value) || state.locations[0]?.id || localStorage.getItem('rd_client_id');
+  var csvLocEl = document.getElementById('csv_loc_id'); var locId = (csvLocEl && csvLocEl.value) || state.locations[0]?.id || lsGet('rd_client_id');
   var previewEl = document.getElementById(previewId);
   try {
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';
