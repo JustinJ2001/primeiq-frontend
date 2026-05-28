@@ -136,9 +136,9 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="s1_alert" class="alert"></div>
     <div class="card">
       <div class="f-group"><label class="f-label">Restaurant Group Name</label>
-        <input class="f-input" id="s1_name" placeholder="e.g. Planet Taco"></div>
+        <input class="f-input" id="s1_name" placeholder="e.g. Planet Taco" oninput="localStorage.setItem('rd_s1_name',this.value)"></div>
       <div class="f-group"><label class="f-label">Your Email</label>
-        <input class="f-input" id="s1_email" type="email" placeholder="owner@yourrestaurant.com"></div>
+        <input class="f-input" id="s1_email" type="email" placeholder="owner@yourrestaurant.com" oninput="localStorage.setItem('rd_s1_email',this.value)"></div>
       <div class="f-row">
         <div class="f-group"><label class="f-label">Password</label>
           <input class="f-input" id="s1_password" type="password" placeholder="Min 8 characters"></div>
@@ -603,20 +603,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function goToDashboard() { window.location.href = "/dashboard"; }
 function renderStep1() {
-  // Restore state from localStorage if not in memory
-  if (!state.restaurantName || !state.email) {
-    var saved = localStorage.getItem('rd_onboard_state');
-    if (saved) {
-      try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
-    }
-  }
-  // Always repopulate fields
-  setTimeout(function() {
-    var nameEl = document.getElementById('s1_name');
-    var emailEl = document.getElementById('s1_email');
-    if (nameEl && state.restaurantName) nameEl.value = state.restaurantName;
-    if (emailEl && state.email) emailEl.value = state.email;
-  }, 50);
+  var nameEl = document.getElementById('s1_name');
+  var emailEl = document.getElementById('s1_email');
+  if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || state.restaurantName || '';
+  if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || state.email || '';
 }
 
 function goToStep(n) {
