@@ -218,7 +218,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <div class="conn-detail-title">TouchBistro — CSV Export</div>
       <div class="conn-detail-sub">Export your daily sales report as CSV and upload here. We parse it automatically.</div>
       <div class="csv-upload" onclick="document.getElementById('tb_csv').click()">
-        <input type="file" id="tb_csv" accept=".csv" onchange="uploadCSV('sales',this)">
+        <input type="file" id="tb_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Click to upload TouchBistro CSV</div>
       </div>
@@ -321,13 +321,13 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       </div>
 
       <div class="csv-upload" onclick="document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleDeliveryCSVDrop(event)">
-        <input type="file" id="del_csv" accept=".csv" onchange="previewDeliveryCSV(this)">
+        <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert')">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
       </div>
 
-      <div id="del_csv_preview" style="display:none;margin-top:12px"></div>
+      <div id="del_csv_preview" style="margin-top:12px"></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:10px">
@@ -397,10 +397,11 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       </div>
 
       <div class="csv-upload" onclick="document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handlePayrollCSVDrop(event)">
-        <input type="file" id="labor_csv" accept=".csv" onchange="previewPayrollCSV(this)">
+        <input type="file" id="labor_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'labor','payroll_csv_preview','pay_alert')">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Click to upload labor CSV</div>
       </div>
+      <div id="payroll_csv_preview" style="margin-top:10px"></div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:10px">
@@ -999,9 +1000,8 @@ function showCSVInstructions() {
 function handleCSVDrop(event, type) {
   event.preventDefault();
   document.getElementById('csv_drop_zone').style.borderColor = '';
-  const file = event.dataTransfer.files[0];
-  if (!file) return;
-  showCSVPreview(file, type);
+  var file = event.dataTransfer.files[0];
+  if (file) previewGenericCSV(file, type || 'sales', 'csv_preview', 'pos_alert');
 }
 
 async function showCSVPreview(file, type) {
@@ -1060,39 +1060,6 @@ function handleCSVDrop(event, type) {
   const file = event.dataTransfer.files[0];
   if (!file) return;
   showCSVPreview(file, type);
-}
-
-async function showCSVPreview(file, type) {
-  const text = await file.text();
-  const lines = text.trim().split('\n').slice(0, 4);
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-  const preview = document.getElementById('csv_preview');
-  preview.style.display = 'block';
-  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
-    + '<div style="overflow-x:auto"><table class="csv-preview-table"><thead><tr>'
-    + headers.map(h => '<th>' + h.slice(0,20) + '</th>').join('')
-    + '</tr></thead><tbody>'
-    + lines.slice(1, 4).map(row => '<tr>' + row.split(',').map(c => '<td>' + c.replace(/"/g,'').trim().slice(0,20) + '</td>').join('') + '</tr>').join('')
-    + '</tbody></table></div>'
-    + '<div style="margin-top:10px;display:flex;gap:8px;align-items:center">'
-    + '<button class="btn-gold" style="padding:8px 18px" onclick="doCSVUpload(' + JSON.stringify(type) + ')">✓ Upload This File</button>'
-    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
-    + '</div>';
-  window._pendingCSVFile = file;
-}
-
-async function doCSVUpload(type) {
-  if (!window._pendingCSVFile) return;
-  const text = await window._pendingCSVFile.text();
-  const locId = state.locations[0]?.id;
-  try {
-    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
-    document.getElementById('csv_preview').innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ Data uploaded successfully — your dashboard will update within a few minutes.</div>';
-    state.connectedPOS[locId] = { provider: 'csv_' + (document.getElementById('csv_pos_type')?.value || 'manual'), status: 'connected' };
-    renderPOSStep();
-  } catch(e) {
-    showAlert('pos_alert', e.message, 'error');
-  }
 }
 
 async function uploadCSV(type, input) {
