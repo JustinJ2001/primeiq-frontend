@@ -118,6 +118,22 @@ async function signIn() {
       const clientData = await clientRes.json();
       if (clientData.client?.id) localStorage.setItem('rd_client_id', clientData.client.id);
     } catch(e) {}
+    // Check if onboarding is complete
+    var clientId = localStorage.getItem('rd_client_id');
+    if (clientId) {
+      try {
+        var checkRes = await fetch('https://restaurant-api-68re.onrender.com/api/clients/' + clientId, {
+          headers: { 'Authorization': 'Bearer ' + data.access_token }
+        });
+        var checkData = await checkRes.json();
+        if (checkData.setup_complete === false) {
+          localStorage.setItem('rd_onboarding', 'true');
+          window.location.href = '/onboarding';
+          return;
+        }
+      } catch(e) {}
+    }
+    localStorage.setItem('rd_setup_complete', 'true');
     window.location.href = '/dashboard';
   } catch(e) {
     showAlert(e.message || 'Sign in failed. Please try again.', 'error');
