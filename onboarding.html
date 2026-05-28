@@ -603,15 +603,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function goToDashboard() { window.location.href = "/dashboard"; }
 function renderStep1() {
-  var hasToken = localStorage.getItem('rd_token');
-  var hasClient = localStorage.getItem('rd_client_id');
-  // Only show resume if mid-onboarding (has token and client but setup not complete)
-  if (hasToken && hasClient && state.step > 1) {
-    document.getElementById('panel1').innerHTML = '<div style="text-align:center;padding:40px 20px">'
-      + '<div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:8px">Welcome back</div>'
-      + '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:24px">Your account is set up. Continue where you left off.</div>'
-      + '<button class="btn-gold" onclick="goToStep(2)">Continue Setup →</button>'
-      + '</div>';
+  // Repopulate fields from saved state
+  if (state.restaurantName) {
+    var nameEl = document.getElementById('s1_name');
+    if (nameEl) nameEl.value = state.restaurantName;
+  }
+  if (state.email) {
+    var emailEl = document.getElementById('s1_email');
+    if (emailEl) emailEl.value = state.email;
   }
 }
 
@@ -1260,7 +1259,7 @@ async function startCheckout() {
         // Pilot account - skip billing, go straight to dashboard
         localStorage.setItem('rd_pilot', 'true');
         localStorage.removeItem('rd_onboarding');
-        // Mark onboarding complete
+        localStorage.setItem('rd_setup_complete', 'true');
         await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
         window.location.href = '/dashboard';
         return;
@@ -1281,6 +1280,7 @@ async function startCheckout() {
 
 async function handlePaymentSuccess(sessionId) {
   localStorage.removeItem('rd_onboarding');
+  localStorage.setItem('rd_setup_complete', 'true');
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   document.getElementById('panel_success').style.display = 'block';
   // Trigger initial data sync

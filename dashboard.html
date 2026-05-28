@@ -818,11 +818,12 @@ body::before {
 // Instant redirect before any rendering - prevents flash
 (function() {
   var params = new URLSearchParams(window.location.search);
-  if (params.get('demo') === '1') return; // demo mode - no redirect
+  if (params.get('demo') === '1') return;
   var token = localStorage.getItem('rd_token');
   var clientId = localStorage.getItem('rd_client_id');
+  var setupDone = localStorage.getItem('rd_setup_complete');
   if (!token) { window.location.replace('/login'); return; }
-  if (!clientId) { window.location.replace('/onboarding'); return; }
+  if (!clientId || setupDone !== 'true') { window.location.replace('/onboarding'); return; }
 })();
 </script>
 </head>
