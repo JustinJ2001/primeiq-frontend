@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrimeIQ — Get Started</title>
+<meta name="description" content="Set up your PrimeIQ restaurant analytics dashboard. Connect your POS, delivery platforms, and payroll in minutes.">
+<meta property="og:title" content="PrimeIQ — Restaurant Analytics">
+<meta property="og:description" content="Know your numbers every morning. Connect your POS and get daily food cost, labor, and prime cost automatically.">
+<meta property="og:url" content="https://primeiq.io/onboarding">
+<meta name="theme-color" content="#1a1208">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -15,6 +21,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .logo em{font-style:italic;color:#f5ead6;}
 .logo-sub{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px;}
 .prog-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;position:sticky;top:0;z-index:100;}
+@media(max-width:600px){.prog-bar{padding:0 12px;}.prog-label{display:none;}.prog-step{padding:12px 6px 12px 0;}.card{padding:16px;}.main{padding-bottom:120px;}}
 .prog-step{display:flex;align-items:center;gap:10px;padding:16px 20px 16px 0;flex:1;}
 .prog-num{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;transition:all 0.3s;}
 .prog-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);transition:all 0.3s;}
@@ -121,6 +128,12 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
   <div class="prog-conn" id="conn5"></div>
   <div class="prog-step" id="prog6"><div class="prog-num">6</div><div class="prog-label">Subscribe</div></div>
 </div>
+<div id="page_loader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s">
+  <div style="text-align:center">
+    <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div>
+    <div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em">Loading...</div>
+  </div>
+</div>
 <div class="main">
   <div id="cb_alert" class="alert"></div>
   <!-- STEP 1: ACCOUNT -->
@@ -130,28 +143,49 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="s1_alert" class="alert"></div>
     <div class="card">
       <div class="f-group"><label class="f-label">Restaurant Group Name</label>
-        <input class="f-input" id="s1_name" placeholder="e.g. Planet Taco"></div>
+        <input class="f-input" id="s1_name" name="organization" placeholder="e.g. Planet Taco" autocomplete="organization" oninput="localStorage.setItem('rd_s1_name',this.value)"></div>
       <div class="f-group"><label class="f-label">Your Email</label>
-        <input class="f-input" id="s1_email" type="email" placeholder="owner@yourrestaurant.com"></div>
+        <input class="f-input" id="s1_email" name="email" type="email" placeholder="owner@yourrestaurant.com" autocomplete="email" oninput="localStorage.setItem('rd_s1_email',this.value)"></div>
       <div class="f-row">
         <div class="f-group"><label class="f-label">Password</label>
-          <input class="f-input" id="s1_password" type="password" placeholder="Min 8 characters"></div>
+          <div style="position:relative">
+            <input class="f-input" id="s1_password" type="password" placeholder="Min 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)" style="padding-right:40px">
+            <button type="button" onclick="togglePw('s1_password',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px">👁</button>
+          </div>
+          <div id="pw_strength" style="font-family:IBM Plex Mono,monospace;font-size:9px;margin-top:4px"></div>
+        </div>
         <div class="f-group"><label class="f-label">Confirm Password</label>
-          <input class="f-input" id="s1_confirm" type="password" placeholder="Repeat password"></div>
+          <div style="position:relative">
+            <input class="f-input" id="s1_confirm" type="password" placeholder="Repeat password" autocomplete="new-password" oninput="checkConfirmMatch()" style="padding-right:40px">
+            <button type="button" onclick="togglePw('s1_confirm',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px">👁</button>
+          </div>
+          <div id="pw_match" style="font-family:IBM Plex Mono,monospace;font-size:9px;margin-top:4px"></div>
+        </div>
       </div>
       <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
     </div>
   </div>
+  <script>(function(){var n=localStorage.getItem("rd_s1_name"),e=localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}})()</script>
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
     <div class="panel-title">What kind of restaurant are you?</div>
     <div class="panel-sub">Select all that apply · You can change this anytime from Settings</div>
+    <div id="welcome_note" style="background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-bottom:16px;display:none">✓ Account created · Welcome email sent</div>
+    <script>
+      (function(){
+        var e=localStorage.getItem('rd_s1_email');
+        var el=document.getElementById('welcome_note');
+        if(e&&el){el.textContent='✓ Account created · Welcome email sent to '+e;el.style.display='block';}
+      })();
+    </script>
     <div id="s1b_alert" class="alert"></div>
     <div id="category_grid" style="margin:20px 0"></div>
     <button class="btn-gold" id="s1b_btn" onclick="saveCategories()" style="margin-top:8px">Continue →</button>
+    <div style="text-align:center;margin-top:10px"><span onclick="skipCategories()" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);cursor:pointer;text-decoration:underline">Skip — add categories from Settings later</span></div>
   </div>
   <!-- STEP 2: LOCATIONS -->
   <div class="panel" id="panel2">
+    <div id="pilot_banner" style="display:none;background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-bottom:16px">🎉 You're on a free pilot — no payment required. Complete setup to access your dashboard.</div>
     <div class="panel-title">Your locations</div>
     <div class="panel-sub">Add each restaurant · You can edit these anytime from Settings</div>
     <div id="s2_alert" class="alert"></div>
@@ -236,6 +270,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
         <ol id="csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.8"></ol>
         <div id="csv_columns_note" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
       </div>
+      <div id="csv_loc_selector" style="margin-bottom:12px"></div>
       <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
         <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
@@ -444,7 +479,7 @@ let state = {
   step: 1,
   userId: null,
   clientId: null,
-  referredBy: new URLSearchParams(window.location.search).get('ref') || null,
+  referredBy: new URLSearchParams(window.location.search).get('ref') || localStorage.getItem('rd_referred_by') || null,
   email: '',
   restaurantName: '',
   categories: [],
@@ -467,6 +502,9 @@ const oauthCode = urlParams.get('code');
 const oauthState = urlParams.get('state');
 
 window.addEventListener('DOMContentLoaded', async () => {
+  // Issue 57: save referral param immediately
+  var refParam = new URLSearchParams(window.location.search).get('ref');
+  if (refParam) localStorage.setItem('rd_referred_by', refParam);
   if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
     Object.keys(localStorage).forEach(function(k) {
       if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
@@ -495,12 +533,77 @@ window.addEventListener('DOMContentLoaded', async () => {
     renderStep(state.step > 1 ? state.step : 2);
     return;
   }
+  // Resume if mid-onboarding
+  var token = localStorage.getItem('rd_token');
+  var clientId = localStorage.getItem('rd_client_id');
+  if (token && clientId) {
+    try {
+      var clientResp = await fetch(CONFIG.apiBase + '/api/clients/' + clientId, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      // Issue 3: handle expired token (401)
+      if (clientResp.status === 401) {
+        localStorage.removeItem('rd_token');
+        localStorage.removeItem('rd_client_id');
+        renderStep(1);
+        document.getElementById('page_loader').style.display = 'none';
+        showAlert('s1_alert', 'Your session expired. Please sign in again.', 'info');
+        return;
+      }
+      var client = await clientResp.json();
+      if (client && client.setup_complete === true) {
+        // Already finished onboarding — go to dashboard
+        document.getElementById('page_loader').style.display = 'none';
+        window.location.replace('/dashboard');
+        return;
+      }
+      if (client && client.setup_complete === false) {
+        var saved = localStorage.getItem('rd_onboard_state');
+        if (saved) { try { Object.assign(state, JSON.parse(saved)); } catch(e) {} }
+        // Issue 13: restore location draft if state.locations empty
+        if (!state.locations || !state.locations.length) {
+          var locDraft = localStorage.getItem('rd_locations_draft');
+          if (locDraft) { try { state.locations = JSON.parse(locDraft); } catch(e) {} }
+        }
+        state.token = token;
+        state.clientId = clientId;
+        state.email = client.email || state.email;
+        state.restaurantName = client.name || state.restaurantName;
+        // Issue 12: restore referral from localStorage
+        state.referredBy = state.referredBy || localStorage.getItem('rd_referred_by');
+        // Handle step 1b correctly — any step including 1b resumes properly
+        // Issue 25: fetch fresh locations from API to ensure IDs are present
+        if (!state.locations || !state.locations.length || !state.locations[0].id) {
+          try {
+            var locs = await apiFetch('/api/locations?client_id=' + clientId);
+            if (locs && locs.locations && locs.locations.length) state.locations = locs.locations;
+          } catch(e2) {}
+        }
+        var resumeStep = state.step && state.step !== 1 ? state.step : 2;
+        renderStep(resumeStep);
+        document.getElementById('page_loader').style.display = 'none';
+        return;
+      }
+    } catch(e) {
+      // Issue 26: API/network down
+      renderStep(1);
+      document.getElementById('page_loader').style.display = 'none';
+      showAlert('s1_alert', 'Having trouble connecting. Please check your internet and try again.', 'info');
+      return;
+    }
+  }
   renderStep(1);
+  document.getElementById('page_loader').style.display = 'none';
 });
 
 function goToStep(n) {
   state.step = n;
   window.history.pushState({ step: n }, '', '/onboarding');
+  // Issue 53: track funnel step
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if (clientId) {
+    apiFetch('/api/usage/ping', 'POST', { client_id: clientId, page: 'onboarding_step_' + n }).catch(function(){});
+  }
   renderStep(n);
 }
 
@@ -513,6 +616,11 @@ window.addEventListener('popstate', function(e) {
 function renderCategoryGrid() {
   const grid = document.getElementById('category_grid');
   if (!grid) return;
+  // Restore categories from localStorage if state is empty
+  if (!state.categories.length) {
+    var saved = localStorage.getItem('rd_categories');
+    if (saved) { try { state.categories = JSON.parse(saved); } catch(e) {} }
+  }
   grid.innerHTML = ALL_CATEGORIES.map(group => {
     const buttons = group.items.map(item => {
       const sel = state.categories.includes(item);
@@ -538,8 +646,13 @@ function toggleCategory(btn, item) {
   }
 }
 
+function skipCategories() {
+  localStorage.setItem('rd_categories', JSON.stringify([]));
+  goToStep(2);
+}
+
 async function saveCategories() {
-  if (state.categories.length === 0) { showAlert('s1b_alert', 'Please select at least one category.', 'error'); return; }
+  // Category selection is now optional — skip link available
   setLoading('s1b_btn', true);
   try {
     if (state.clientId) { await apiFetch('/api/clients/' + state.clientId, 'PATCH', { categories: state.categories }); }
@@ -556,13 +669,31 @@ function renderStep(n) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('panel' + n);
   if (panel) panel.classList.add('active');
-  const progN = n === '1b' ? 1 : n;
-  document.querySelectorAll('.prog-step').forEach((s, i) => {
+  var progN = n === '1b' ? 1 : parseInt(n) || 1;
+  document.querySelectorAll('.prog-step').forEach(function(s, i) {
     s.classList.remove('active', 'done');
-    if (i + 1 < progN) s.classList.add('done');
+    if (i + 1 < progN) {
+      s.classList.add('done');
+      s.querySelector('.prog-num').textContent = '✓';
+      // Issue 19: warn on unsaved changes
+      s.style.cursor = 'pointer';
+      s.onclick = (function(step, currentStep) {
+        return function() {
+          if (step < currentStep && window._unsavedChanges) {
+            if (!confirm('You have unsaved changes. Go back anyway?')) return;
+            window._unsavedChanges = false;
+          }
+          goToStep(step);
+        };
+      })(i + 1, progN);
+    } else {
+      s.querySelector('.prog-num').textContent = String(i + 1);
+      s.style.cursor = 'default';
+      s.onclick = null;
+    }
     if (i + 1 === progN) s.classList.add('active');
   });
-  document.querySelectorAll('.prog-conn').forEach((c, i) => { c.classList.toggle('done', i + 1 < progN); });
+  document.querySelectorAll('.prog-conn').forEach(function(conn, i) { conn.classList.toggle('done', i + 1 < progN); });
   window.scrollTo(0, 0);
   if (n === '1b') renderCategoryGrid();
   if (n === 2) renderLocationForms();
@@ -573,13 +704,65 @@ function renderStep(n) {
 }
 
 async function createAccount() {
+  // Issue 41: rate limit button clicks
+  var now = Date.now();
+  if (window._lastCreateAttempt && now - window._lastCreateAttempt < 3000) {
+    showAlert('s1_alert', 'Please wait a moment before trying again.', 'info');
+    return;
+  }
+  window._lastCreateAttempt = now;
+  // If already signed up, verify password if provided
+  if (localStorage.getItem('rd_token') && localStorage.getItem('rd_client_id')) {
+    const emailVal = val('s1_email');
+    const pwVal = val('s1_password');
+    // Issue 10: if different email entered, clear session and start fresh
+    var storedEmail = localStorage.getItem('rd_s1_email');
+    if (emailVal && storedEmail && emailVal.toLowerCase() !== storedEmail.toLowerCase()) {
+      localStorage.removeItem('rd_token');
+      localStorage.removeItem('rd_client_id');
+      localStorage.removeItem('rd_onboard_state');
+      localStorage.removeItem('rd_locations_draft');
+      // Continue to fresh signup below
+    } else {
+    if (emailVal && pwVal) {
+      // Fields filled — verify password is correct
+      setLoading('s1_btn', true);
+      var signInCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: emailVal, password: pwVal });
+      if (signInCheck.error) {
+        showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
+        setLoading('s1_btn', false);
+        return;
+      }
+      // Password correct — refresh token
+      state.token = signInCheck.access_token;
+      state.userId = signInCheck.user?.id;
+      localStorage.setItem('rd_token', state.token);
+      // Issue 32: update name in DB if changed
+      var newName = val('s1_name');
+      if (newName && newName !== localStorage.getItem('rd_s1_name')) {
+        var cid = localStorage.getItem('rd_client_id');
+        if (cid) apiFetch('/api/clients/' + cid, 'PATCH', { name: newName }).catch(function(){});
+        localStorage.setItem('rd_s1_name', newName);
+        state.restaurantName = newName;
+      }
+      setLoading('s1_btn', false);
+    }
+      // No credentials entered — tell them to sign in
+      showAlert('s1_alert', 'Already have an account — please enter your email and password to continue.', 'info');
+      setLoading('s1_btn', false);
+      return;
+    } // end else
+  }
   const email    = val('s1_email');
   const password = val('s1_password');
   const confirm  = val('s1_confirm');
   const name     = val('s1_name');
   clearAlerts();
   if (!email || !password || !name) return showAlert('s1_alert', 'Please fill in all fields.', 'error');
+  // Issue 22: validate email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('s1_alert', 'Please enter a valid email address.', 'error');
   if (password.length < 8) return showAlert('s1_alert', 'Password must be at least 8 characters.', 'error');
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return showAlert('s1_alert', 'Password must contain at least one letter and one number.', 'error');
   if (password !== confirm) return showAlert('s1_alert', 'Passwords do not match.', 'error');
   setLoading('s1_btn', true);
   try {
@@ -597,7 +780,20 @@ async function createAccount() {
       localStorage.setItem('rd_token', state.token);
       localStorage.setItem('rd_onboarding', 'true');
       var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-      if (existing && existing.id) { state.clientId = existing.id; localStorage.setItem('rd_client_id', existing.id); }
+      if (existing && existing.id) {
+        state.clientId = existing.id;
+        localStorage.setItem('rd_client_id', existing.id);
+      } else {
+        // Issue 11: client record missing — create it now
+        try {
+          var newClient = await apiFetch('/api/clients', 'POST', {
+            user_id: state.userId, name: state.restaurantName || emailVal, email: emailVal,
+            status: 'pending_payment', referred_by: state.referredBy || undefined
+          });
+          state.clientId = newClient.id;
+          localStorage.setItem('rd_client_id', newClient.id);
+        } catch(e2) {}
+      }
       goToStep(2);
       setLoading('s1_btn', false);
       return;
@@ -618,9 +814,11 @@ async function createAccount() {
     });
     state.clientId = clientRes.id;
     state.restaurantName = name;
-    localStorage.setItem('rd_token', state.token);
+    state.token && localStorage.setItem('rd_token', state.token);
     localStorage.setItem('rd_client_id', state.clientId);
     localStorage.setItem('rd_onboarding', 'true');
+    // Issue 37: store email for welcome note on next step
+    localStorage.setItem('rd_s1_email', email);
     goToStep('1b');
   } catch (e) {
     showAlert('s1_alert', e.message, 'error');
@@ -628,7 +826,23 @@ async function createAccount() {
   setLoading('s1_btn', false);
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 function renderLocationForms() {
+  // Issue 45: check pilot status and show banner
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if (clientId && !window._pilotChecked) {
+    window._pilotChecked = true;
+    apiFetch('/api/clients/' + clientId).then(function(d){
+      if (d && d.is_pilot) {
+        var banner = document.getElementById('pilot_banner');
+        if (banner) banner.style.display = 'block';
+      }
+    }).catch(function(){});
+  }
   if (state.locations.length === 0) addLocation();
   const container = document.getElementById('loc_forms');
   container.innerHTML = state.locations.map((loc, i) => `
@@ -637,9 +851,9 @@ function renderLocationForms() {
       ${i > 0 ? `<button class="remove-loc" onclick="removeLocation(${i})">✕ Remove</button>` : ''}
       <div class="f-row">
         <div class="f-group"><label class="f-label">Location Name (e.g. Downtown, Midtown, West Loop)</label>
-          <input class="f-input" placeholder="e.g. Downtown, Midtown, West Loop" value="${loc.name || ''}" oninput="updateLocation(${i},'name',this.value)"></div>
+          <input class="f-input" placeholder="e.g. Downtown, Midtown, West Loop" value="${escapeHtml(loc.name)}" oninput="updateLocation(${i},'name',this.value)"></div>
         <div class="f-group"><label class="f-label">Address</label>
-          <input class="f-input" placeholder="458 W 46th St, New York" value="${loc.address || ''}" oninput="updateLocation(${i},'address',this.value)"></div>
+          <input class="f-input" placeholder="458 W 46th St, New York" value="${escapeHtml(loc.address)}" oninput="updateLocation(${i},'address',this.value)"></div>
       </div>
       <div class="section-divider">Monthly Fixed Costs</div>
       <div class="f-row3">
@@ -692,10 +906,22 @@ async function saveLocations() {
   clearAlerts();
   const valid = state.locations.every(l => l.name && l.address);
   if (!valid) return showAlert('s2_alert', 'Please enter a name and address for every location.', 'error');
+  // Issue 15+48: validate fixed costs are positive numbers
+  const costFields = ['rent','utilities','insurance','supplies','marketing','software'];
+  for (var li = 0; li < state.locations.length; li++) {
+    for (var fi = 0; fi < costFields.length; fi++) {
+      var val2 = state.locations[li][costFields[fi]];
+      if (val2 !== '' && val2 !== undefined && (isNaN(parseFloat(val2)) || parseFloat(val2) < 0)) {
+        return showAlert('s2_alert', 'Fixed costs must be positive numbers.', 'error');
+      }
+    }
+  }
   setLoading('s2_btn', true);
   try {
     const saved = await apiFetch('/api/locations/bulk', 'POST', { client_id: state.clientId, locations: state.locations });
-    state.locations = saved.locations;
+    // Issue 49: merge saved locations carefully preserving all fields
+    if (saved.locations && saved.locations.length) state.locations = saved.locations.map(function(sl,i){ return Object.assign({}, state.locations[i]||{}, sl); });
+    window._unsavedChanges = false;
     goToStep(3);
   } catch(e) { showAlert('s2_alert', e.message, 'error'); }
   setLoading('s2_btn', false);
@@ -715,6 +941,13 @@ const POS_SYSTEMS = [
 let selectedPOS = null;
 
 function renderPOSStep() {
+  // Issue 16+38: guard against missing location IDs
+  if (!state.locations.length || !state.locations[0].id) {
+    document.getElementById('pos_alert').className = 'alert show info';
+    document.getElementById('pos_alert').textContent = 'Please save your location info first.';
+    goToStep(2);
+    return;
+  }
   const grid = document.getElementById('pos_grid');
   grid.innerHTML = POS_SYSTEMS.map(p => {
     const isConnected = Object.values(state.connectedPOS).some(c => c.provider === p.id);
@@ -748,11 +981,11 @@ function selectPOS(posId) {
 function connectPOSOAuth(provider) {
   const locId = document.getElementById('pos_loc_id')?.value || state.locations[0]?.id;
   localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, locId, step: 3 }));
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + provider);
+  const redirectUri = encodeURIComponent('https://primeiq.io/onboarding');
   const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
   const urls = {
     toast:      `${CONFIG.toastOAuthUrl}?client_id=${CONFIG.toastClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-    square:     `${CONFIG.squareOAuthUrl}?client_id=${CONFIG.squareAppId}&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+EMPLOYEES_READ&redirect_uri=${redirectUri}&state=${oauthState2}`,
+    square:     `${CONFIG.squareOAuthUrl}?client_id=${CONFIG.squareAppId}&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ&redirect_uri=${redirectUri}&state=${oauthState2}`,
     clover:     `${CONFIG.cloverOAuthUrl}?client_id=${CONFIG.cloverAppId}&redirect_uri=${redirectUri}&state=${oauthState2}`,
     lightspeed: `https://cloud.lightspeedapp.com/oauth/authorize.php?response_type=code&client_id=${CONFIG.lightspeedClientId}&scope=employee:all&redirect_uri=${redirectUri}&state=${oauthState2}`,
   };
@@ -910,7 +1143,7 @@ function selectPayroll(provider) {
 
 async function connectPayrollOAuth(provider) {
   localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, step: 5 }));
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + provider);
+  const redirectUri = encodeURIComponent('https://primeiq.io/onboarding');
   const oauthState2 = btoa(JSON.stringify({ clientId: state.clientId }));
   const urls = {
     homebase: `https://app.joinhomebase.com/oauth/authorize?client_id=${CONFIG.homebaseClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
@@ -929,15 +1162,16 @@ function renderReviewStep() {
   const posCount = Object.keys(state.connectedPOS).length;
   const delCount = Object.values(state.connectedDelivery).reduce((s, d) => s + (d.providers?.length || 0), 0);
   document.getElementById('review_content').innerHTML = `
-    <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName}</span></div>
+    <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName || localStorage.getItem('rd_s1_name') || '—'}</span></div>
     <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}</span></div>
     <div class="summary-row"><span class="summary-label">POS Connected</span><span class="summary-val ${posCount > 0 ? 'good' : 'warn'}">${posCount > 0 ? posCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Delivery Platforms</span><span class="summary-val ${delCount > 0 ? 'good' : 'warn'}">${delCount > 0 ? delCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email}</span></div>`;
+    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email || localStorage.getItem('rd_s1_email')} <span style='font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)'>(wrong email? <a href="mailto:justin@primeiq.io" style="color:var(--gold)">contact us</a>)</span></span></div>`;
 }
 
 async function startCheckout() {
+  // Issue 8: always generate fresh checkout session — never reuse old URLs
   setLoading('checkout_btn', true);
   try {
     localStorage.setItem('rd_onboard_state', JSON.stringify(state));
@@ -959,16 +1193,52 @@ async function startCheckout() {
 }
 
 async function handlePaymentSuccess(sessionId) {
+  // Issue 44: restore state so success screen can show restaurant name
+  var saved = localStorage.getItem('rd_onboard_state');
+  if (saved) { try { Object.assign(state, JSON.parse(saved)); } catch(e) {} }
   localStorage.removeItem('rd_onboarding');
   localStorage.setItem('rd_setup_complete', 'true');
   const clientId = localStorage.getItem('rd_client_id');
   if (clientId) await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
+  // Issue 36: mark all progress steps as done
+  document.querySelectorAll('.prog-step').forEach(function(s){ s.classList.remove('active'); s.classList.add('done'); s.querySelector('.prog-num').textContent = '✓'; });
+  document.querySelectorAll('.prog-conn').forEach(function(c){ c.classList.add('done'); });
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   document.getElementById('panel_success').style.display = 'block';
+  document.getElementById('page_loader').style.display = 'none';
   try { await apiFetch('/api/sync/trigger', 'POST', { client_id: clientId }); } catch(e) {}
 }
 
 const val = id => document.getElementById(id)?.value?.trim() || '';
+
+// Issue 24: toggle password visibility
+function togglePw(id, btn) {
+  var input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
+// Issue 21: password strength check
+function checkPasswordStrength(pw) {
+  var el = document.getElementById('pw_strength');
+  if (!el) return;
+  if (!pw) { el.textContent = ''; return; }
+  var strong = pw.length >= 10 && /[A-Za-z]/.test(pw) && /[0-9]/.test(pw);
+  var ok = pw.length >= 8 && /[A-Za-z]/.test(pw);
+  el.textContent = strong ? '✓ Strong' : ok ? '⚠ Moderate — add numbers or length' : '✗ Too weak';
+  el.style.color = strong ? 'var(--green)' : ok ? 'var(--amber)' : 'var(--red)';
+}
+
+// Issue 23: real-time confirm match
+function checkConfirmMatch() {
+  var el = document.getElementById('pw_match');
+  if (!el) return;
+  var pw = document.getElementById('s1_password')?.value || '';
+  var cf = document.getElementById('s1_confirm')?.value || '';
+  if (!cf) { el.textContent = ''; return; }
+  el.textContent = pw === cf ? '✓ Passwords match' : '✗ Passwords do not match';
+  el.style.color = pw === cf ? 'var(--green)' : 'var(--red)';
+}
 
 function showAlert(id, msg, type) {
   const el = document.getElementById(id);
@@ -982,14 +1252,32 @@ function clearAlerts() { document.querySelectorAll('.alert').forEach(a => a.clas
 function setLoading(id, loading) {
   const btn = document.getElementById(id);
   if (!btn) return;
-  if (loading) { btn.disabled = true; btn._orig = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span>Please wait...'; }
-  else { btn.disabled = false; btn.innerHTML = btn._orig || btn.innerHTML; }
+  if (loading) {
+    btn.disabled = true;
+    btn._orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span>Please wait...';
+    // Issue 14: show slow connection message after 8 seconds
+    btn._slowTimer = setTimeout(function(){
+      if (btn.disabled) btn.innerHTML = '<span class="spinner"></span>Taking longer than usual — please wait...';
+    }, 8000);
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn._orig || btn.innerHTML;
+    if (btn._slowTimer) clearTimeout(btn._slowTimer);
+  }
 }
 
 async function supabaseFetch(path, method, body) {
-  const res = await fetch(CONFIG.supabaseUrl + path, {
-    method, headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(body)
-  });
+  // Issue 31: throw on network errors
+  let res;
+  try {
+    res = await fetch(CONFIG.supabaseUrl + path, {
+      method, headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey }, body: JSON.stringify(body)
+    });
+  } catch(e) {
+    // Issue 58: Supabase down
+    throw new Error('Unable to connect. Please check your internet connection and try again.');
+  }
   return res.json();
 }
 
@@ -997,10 +1285,21 @@ async function apiFetch(path, method = 'GET', body = null) {
   const token = state.token || localStorage.getItem('rd_token');
   const opts = { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) } };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(CONFIG.apiBase + path, opts);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || data.error || 'Request failed');
-  return data;
+  // Issue 33: 15 second timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  opts.signal = controller.signal;
+  try {
+    const res = await fetch(CONFIG.apiBase + path, opts);
+    clearTimeout(timeout);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error || 'Request failed');
+    return data;
+  } catch(e) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') throw new Error('Request timed out. Please try again.');
+    throw e;
+  }
 }
 
 async function connectAPIKey(provider) {
@@ -1067,6 +1366,16 @@ function handlePayrollCSVDrop(event) {
 }
 
 async function previewGenericCSV(file, type, previewId, alertId) {
+  // Issue 35: check file type
+  if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
+    showAlert(alertId, 'Please upload a CSV file (.csv format only).', 'error');
+    return;
+  }
+  // Issue 34: check file size (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    showAlert(alertId, 'File is too large. Please upload a CSV under 10MB.', 'error');
+    return;
+  }
   var text = await file.text();
   var lines = text.trim().split('\n').slice(0, 4);
   var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
@@ -1093,7 +1402,7 @@ async function doGenericUpload(type, previewId, alertId) {
   var pending = window['_pendingCSV_' + type];
   if (!pending) { showAlert(alertId || 'pos_alert', 'Please select a file first.', 'error'); return; }
   if (!state.clientId) { showAlert(alertId || 'pos_alert', 'Please complete account setup first.', 'error'); return; }
-  var locId = state.locations[0]?.id || localStorage.getItem('rd_client_id');
+  var csvLocEl = document.getElementById('csv_loc_id'); var locId = (csvLocEl && csvLocEl.value) || state.locations[0]?.id || localStorage.getItem('rd_client_id');
   var previewEl = document.getElementById(previewId);
   try {
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';
