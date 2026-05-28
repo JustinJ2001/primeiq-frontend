@@ -550,6 +550,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     await handlePaymentSuccess(urlParams.get('session_id'));
     return;
   }
+  // If already has token and client ID - mid onboarding, skip to step 2
+  var existingToken = localStorage.getItem('rd_token');
+  var existingClient = localStorage.getItem('rd_client_id');
+  if (existingToken && existingClient && !urlParams.get('payment') && !urlParams.get('callback') && !urlParams.get('confirmed')) {
+    // Restore name from API
+    try {
+      var clientData = await apiFetch('/api/clients/' + existingClient);
+      if (clientData && clientData.setup_complete === false) {
+        state.token = existingToken;
+        state.clientId = existingClient;
+        state.userId = clientData.user_id;
+        state.email = clientData.email;
+        state.restaurantName = clientData.name;
+        goToStep(2);
+        return;
+      }
+    } catch(e) {}
+  }
+
   // Handle email confirmation redirect
   if (urlParams.get('confirmed') === '1') {
     // Restore any saved state
