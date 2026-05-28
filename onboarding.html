@@ -639,7 +639,7 @@ function goToStep(n) {
   // Save full state so it survives page reloads
   localStorage.setItem('rd_onboard_state', JSON.stringify(state));
   // Push to browser history so back button works
-  window.history.pushState({ step: n }, '', '?step=' + n);
+  window.history.pushState({ step: n }, '', '/onboarding');
   renderStep(n);
 }
 
@@ -757,26 +757,8 @@ async function createAccount() {
     // Create Supabase auth user
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
     if (authRes.error) {
-      // Any signup error — try signing in instead (handles already registered case)
-      var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
-      if (signInRes.error) {
-        // Wrong password or other real error
-        showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
-        setLoading('s1_btn', false);
-        return;
-      }
-      // Signed in successfully — continue onboarding
-      state.email = email;
-      state.userId = signInRes.user?.id;
-      state.token = signInRes.access_token;
-      localStorage.setItem('rd_token', state.token);
-      localStorage.setItem('rd_onboarding', 'true');
-      var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-      if (existing && existing.id) {
-        state.clientId = existing.id;
-        localStorage.setItem('rd_client_id', existing.id);
-      }
-      goToStep(2);
+      // Account already exists — show message and let them sign in properly
+      showAlert('s1_alert', 'An account with this email already exists. <a href="/login" style="color:var(--gold)">Sign in here →</a>', 'error');
       setLoading('s1_btn', false);
       return;
     }
