@@ -4,1620 +4,931 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrimeIQ — Get Started</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-<script src="https://js.stripe.com/v3/"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#faf8f4;--card:#fff;--border:rgba(40,25,5,0.1);--gold:#b8860b;--dark:#1a1208;--muted:#8a7a5a;--green:#2d7a4f;--green-bg:#edf7f2;--red:#c0392b;--red-bg:#fdf0ee;--amber:#c07000;--amber-bg:#fef6e8;}
 *{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --dark:#1a0e02;--gold:#b8860b;--gold-lt:#e8b84b;--cream:#f5ead6;
+  --bg:#faf8f4;--border:rgba(40,25,5,0.12);--muted:#8a7a5a;
+  --green:#2d7a4f;--red:#c0392b;--amber:#c9820a;
+}
 body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-height:100vh;}
-.header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Playfair Display',serif;font-size:20px;color:#e8b84b;}
-.logo em{font-style:italic;color:#f5ead6;}
-.logo-sub{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px;}
-.prog-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;position:sticky;top:0;z-index:100;}
-.prog-step{display:flex;align-items:center;gap:10px;padding:16px 20px 16px 0;flex:1;}
-.prog-num{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;transition:all 0.3s;}
-.prog-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);transition:all 0.3s;}
-.prog-step.active .prog-num{background:var(--gold);border-color:var(--gold);color:#fff;}
-.prog-step.active .prog-label{color:var(--dark);}
-.prog-step.done .prog-num{background:var(--green);border-color:var(--green);color:#fff;}
-.prog-step.done .prog-label{color:var(--green);}
-.prog-conn{height:2px;width:20px;background:var(--border);flex-shrink:0;transition:background 0.3s;}
+/* NAV */
+.nav{background:var(--dark);padding:16px 40px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold-lt);}
+.logo em{font-style:italic;color:var(--cream);}
+/* LAYOUT */
+.wrap{max-width:680px;margin:0 auto;padding:40px 24px 80px;}
+/* PROGRESS */
+.progress{display:flex;align-items:center;margin-bottom:36px;}
+.prog-step{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);
+  flex-shrink:0;transition:all 0.2s;background:var(--bg);}
+.prog-step.active{border-color:var(--gold);color:var(--gold);background:#fdf3db;}
+.prog-step.done{border-color:var(--green);background:var(--green);color:#fff;}
+.prog-conn{flex:1;height:2px;background:var(--border);transition:background 0.2s;}
 .prog-conn.done{background:var(--green);}
-.main{max-width:660px;margin:0 auto;padding:40px 20px 80px;}
-.panel{display:none;} .panel.active{display:block;}
-.panel-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);margin-bottom:6px;}
-.panel-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-bottom:30px;}
-.card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:22px;margin-bottom:14px;}
-.card-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--dark);margin-bottom:3px;}
-.card-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:16px;}
-.f-group{margin-bottom:14px;}
-.f-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
-.f-input,.f-select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'Lato',sans-serif;font-size:13.5px;color:var(--dark);outline:none;transition:border-color 0.15s;}
-.f-input:focus,.f-select:focus{border-color:var(--gold);}
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:16px;}
+.panel-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark);margin-bottom:6px;}
+.panel-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.06em;margin-bottom:28px;}
+/* FORMS */
+.f-group{margin-bottom:16px;}
+.f-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
+.f-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Lato',sans-serif;background:#fff;color:var(--dark);transition:border-color 0.2s;outline:none;}
+.f-input:focus{border-color:var(--gold);}
 .f-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;}
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
-.f-error{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);margin-top:4px;display:none;}
-.loc-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;position:relative;}
-.loc-num{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;}
-.remove-loc{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;}
-.remove-loc:hover{color:var(--red);border-color:var(--red);}
-.add-loc{width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:10px;background:none;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:0.08em;transition:all 0.2s;margin-top:4px;}
-.add-loc:hover{border-color:var(--gold);color:var(--gold);}
-.connect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
-.conn-card{border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.2s;background:#fff;display:flex;align-items:center;gap:12px;}
-.conn-card:hover{border-color:var(--gold);}
-.conn-card.selected{border-color:var(--green);background:var(--green-bg);}
-.conn-card.connected{border-color:var(--green);background:var(--green-bg);}
-.conn-card.connected .conn-status{color:var(--green);}
-.conn-icon{font-size:22px;flex-shrink:0;}
-.conn-name{font-size:13px;font-weight:700;color:var(--dark);}
-.conn-desc{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:2px;}
-.conn-status{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:4px;}
-.conn-detail{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;display:none;}
-.conn-detail.open{display:block;}
-.conn-detail-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:3px;}
-.conn-detail-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:14px;}
-.oauth-btn{display:flex;align-items:center;gap:10px;padding:11px 18px;border:1.5px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:700;color:var(--dark);transition:all 0.2s;width:100%;margin-bottom:8px;}
-.oauth-btn:hover{border-color:var(--gold);background:rgba(184,134,11,0.04);}
-.oauth-btn.connected{border-color:var(--green);background:var(--green-bg);color:var(--green);}
-.skip-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;text-decoration:underline;display:block;text-align:center;margin-top:8px;}
-.skip-link:hover{color:var(--dark);}
-.csv-upload{border:1.5px dashed var(--border);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.csv-upload:hover{border-color:var(--gold);background:rgba(184,134,11,0.03);}
-.csv-upload input{display:none;}
-.csv-upload-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;}
-.csv-col-chip{display:inline-block;padding:2px 8px;background:var(--gold-dim,rgba(184,134,11,0.1));color:var(--gold);border-radius:4px;font-family:"IBM Plex Mono",monospace;font-size:9px;margin:2px;}
-.csv-preview-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
-.csv-preview-table th{padding:5px 8px;background:var(--dark);color:white;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;font-family:"IBM Plex Mono",monospace;}
-.csv-preview-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);}
-.plan-card{border:1.5px solid var(--border);border-radius:12px;padding:22px;background:#fff;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
-.plan-price{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);}
-.plan-period{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
-.plan-features{list-style:none;margin-top:12px;}
-.plan-features li{font-size:12.5px;color:var(--muted);padding:3px 0;display:flex;align-items:center;gap:8px;}
-.plan-features li::before{content:"✓";color:var(--green);font-weight:700;}
-.btn-gold{width:100%;padding:14px;border-radius:9px;border:none;background:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:11px;color:#fff;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;transition:all 0.2s;margin-top:6px;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+/* BUTTONS */
+.btn-gold{padding:12px 24px;background:var(--gold);color:#fff;border:none;border-radius:9px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;
+  text-transform:uppercase;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .btn-gold:hover{background:#9a7009;}
-.btn-gold:disabled{opacity:0.5;cursor:not-allowed;}
-.btn-outline{width:100%;padding:13px;border-radius:9px;border:1.5px solid var(--border);background:transparent;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:0.08em;transition:all 0.2s;margin-top:8px;}
-.btn-outline:hover{color:var(--dark);border-color:var(--gold);}
-.alert{border-radius:9px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;line-height:1.5;display:none;}
+.btn-gold:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-outline{padding:12px 24px;background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:9px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;
+  text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-outline:hover{border-color:var(--muted);}
+.btn-row{display:flex;gap:10px;margin-top:24px;}
+/* ALERT */
+.alert{padding:11px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;display:none;}
 .alert.show{display:block;}
-.alert.error{background:var(--red-bg);border:1px solid rgba(192,57,43,0.2);color:var(--red);}
-.alert.success{background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);color:var(--green);}
-.alert.info{background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);color:var(--amber);}
-.summary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
-.summary-row:last-child{border:none;}
-.summary-label{color:var(--muted);}
-.summary-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--dark);font-weight:600;}
-.summary-val.good{color:var(--green);}
-.summary-val.warn{color:var(--amber);}
-.check-icon{width:60px;height:60px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.section-divider{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-
+.alert.error{background:#fdf0ee;color:var(--red);}
+.alert.success{background:#e8f5ee;color:var(--green);}
+.alert.info{background:#fdf3db;color:var(--amber);}
+/* CONN CARDS */
+.conn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.conn-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;
+  text-align:center;cursor:pointer;transition:all 0.15s;}
+.conn-card:hover{border-color:var(--gold);}
+.conn-card.selected{border-color:var(--gold);background:#fdf3db;}
+.conn-card.connected{border-color:var(--green);background:#e8f5ee;}
+.conn-card.coming-soon{opacity:0.45;cursor:not-allowed;}
+.conn-icon{margin-bottom:6px;display:flex;justify-content:center;}
+.conn-name{font-size:10px;font-weight:700;color:var(--dark);}
+.conn-desc{font-size:9px;color:var(--muted);margin-top:2px;line-height:1.3;}
+.conn-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:7px;
+  background:#f0ece4;color:var(--muted);padding:1px 5px;border-radius:4px;margin-top:3px;}
+/* DETAIL PANEL */
+.detail{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:20px;margin-bottom:16px;display:none;}
+.detail.open{display:block;}
+.detail-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:4px;}
+.detail-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:14px;}
+.oauth-btn{padding:10px 20px;background:var(--dark);color:#fff;border:none;border-radius:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.08em;
+  cursor:pointer;transition:background 0.2s;}
+.oauth-btn:hover{background:#2a1a05;}
+/* CSV */
+.csv-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;
+  cursor:pointer;transition:border-color 0.2s;background:#faf8f4;}
+.csv-zone:hover{border-color:var(--gold);}
+.csv-zone-icon{font-size:32px;margin-bottom:8px;}
+.csv-zone-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.csv-preview{margin-top:12px;}
+/* SELECT */
+.f-select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:13px;font-family:'Lato',sans-serif;background:#fff;color:var(--dark);outline:none;}
+/* LOC BLOCK */
+.loc-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px;}
+.loc-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;}
+/* CAT GRID */
+.cat-group{margin-bottom:18px;}
+.cat-group-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.cat-btn{padding:8px 14px;border:1.5px solid var(--border);border-radius:7px;background:#fff;
+  font-size:12px;cursor:pointer;transition:all 0.15s;margin:3px;display:inline-block;}
+.cat-btn:hover{border-color:var(--gold);}
+.cat-btn.sel{border-color:var(--gold);background:rgba(184,134,11,0.1);color:var(--gold);}
+/* SECTION DIVIDER */
+.section-div{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);
+  letter-spacing:0.12em;text-transform:uppercase;margin:20px 0 12px;
+  display:flex;align-items:center;gap:10px;}
+.section-div::before,.section-div::after{content:'';flex:1;height:1px;background:var(--border);}
+/* SKIP */
+.skip-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);
+  cursor:pointer;text-decoration:underline;display:block;text-align:center;margin-top:10px;}
+/* REVIEW */
+.review-row{display:flex;justify-content:space-between;padding:10px 0;
+  border-bottom:1px solid var(--border);font-size:13px;}
+.review-row:last-child{border-bottom:none;}
+.review-label{color:var(--muted);}
+.review-val{font-weight:700;}
+/* INSTRUCTIONS */
+.inst-box{background:#fdf3db;border-left:3px solid var(--gold);border-radius:4px;
+  padding:14px;margin-bottom:14px;display:none;}
+.inst-box.open{display:block;}
+.inst-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.inst-steps{padding-left:16px;font-size:12px;line-height:1.9;}
+/* SUCCESS */
+.success-box{text-align:center;padding:60px 20px;}
+/* RESPONSIVE */
+@media(max-width:600px){
+  .f-row,.f-row3{grid-template-columns:1fr;}
+  .conn-grid{grid-template-columns:repeat(2,1fr);}
+  .nav{padding:14px 20px;}
+  .wrap{padding:24px 16px 60px;}
+}
 </style>
 </head>
-<body style="visibility:hidden">
+<body>
 
-<div class="header">
-  <div>
-    <div class="logo"><em>Prime</em>IQ</div>
-    <div class="logo-sub">Restaurant Analytics</div>
+<nav class="nav">
+  <div class="logo"><em>Prime</em>IQ</div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3)">Restaurant Analytics</div>
+</nav>
+
+<div class="wrap">
+  <!-- PROGRESS BAR -->
+  <div class="progress" id="progressBar">
+    <div class="prog-step active" id="prog1">1</div>
+    <div class="prog-conn" id="conn1"></div>
+    <div class="prog-step" id="prog2">2</div>
+    <div class="prog-conn" id="conn2"></div>
+    <div class="prog-step" id="prog3">3</div>
+    <div class="prog-conn" id="conn3"></div>
+    <div class="prog-step" id="prog4">4</div>
+    <div class="prog-conn" id="conn4"></div>
+    <div class="prog-step" id="prog5">5</div>
+    <div class="prog-conn" id="conn5"></div>
+    <div class="prog-step" id="prog6">6</div>
   </div>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4)">Secure · Encrypted · Auto-synced</div>
-</div>
-
-<div class="prog-bar">
-  <div class="prog-step active" id="prog1"><div class="prog-num">1</div><div class="prog-label">Account</div></div>
-  <div class="prog-conn" id="conn1"></div>
-  <div class="prog-step" id="prog2"><div class="prog-num">2</div><div class="prog-label">Locations</div></div>
-  <div class="prog-conn" id="conn2"></div>
-  <div class="prog-step" id="prog3"><div class="prog-num">3</div><div class="prog-label">POS System</div></div>
-  <div class="prog-conn" id="conn3"></div>
-  <div class="prog-step" id="prog4"><div class="prog-num">4</div><div class="prog-label">Delivery</div></div>
-  <div class="prog-conn" id="conn4"></div>
-  <div class="prog-step" id="prog5"><div class="prog-num">5</div><div class="prog-label">Payroll</div></div>
-  <div class="prog-conn" id="conn5"></div>
-  <div class="prog-step" id="prog6"><div class="prog-num">6</div><div class="prog-label">Subscribe</div></div>
-</div>
-
-<div class="main">
-
-  <div id="cb_alert" class="alert"></div>
 
   <!-- STEP 1: ACCOUNT -->
-  <div class="panel active" id="panel1">
+  <div id="step1">
     <div class="panel-title">Create your account</div>
     <div class="panel-sub">Takes 2 minutes · No card required yet</div>
-    <div id="s1_alert" class="alert"></div>
+    <div id="alert1" class="alert"></div>
     <div class="card">
-      <div class="f-group"><label class="f-label">Restaurant Group Name</label>
-        <input class="f-input" id="s1_name" placeholder="e.g. Planet Taco" oninput="localStorage.setItem('rd_s1_name',this.value)"></div>
-      <div class="f-group"><label class="f-label">Your Email</label>
-        <input class="f-input" id="s1_email" type="email" placeholder="owner@yourrestaurant.com" oninput="localStorage.setItem('rd_s1_email',this.value)"></div>
-      <div class="f-row">
-        <div class="f-group"><label class="f-label">Password</label>
-          <input class="f-input" id="s1_password" type="password" placeholder="Min 8 characters"></div>
-        <div class="f-group"><label class="f-label">Confirm Password</label>
-          <input class="f-input" id="s1_confirm" type="password" placeholder="Repeat password"></div>
+      <div class="f-group">
+        <label class="f-label">Restaurant Group Name</label>
+        <input class="f-input" id="s1_name" placeholder="e.g. The Local Group" oninput="save1()">
       </div>
-      <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
+      <div class="f-group">
+        <label class="f-label">Your Email</label>
+        <input class="f-input" id="s1_email" type="email" placeholder="owner@yourrestaurant.com" oninput="save1()">
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <label class="f-label">Password</label>
+          <input class="f-input" id="s1_pw" type="password" placeholder="Min 8 characters">
+        </div>
+        <div class="f-group">
+          <label class="f-label">Confirm Password</label>
+          <input class="f-input" id="s1_pw2" type="password" placeholder="Repeat password">
+        </div>
+      </div>
+      <button class="btn-gold" id="s1_btn" onclick="createAccount()" style="width:100%;margin-top:8px">Create Account →</button>
     </div>
+    <script>
+      // Populate on load from localStorage
+      (function(){
+        var n=localStorage.getItem('rd_s1_name');
+        var e=localStorage.getItem('rd_s1_email');
+        if(n){var el=document.getElementById('s1_name');if(el)el.value=n;}
+        if(e){var el2=document.getElementById('s1_email');if(el2)el2.value=e;}
+      })();
+    </script>
   </div>
-  <script>
-    // Runs immediately when HTML is parsed - always populate step 1 fields
-    (function() {
-      var n = localStorage.getItem('rd_s1_name');
-      var e = localStorage.getItem('rd_s1_email');
-      var nameEl = document.getElementById('s1_name');
-      var emailEl = document.getElementById('s1_email');
-      if (nameEl && n) nameEl.value = n;
-      if (emailEl && e) emailEl.value = e;
-    })();
-  </script>
 
-  <!-- STEP 1B: CATEGORY SELECTION -->
-  <div class="panel" id="panel1b">
-    <div class="panel-title">What kind of restaurant are you?</div>
-    <div class="panel-sub">Select all that apply · You can change this anytime from Settings</div>
-    <div id="s1b_alert" class="alert"></div>
-    <div id="category_grid" style="margin:20px 0"></div>
-    <button class="btn-gold" id="s1b_btn" onclick="saveCategories()" style="margin-top:8px">Continue →</button>
+  <!-- STEP 1B: CATEGORIES -->
+  <div id="step1b" style="display:none">
+    <div class="panel-title">What kind of restaurant?</div>
+    <div class="panel-sub">Select all that apply · Used to personalize your benchmarks</div>
+    <div id="alert1b" class="alert"></div>
+    <div class="card">
+      <div id="cat_grid"></div>
+      <div class="btn-row">
+        <button class="btn-gold" onclick="saveCategories()">Continue →</button>
+        <button class="btn-outline" onclick="show(1)">← Back</button>
+      </div>
+    </div>
   </div>
 
   <!-- STEP 2: LOCATIONS -->
-  <div class="panel" id="panel2">
+  <div id="step2" style="display:none">
     <div class="panel-title">Your locations</div>
-    <div class="panel-sub">Add each restaurant · You can edit these anytime from Settings</div>
-    <div id="s2_alert" class="alert"></div>
+    <div class="panel-sub">Enter each restaurant location separately</div>
+    <div id="alert2" class="alert"></div>
     <div id="loc_forms"></div>
-    <div id="pos_loc_selector"></div>
-    <button class="add-loc" onclick="addLocation()">+ Add Another Location</button>
-    <button class="btn-gold" id="s2_btn" onclick="saveLocations()" style="margin-top:20px">Save & Continue →</button>
-    <button class="btn-outline" onclick="goToStep(1)">← Back</button>
+    <button onclick="addLocation()" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);background:none;border:none;cursor:pointer;padding:4px 0;">+ Add another location</button>
+    <div class="btn-row">
+      <button class="btn-gold" id="s2_btn" onclick="saveLocations()">Save & Continue →</button>
+      <button class="btn-outline" onclick="show('1b')">← Back</button>
+    </div>
   </div>
 
   <!-- STEP 3: POS -->
-  <div class="panel" id="panel3">
+  <div id="step3" style="display:none">
     <div class="panel-title">Connect your POS</div>
     <div class="panel-sub">We pull daily sales, covers, payment mix, voids and comps automatically</div>
-    <div id="pos_alert" class="alert"></div>
-    <div class="connect-grid" id="pos_grid"></div>
-
-    <div class="conn-detail pos-detail" id="pos_detail_toast">
-      <div class="conn-detail-title">Connect Toast POS</div>
-      <div class="conn-detail-sub">You'll be redirected to Toast to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('toast')">🔗 Connect with Toast →</button>
+    <div id="alert3" class="alert"></div>
+    <div class="conn-grid" id="pos_grid"></div>
+    <!-- Detail panels populated by JS -->
+    <div id="pos_details"></div>
+    <div class="btn-row">
+      <button class="btn-gold" onclick="show(4)">Continue →</button>
+      <button class="btn-outline" onclick="show(2)">← Back</button>
     </div>
-    <div class="conn-detail pos-detail" id="pos_detail_square">
-      <div class="conn-detail-title">Connect Square</div>
-      <div class="conn-detail-sub">You'll be redirected to Square to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('square')">🔗 Connect with Square →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_clover">
-      <div class="conn-detail-title">Connect Clover</div>
-      <div class="conn-detail-sub">You'll be redirected to Clover to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('clover')">🔗 Connect with Clover →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_lightspeed">
-      <div class="conn-detail-title">Connect Lightspeed</div>
-      <div class="conn-detail-sub">You'll be redirected to Lightspeed to authorize</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('lightspeed')">🔗 Connect with Lightspeed →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_revel">
-      <div class="conn-detail-title">Connect Revel</div>
-      <div class="conn-detail-sub">Enter your Revel API credentials from your Revel dashboard</div>
-      <div class="f-group"><label class="f-label">Revel API URL</label><input class="f-input" id="revel_url" placeholder="https://yourstore.revelup.com"></div>
-      <div class="f-row">
-        <div class="f-group"><label class="f-label">API Key</label><input class="f-input" id="revel_key"></div>
-        <div class="f-group"><label class="f-label">API Secret</label><input class="f-input" id="revel_secret" type="password"></div>
-      </div>
-      <button class="btn-gold" onclick="connectAPIKey('revel')">Connect Revel →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_spoton">
-      <div class="conn-detail-title">Connect SpotOn</div>
-      <div class="conn-detail-sub">API credentials from your SpotOn dashboard</div>
-      <div class="f-group"><label class="f-label">API Key</label><input class="f-input" id="spoton_key"></div>
-      <div class="f-group"><label class="f-label">Location ID</label><input class="f-input" id="spoton_loc"></div>
-      <button class="btn-gold" onclick="connectAPIKey('spoton')">Connect SpotOn →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_touchbistro">
-      <div class="conn-detail-title">TouchBistro — CSV Export</div>
-      <div class="conn-detail-sub">Export your daily sales report as CSV and upload here. We parse it automatically.</div>
-      <div class="csv-upload" onclick="document.getElementById('tb_csv').click()">
-        <input type="file" id="tb_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload TouchBistro CSV</div>
-      </div>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_csv">
-      <div class="conn-detail-title">Upload Sales Data — Any POS</div>
-      <div class="conn-detail-sub">Select your POS below for step-by-step export instructions</div>
-
-      <div style="margin:14px 0">
-        <label class="f-label">My POS system is</label>
-        <select id="csv_pos_type" onchange="showCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select your POS →</option>
-          <option value="toast">Toast</option>
-          <option value="square">Square</option>
-          <option value="clover">Clover</option>
-          <option value="lightspeed">Lightspeed</option>
-          <option value="spoton">SpotOn</option>
-          <option value="revel">Revel</option>
-          <option value="aloha">Aloha / NCR</option>
-          <option value="micros">Oracle MICROS</option>
-          <option value="other">Other / Not sure</option>
-        </select>
-      </div>
-
-      <div id="csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="csv_pos_name"></span></div>
-        <ol id="csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.8"></ol>
-        <div id="csv_columns_note" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
-      </div>
-
-      <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
-        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
-        <div style="font-size:32px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Accepts .csv files · Your data stays private</div>
-      </div>
-
-      <div id="csv_preview" style="margin-top:12px"></div>
-    </div>
-
-    <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(4)" style="flex:1">Continue →</button>
-      <button class="btn-outline" onclick="goToStep(2)" style="flex:0 0 100px">← Back</button>
-    </div>
-    <span class="skip-link" onclick="skipPOS()">Skip — connect from Settings later</span>
+    <span class="skip-link" onclick="show(4)">Skip — connect from Settings later</span>
   </div>
 
   <!-- STEP 4: DELIVERY -->
-  <div class="panel" id="panel4">
-    <div class="panel-title">Connect delivery platforms</div>
-    <div class="panel-sub">Track orders, gross revenue, commissions, and net per platform automatically</div>
-    <div id="del_alert" class="alert"></div>
-    <div class="connect-grid" id="del_grid"></div>
-
-    <div class="conn-detail del-detail" id="del_detail_doordash">
-      <div class="conn-detail-title">Connect DoorDash</div>
-      <div class="conn-detail-sub">Authorize via DoorDash Merchant portal</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('doordash')">🔗 Connect with DoorDash →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="doordash_rate" type="number" value="22"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('doordash')">Save Rate →</button>
+  <div id="step4" style="display:none">
+    <div class="panel-title">Delivery platforms</div>
+    <div class="panel-sub">Upload payout reports or connect automatically</div>
+    <div id="alert4" class="alert"></div>
+    <div class="conn-grid" id="del_grid"></div>
+    <div id="del_details"></div>
+    <div class="btn-row">
+      <button class="btn-gold" onclick="show(5)">Continue →</button>
+      <button class="btn-outline" onclick="show(3)">← Back</button>
     </div>
-    <div class="conn-detail del-detail" id="del_detail_ubereats">
-      <div class="conn-detail-title">Connect Uber Eats</div>
-      <div class="conn-detail-sub">Authorize via Uber Eats for Merchants</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('ubereats')">🔗 Connect with Uber Eats →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="ubereats_rate" type="number" value="30"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('ubereats')">Save Rate →</button>
-    </div>
-    <div class="conn-detail del-detail" id="del_detail_grubhub">
-      <div class="conn-detail-title">Connect GrubHub</div>
-      <div class="conn-detail-sub">Authorize via GrubHub for Restaurants</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('grubhub')">🔗 Connect with GrubHub →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="grubhub_rate" type="number" value="25"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('grubhub')">Save Rate →</button>
-    </div>
-    <div class="conn-detail del-detail" id="del_detail_csv">
-      <div class="conn-detail-title">Upload Delivery Payout Data</div>
-      <div class="conn-detail-sub">Select your platform for step-by-step export instructions</div>
-
-      <div style="margin:14px 0">
-        <label class="f-label">Platform</label>
-        <select id="del_csv_platform" onchange="showDeliveryCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select platform →</option>
-          <option value="doordash">DoorDash</option>
-          <option value="ubereats">Uber Eats</option>
-          <option value="grubhub">Grubhub</option>
-          <option value="other">Other platform</option>
-        </select>
-      </div>
-
-      <div id="del_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="del_csv_platform_name"></span></div>
-        <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
-      </div>
-
-      <div class="csv-upload" onclick="document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleDeliveryCSVDrop(event)">
-        <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert')">
-        <div style="font-size:32px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
-      </div>
-
-      <div id="del_csv_preview" style="margin-top:12px"></div>
-    </div>
-
-    <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Continue →</button>
-      <button class="btn-outline" onclick="goToStep(3)" style="flex:0 0 100px">← Back</button>
-    </div>
-    <span class="skip-link" onclick="skipDelivery()">Skip — connect from Settings later</span>
+    <span class="skip-link" onclick="show(5)">Skip — connect from Settings later</span>
   </div>
 
   <!-- STEP 5: PAYROLL -->
-  <div class="panel" id="panel5">
-    <div class="panel-title">Connect payroll or scheduling</div>
-    <div class="panel-sub">We track actual vs scheduled hours, overtime alerts, and labor cost per day</div>
-    <div id="pay_alert" class="alert"></div>
-    <div class="connect-grid" id="payroll_grid"></div>
-
-    <div class="conn-detail pay-detail" id="pay_detail_homebase">
-      <div class="conn-detail-title">Connect Homebase</div>
-      <div class="conn-detail-sub">Most common in NYC restaurants · Handles scheduling and payroll</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('homebase')">🔗 Connect with Homebase →</button>
+  <div id="step5" style="display:none">
+    <div class="panel-title">Payroll & scheduling</div>
+    <div class="panel-sub">We use this to calculate labor cost and prime cost</div>
+    <div id="alert5" class="alert"></div>
+    <div class="conn-grid" id="pay_grid"></div>
+    <div id="pay_details"></div>
+    <div class="btn-row">
+      <button class="btn-gold" onclick="show(6)">Review & Subscribe →</button>
+      <button class="btn-outline" onclick="show(4)">← Back</button>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_gusto">
-      <div class="conn-detail-title">Connect Gusto</div>
-      <div class="conn-detail-sub">You'll be redirected to Gusto to authorize payroll access</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('gusto')">🔗 Connect with Gusto →</button>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_7shifts">
-      <div class="conn-detail-title">Connect 7shifts</div>
-      <div class="conn-detail-sub">Restaurant scheduling · Very common in NYC</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('7shifts')">🔗 Connect with 7shifts →</button>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_square_payroll">
-      <div class="conn-detail-title">Square Payroll</div>
-      <div class="alert show info" style="margin-top:8px">Already connected via Square POS. Labor data is flowing automatically.</div>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_toast_payroll">
-      <div class="conn-detail-title">Toast Payroll</div>
-      <div class="alert show info" style="margin-top:8px">Already connected via Toast POS. Labor data is flowing automatically.</div>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_adp">
-      <div class="conn-detail-title">Connect ADP</div>
-      <div class="conn-detail-sub">API credentials from your ADP administrator portal</div>
-      <div class="f-group"><label class="f-label">ADP Client ID</label><input class="f-input" id="adp_client_id"></div>
-      <div class="f-group"><label class="f-label">ADP Client Secret</label><input class="f-input" id="adp_secret" type="password"></div>
-      <button class="btn-gold" onclick="connectAPIKey('adp')">Connect ADP →</button>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_csv">
-      <div class="conn-detail-title">Upload Labor Report CSV</div>
-      <div class="conn-detail-sub">Export weekly hours from your system. Columns: Employee, Role, Week, Scheduled Hours, Actual Hours, Total Pay.</div>
-      <div style="margin:14px 0">
-        <label class="f-label">Payroll System</label>
-        <select id="pay_csv_source" onchange="showPayrollCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select system →</option>
-          <option value="gusto">Gusto</option>
-          <option value="adp">ADP</option>
-          <option value="paychex">Paychex</option>
-          <option value="homebase">Homebase</option>
-          <option value="7shifts">7shifts</option>
-          <option value="toast_payroll">Toast Payroll</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-
-      <div id="pay_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="pay_csv_source_name"></span></div>
-        <ol id="pay_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
-      </div>
-
-      <div class="csv-upload" onclick="document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handlePayrollCSVDrop(event)">
-        <input type="file" id="labor_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'labor','payroll_csv_preview','pay_alert')">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload labor CSV</div>
-      </div>
-      <div id="payroll_csv_preview" style="margin-top:10px"></div>
-    </div>
-
-    <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(6)" style="flex:1">Review & Subscribe →</button>
-      <button class="btn-outline" onclick="goToStep(4)" style="flex:0 0 100px">← Back</button>
-    </div>
-    <span class="skip-link" onclick="skipPayroll()">Skip — connect from Settings later</span>
+    <span class="skip-link" onclick="show(6)">Skip — connect from Settings later</span>
   </div>
 
   <!-- STEP 6: REVIEW + SUBSCRIBE -->
-  <div class="panel" id="panel6">
+  <div id="step6" style="display:none">
     <div class="panel-title">Review and subscribe</div>
-    <div class="panel-sub">One flat price · Cancel anytime · Your data is always yours</div>
-    <div id="review_alert" class="alert"></div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="card-title">Your Setup</div>
-      <div class="card-sub">Everything you configured</div>
-      <div id="review_content"></div>
+    <div class="panel-sub">30-day free pilot · No credit card charged today</div>
+    <div id="alert6" class="alert"></div>
+    <div class="card" id="review_card"></div>
+    <div class="card" style="margin-top:14px;background:var(--dark);border-color:transparent">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--cream);margin-bottom:4px">$500<span style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.4)">/month after trial</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:20px">All locations · Cancel anytime · No refunds</div>
+      <button class="btn-gold" id="s6_btn" onclick="startCheckout()" style="width:100%">Start Free 30-Day Pilot →</button>
     </div>
-    <div class="card">
-      <div class="card-title">Restaurant Dashboard</div>
-      <div class="card-sub">What you get every month</div>
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px">
-        <div style="font-family:'Playfair Display',serif;font-size:32px;color:var(--dark)">$500</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">/month · cancel anytime</div>
-      </div>
-      <ul class="plan-features">
-        <li>Daily food cost, labor, prime cost — fully automatic</li>
-        <li>All locations in one dashboard</li>
-        <li>Delivery tracking — DoorDash, Uber Eats, GrubHub</li>
-        <li>Sales by hour with staffing insights</li>
-        <li>Voids and comps tracking and alerts</li>
-        <li>Break-even calculator per location</li>
-        <li>Weekly P&L report every Monday morning</li>
-        <li>Monthly report on the 1st of each month</li>
-        <li>Works with Toast, Square, Clover, Lightspeed and more</li>
-        <li>Setup included · Direct support</li>
-      </ul>
-      <button class="btn-gold" id="checkout_btn" onclick="startCheckout()">Subscribe and Access Dashboard →</button>
-      <div style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:10px">
-        Secure payment via Stripe · Cancel from your billing portal · No hidden fees
-      </div>
+    <div class="btn-row">
+      <button class="btn-outline" onclick="show(5)" style="width:100%">← Back</button>
     </div>
-    <button class="btn-outline" onclick="goToStep(5)">← Back</button>
   </div>
 
-  
   <!-- SUCCESS -->
-  <div id="panel_success" style="display:none;text-align:center;padding:60px 20px">
-    <div style="width:70px;height:70px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 20px">✓</div>
-    <div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);margin-bottom:8px">You're all set.</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:30px">Your dashboard is being set up. First sync runs within 4 hours.</div>
-    <a href="/dashboard" style="display:inline-block;padding:14px 32px;background:var(--gold);color:#fff;border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-decoration:none;text-transform:uppercase">Go to Dashboard →</a>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:20px">Check your email for your welcome message and next steps.</div>
+  <div id="step_success" style="display:none">
+    <div class="success-box">
+      <div style="font-size:48px;margin-bottom:16px">🎉</div>
+      <div class="panel-title">You're all set!</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin:10px 0 24px;line-height:1.7">
+        Your dashboard is ready. Data will appear within a few minutes<br>of connecting your systems.
+      </div>
+      <button class="btn-gold" onclick="window.location.href='/dashboard'">Go to Dashboard →</button>
+    </div>
   </div>
-
-</div><!-- end .main -->
-
-
 </div>
-<script>
 
+<script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-// Replace these with your real values after setup
-const CONFIG = {
-  supabaseUrl:    'https://rkxhrdecrqtqoorjyfel.supabase.co',
-  supabaseKey:    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw',
-  apiBase:        'https://restaurant-api-68re.onrender.com',         // e.g. https://restaurant-api.onrender.com
-  stripeKey:      'pk_live_51TYwBfC3joyyq2YKgQzwaCheBkZcPmBz7XvBN4VCGuJBnpZVx7H6ZHcs3p766OEVqugwgdaMg9sTqgGvKadTUNtE00X3qeF2uU', // pk_live_...
-  // OAuth redirect URLs — point to this page with a ?callback=provider param
-  toastOAuthUrl:  'https://ws-api.toasttab.com/authentication/v1/oauth/authorize',
-  squareOAuthUrl: 'https://connect.squareup.com/oauth2/authorize',
-  cloverOAuthUrl: 'https://www.clover.com/oauth/authorize',
-  // Your Stripe product price ID
-  priceId:        'price_1TYwFNCJnKt2Oid7wbFeIrXY',
-};
+const SB_URL  = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw';
+const API     = 'https://restaurant-api-68re.onrender.com';
+const STRIPE_KEY = 'pk_live_51TYwBfC3joyyq2YKgQzwaCheBkZcPmBz7XvBN4VCGuJBnpZVx7H6ZHcs3p766OEVqugwgdaMg9sTqgGvKadTUNtE00X3qeF2uU';
+const PRICE_ID   = 'price_1TYwFNCJnKt2Oid7wbFeIrXY';
+const SQ_APP_ID  = 'sq0idp-hjt3iIFTh3nBFHJ_tZXvEw';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = {
+var state = {
   step: 1,
   userId: null,
   clientId: null,
-  referredBy: new URLSearchParams(window.location.search).get('ref') || null,
+  token: null,
   email: '',
   restaurantName: '',
-  categories: [],        // selected restaurant type categories
+  categories: [],
   locations: [],
-  connectedPOS: {},
-  connectedDelivery: {},
-  connectedPayroll: null,
-  checkoutComplete: false,
+  referredBy: new URLSearchParams(window.location.search).get('ref') || null,
 };
-
-// ── ALL AVAILABLE CATEGORIES ───────────────────────────────────────────────
-const ALL_CATEGORIES = [
-  { group: 'Service Style', items: [
-    'Fast Casual / Counter Service',
-    'Casual Dining',
-    'Fine Dining',
-    'Breakfast & Brunch',
-  ]},
-  { group: 'Cuisine', items: [
-    'Pizza & Italian',
-    'Asian',
-    'Mexican & Latin',
-    'Mediterranean & Middle Eastern',
-    'Indian & South Asian',
-    'Caribbean',
-    'Seafood',
-    'Steakhouse',
-  ]},
-  { group: 'Format', items: [
-    'Bars & Nightlife',
-    'Cafe & Bakery',
-    'Ghost Kitchen / Delivery Only',
-    'Food Hall Stall',
-    'Catering',
-  ]},
-];
-
-// Check if returning from OAuth callback
-const urlParams = new URLSearchParams(window.location.search);
-const oauthCallback = urlParams.get('callback');
-const oauthCode = urlParams.get('code');
-const oauthState = urlParams.get('state');
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-// Watch panel1 for when it becomes visible and populate fields
-var panel1Observer = new MutationObserver(function() {
-  var panel = document.getElementById('panel1');
-  if (panel && panel.classList.contains('active')) {
-    var nameEl = document.getElementById('s1_name');
-    var emailEl = document.getElementById('s1_email');
-    if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || '';
-    if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || '';
-  }
-});
-
-window.addEventListener('DOMContentLoaded', async () => {
-  var panel1 = document.getElementById('panel1');
-  if (panel1) panel1Observer.observe(panel1, { attributes: true, attributeFilter: ['class'] });
-  // Clear any stale Supabase sessions
-  if (!urlParams.get('confirmed') && !urlParams.get('payment') && !urlParams.get('callback')) {
-    Object.keys(localStorage).forEach(function(k) {
-      if (k.startsWith('sb-') && k.endsWith('-auth-token')) localStorage.removeItem(k);
-    });
-  }
-  // Handle OAuth callbacks
-  if (oauthCallback && oauthCode) {
-    await handleOAuthCallback(oauthCallback, oauthCode, oauthState);
-    document.body.style.visibility = 'visible'; return;
-  }
-  // Handle Stripe success
-  if (urlParams.get('payment') === 'success') {
-    await handlePaymentSuccess(urlParams.get('session_id'));
-    document.body.style.visibility = 'visible'; return;
-  }
-  // If already has token and client ID - mid onboarding, restore and skip to last step
-  var existingToken = localStorage.getItem('rd_token');
-  var existingClient = localStorage.getItem('rd_client_id');
-  if (existingToken && existingClient && !urlParams.get('payment') && !urlParams.get('callback') && !urlParams.get('confirmed')) {
-    try {
-      var clientData = await apiFetch('/api/clients/' + existingClient);
-      if (clientData && clientData.setup_complete === false) {
-        // Restore full saved state first
-        var savedState = localStorage.getItem('rd_onboard_state');
-        if (savedState) {
-          try { Object.assign(state, JSON.parse(savedState)); } catch(e) {}
-        }
-        // Ensure critical fields are set
-        state.token = existingToken;
-        state.clientId = existingClient;
-        state.userId = clientData.user_id;
-        state.email = clientData.email || state.email;
-        state.restaurantName = clientData.name || state.restaurantName;
-        // Go to the step they were on, or step 2 minimum
-        var resumeStep = (state.step && state.step > 1) ? state.step : 2;
-        goToStep(resumeStep);
-        document.body.style.visibility = 'visible'; return;
-      }
-    } catch(e) {}
-  }
-
-  // Handle email confirmation redirect
-  if (urlParams.get('confirmed') === '1') {
-    // Restore any saved state
-    var saved = localStorage.getItem('rd_onboard_state');
-    if (saved) {
-      try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
-    }
-    // Get session from Supabase hash if present
-    var hash = window.location.hash;
-    if (hash && hash.includes('access_token')) {
-      var params = new URLSearchParams(hash.replace('#',''));
-      var token = params.get('access_token');
-      if (token) {
-        state.token = token;
-        localStorage.setItem('rd_token', token);
-      }
-    }
-    renderStep(state.step > 1 ? state.step : 2);
-    return;
-  }
-  renderStep(1);
-  renderStep1();
-  document.body.style.visibility = 'visible';
-});
-
-// ── NAVIGATION ────────────────────────────────────────────────────────────────
-function goToDashboard() { window.location.href = "/dashboard"; }
-function renderStep1() {
-  var nameEl = document.getElementById('s1_name');
-  var emailEl = document.getElementById('s1_email');
-  if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || state.restaurantName || '';
-  if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || state.email || '';
-}
-
-function goToStep(n) {
-  state.step = n;
-  // Save full state so it survives page reloads
-  localStorage.setItem('rd_onboard_state', JSON.stringify(state));
-  // Push to browser history so back button works
-  window.history.pushState({ step: n }, '', '/onboarding');
-  renderStep(n);
-}
-
-// Handle browser back/forward
-window.addEventListener('popstate', function(e) {
-  var step = e.state && e.state.step ? e.state.step : 1;
-  // Restore full state from localStorage on back navigation
-  var saved = localStorage.getItem('rd_onboard_state');
-  if (saved) {
-    try { Object.assign(state, JSON.parse(saved)); } catch(e2) {}
-  }
-  state.step = step;
-  renderStep(step);
-  if (step === 1 || step === '1') renderStep1();
-});
-
-function renderCategoryGrid() {
-  const grid = document.getElementById('category_grid');
-  if (!grid) return;
-  grid.innerHTML = ALL_CATEGORIES.map(group => {
-    const buttons = group.items.map(item => {
-      const sel = state.categories.includes(item);
-      var safeItem = item.replace(/"/g, '&quot;');
-      return '<button onclick="toggleCategory(this, &quot;' + safeItem + '&quot;)" style="padding:10px 16px;border-radius:8px;border:1.5px solid ' + (sel ? 'var(--gold)' : 'var(--border)') + ';background:' + (sel ? 'rgba(184,134,11,0.12)' : 'transparent') + ';color:' + (sel ? 'var(--gold)' : 'var(--muted)') + ';font-size:12px;cursor:pointer;transition:all 0.15s;margin:4px;font-family:inherit">' + item + '</button>';
-    }).join('');
-    return '<div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">' + group.group + '</div><div>' + buttons + '</div></div>';
-  }).join('');
-}
-
-function toggleCategory(btn, item) {
-  const idx = state.categories.indexOf(item);
-  if (idx >= 0) {
-    state.categories.splice(idx, 1);
-    btn.style.border = '1.5px solid var(--border)';
-    btn.style.background = 'transparent';
-    btn.style.color = 'var(--muted)';
-  } else {
-    state.categories.push(item);
-    btn.style.border = '1.5px solid var(--gold)';
-    btn.style.background = 'rgba(184,134,11,0.12)';
-    btn.style.color = 'var(--gold)';
-  }
-}
-
-async function saveCategories() {
-  if (state.categories.length === 0) {
-    showAlert('s1b_alert', 'Please select at least one category.', 'error');
-    return;
-  }
-  setLoading('s1b_btn', true);
-  try {
-    // Save categories to client record
-    if (state.clientId) {
-      await apiFetch('/api/clients/' + state.clientId, 'PATCH', {
-        categories: state.categories
-      });
-    }
-    // Also save to localStorage for dashboard use
-    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
-    goToStep(2);
-  } catch(e) {
-    // Non-fatal — save to localStorage and continue
-    localStorage.setItem('rd_categories', JSON.stringify(state.categories));
-    goToStep(2);
-  }
-  setLoading('s1b_btn', false);
-}
-
-function renderStep(n) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById('panel' + n);
-  if (panel) panel.classList.add('active');
-  // For progress bar, treat 1b as still step 1
-  const progN = n === '1b' ? 1 : n;
-  document.querySelectorAll('.prog-step').forEach((s, i) => {
-    s.classList.remove('active', 'done');
-    if (i + 1 < progN) s.classList.add('done');
-    if (i + 1 === progN) s.classList.add('active');
-  });
-  document.querySelectorAll('.prog-conn').forEach((c, i) => {
-    c.classList.toggle('done', i + 1 < progN);
-  });
-  window.scrollTo(0, 0);
-
-  // Render dynamic content
-  if (n === '1b') renderCategoryGrid();
-  if (n === 1 || n === '1') {
-    var nameEl = document.getElementById('s1_name');
-    var emailEl = document.getElementById('s1_email');
-    if (nameEl) nameEl.value = localStorage.getItem('rd_s1_name') || '';
-    if (emailEl) emailEl.value = localStorage.getItem('rd_s1_email') || '';
-  }
-  if (n === 2) renderLocationForms();
-  if (n === 3) renderPOSStep();
-  if (n === 4) renderDeliveryStep();
-  if (n === 5) renderPayrollStep();
-  if (n === 6) renderReviewStep();
-}
-
-// ── STEP 1: ACCOUNT ───────────────────────────────────────────────────────────
-async function createAccount() {
-  const email    = val('s1_email');
-  const password = val('s1_password');
-  const confirm  = val('s1_confirm');
-  const name     = val('s1_name');
-
-  clearAlerts();
-  if (!email || !password || !name) return showAlert('s1_alert', 'Please fill in all fields.', 'error');
-  if (password.length < 8) return showAlert('s1_alert', 'Password must be at least 8 characters.', 'error');
-  if (password !== confirm) return showAlert('s1_alert', 'Passwords do not match.', 'error');
-
-  setLoading('s1_btn', true);
-
-  try {
-    // Create Supabase auth user
-    const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
-    if (authRes.error) {
-      var errMsg = authRes.error.message || authRes.error.msg || JSON.stringify(authRes.error);
-      // Check if it's a duplicate account error
-      if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('registered')) {
-        showAlert('s1_alert', 'An account with this email already exists. <a href="/login" style="color:var(--gold)">Sign in here →</a>', 'error');
-      } else {
-        showAlert('s1_alert', 'Signup failed: ' + errMsg, 'error');
-      }
-      setLoading('s1_btn', false);
-      return;
-    }
-
-    state.email = email;
-    state.userId = authRes.user?.id || authRes.id;
-    state.token  = authRes.access_token;
-
-    // If no token returned, something went wrong
-    if (!state.token) {
-      showAlert('s1_alert', 'Account created! Please sign in to continue.', 'success');
-      setLoading('s1_btn', false);
-      setTimeout(function(){ window.location.href = '/login'; }, 1500);
-      return;
-    }
-
-    if (!state.userId) throw new Error('Could not create account. Please try again.');
-
-    // Create client record in our DB
-    const clientRes = await apiFetch('/api/clients', 'POST', {
-      user_id: state.userId,
-      name,
-      email,
-      status: 'pending_payment',
-      ...(state.referredBy ? { referred_by: state.referredBy } : {})
-    });
-    state.clientId = clientRes.id;
-    state.restaurantName = name;
-
-    // Store token for subsequent requests
-    localStorage.setItem('rd_token', state.token);
-    localStorage.setItem('rd_client_id', state.clientId);
-    localStorage.setItem('rd_onboarding', 'true'); // Prevent dashboard redirect mid-onboarding
-
-    goToStep(2);
-  } catch (e) {
-    showAlert('s1_alert', e.message, 'error');
-  }
-  setLoading('s1_btn', false);
-}
-
-// ── STEP 2: LOCATIONS ─────────────────────────────────────────────────────────
-function renderLocationForms() {
-  if (state.locations.length === 0) addLocation();
-  const container = document.getElementById('loc_forms');
-  container.innerHTML = state.locations.map((loc, i) => `
-    <div class="loc-block" id="loc_block_${i}">
-      <div class="loc-num">Location ${i + 1}${i === 0 ? ' · Primary' : ''}</div>
-      ${i > 0 ? `<button class="remove-loc" onclick="removeLocation(${i})">✕ Remove</button>` : ''}
-      <div class="f-row">
-        <div class="f-group"><label class="f-label">Location Name (e.g. Downtown, Midtown, West Loop)</label>
-          <input class="f-input" placeholder="e.g. Downtown, Midtown, West Loop" value="${loc.name || ''}" oninput="updateLocation(${i},'name',this.value)"></div>
-        <div class="f-group"><label class="f-label">Address</label>
-          <input class="f-input" placeholder="458 W 46th St, New York" value="${loc.address || ''}" oninput="updateLocation(${i},'address',this.value)"></div>
-      </div>
-      <div class="section-divider">Monthly Fixed Costs</div>
-      <div class="f-row3">
-        <div class="f-group"><label class="f-label">Rent</label>
-          <input class="f-input" type="number" placeholder="8200" value="${loc.rent || ''}" oninput="updateLocation(${i},'rent',this.value)"></div>
-        <div class="f-group"><label class="f-label">Utilities</label>
-          <input class="f-input" type="number" placeholder="1800" value="${loc.utilities || ''}" oninput="updateLocation(${i},'utilities',this.value)"></div>
-        <div class="f-group"><label class="f-label">Insurance</label>
-          <input class="f-input" type="number" placeholder="980" value="${loc.insurance || ''}" oninput="updateLocation(${i},'insurance',this.value)"></div>
-        <div class="f-group"><label class="f-label">Supplies</label>
-          <input class="f-input" type="number" placeholder="620" value="${loc.supplies || ''}" oninput="updateLocation(${i},'supplies',this.value)"></div>
-        <div class="f-group"><label class="f-label">Marketing</label>
-          <input class="f-input" type="number" placeholder="800" value="${loc.marketing || ''}" oninput="updateLocation(${i},'marketing',this.value)"></div>
-        <div class="f-group"><label class="f-label">Software</label>
-          <input class="f-input" type="number" placeholder="310" value="${loc.software || ''}" oninput="updateLocation(${i},'software',this.value)"></div>
-      </div>
-      <div class="section-divider">Cost Targets</div>
-      <div class="f-row3">
-        <div class="f-group"><label class="f-label">Food Cost Target %</label>
-          <input class="f-input" type="number" placeholder="31" value="${loc.foodTarget || ''}" oninput="updateLocation(${i},'foodTarget',this.value);updatePrimeDisplay(${i})">
-          <div class="f-hint">Typical range: 28–35% (varies by concept)</div></div>
-        <div class="f-group"><label class="f-label">Labor Cost Target %</label>
-          <input class="f-input" type="number" placeholder="34" value="${loc.laborTarget || ''}" oninput="updateLocation(${i},'laborTarget',this.value);updatePrimeDisplay(${i})">
-          <div class="f-hint">Typical range: 28–38% (varies by concept)</div></div>
-        <div class="f-group"><label class="f-label">Prime Cost Target %</label>
-          <div class="f-input" id="prime_display_${i}" style="background:#f5f0e8;color:var(--muted);cursor:default;display:flex;align-items:center">${((loc.foodTarget||31) + (loc.laborTarget||34))}% <span style="margin-left:8px;font-size:9px;color:var(--muted)">(auto)</span></div>
-          <div class="f-hint">Food + Labor combined — updates automatically</div></div>
-      </div>
-    </div>`).join('');
-}
-
-function addLocation() {
-  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', supplies:'', marketing:'', software:'', foodTarget:31, laborTarget:34 });
-  renderLocationForms();
-}
-
-function removeLocation(i) {
-  state.locations.splice(i, 1);
-  renderLocationForms();
-}
-
-function updateLocation(i, key, value) {
-  state.locations[i][key] = value;
-}
-
-function updatePrimeDisplay(i) {
-  var el = document.getElementById('prime_display_' + i);
-  if (!el) return;
-  var food = parseFloat(state.locations[i].foodTarget) || 31;
-  var labor = parseFloat(state.locations[i].laborTarget) || 34;
-  el.innerHTML = (food + labor).toFixed(1) + '% <span style="margin-left:8px;font-size:9px;color:var(--muted)">(auto)</span>';
-}
-
-async function saveLocations() {
-  clearAlerts();
-  const valid = state.locations.every(l => l.name && l.address);
-  if (!valid) return showAlert('s2_alert', 'Please enter a name and address for every location.', 'error');
-
-  setLoading('s2_btn', true);
-  try {
-    var clientId = state.clientId || localStorage.getItem('rd_client_id');
-    if (!clientId) throw new Error('Session expired. Please refresh and try again.');
-    const saved = await apiFetch('/api/locations/bulk', 'POST', {
-      client_id: clientId,
-      locations: state.locations
-    });
-    state.clientId = clientId;
-    state.locations = saved.locations; // get back with IDs
-    goToStep(3);
-  } catch(e) {
-    showAlert('s2_alert', e.message, 'error');
-  }
-  setLoading('s2_btn', false);
-}
-
-// ── STEP 3: POS ───────────────────────────────────────────────────────────────
-const POS_SYSTEMS = [
-  { id:'toast',      icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF6B35"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">T</text></svg>', name:'Toast POS',      desc:'Coming soon — use CSV for now', live: false },
-  { id:'square',     icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#006AFF"/><rect x="7" y="7" width="14" height="14" rx="2" fill="white"/><rect x="11" y="11" width="6" height="6" fill="#006AFF"/></svg>', name:'Square',          desc:'Easy setup · Auto-connects',      live: true },
-  { id:'clover',     icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#1DA462"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="16" font-weight="900" fill="white">C</text></svg>', name:'Clover',          desc:'Coming soon — use CSV for now',   live: false },
-  { id:'lightspeed', icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#E8222B"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">LS</text></svg>', name:'Lightspeed',      desc:'Coming soon — use CSV for now',   live: false },
-  { id:'revel',      icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#1B3A6B"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">R</text></svg>', name:'Revel',           desc:'Coming soon — use CSV for now',   live: false },
-  { id:'spoton',     icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#0066CC"/><circle cx="14" cy="14" r="6" fill="white"/><circle cx="14" cy="14" r="3" fill="#0066CC"/></svg>', name:'SpotOn',          desc:'Coming soon — use CSV for now',   live: false },
-  { id:'touchbistro',icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#003087"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">TB</text></svg>', name:'TouchBistro',     desc:'Coming soon — use CSV for now',   live: false },
-  { id:'csv',        icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#4A5568"/><rect x="7" y="8" width="14" height="2" rx="1" fill="white"/><rect x="7" y="13" width="14" height="2" rx="1" fill="white"/><rect x="7" y="18" width="10" height="2" rx="1" fill="white"/></svg>', name:'Other / CSV Upload', desc:'Works with any POS system',   live: true },
-];
-
-let selectedPOS = null;
-
-function renderPOSStep() {
-  const grid = document.getElementById('pos_grid');
-  grid.innerHTML = POS_SYSTEMS.map(p => {
-    const isConnected = Object.values(state.connectedPOS).some(c => c.provider === p.id);
-    const isLive = p.live !== false;
-    return '<div class="conn-card ' + (isConnected ? 'connected' : '') + (isLive ? '' : ' coming-soon') + '" '
-      + (isLive ? 'onclick="selectPOS(\'' + p.id + '\')"' : '')
-      + ' id="pos_card_' + p.id + '" style="' + (isLive ? '' : 'opacity:0.45;cursor:not-allowed') + '">'
-      + '<div class="conn-icon">' + p.icon + '</div>'
-      + '<div>'
-      + '<div class="conn-name">' + p.name + (isLive ? '' : ' <span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);background:#f0ece4;padding:2px 6px;border-radius:10px;vertical-align:middle">soon</span>') + '</div>'
-      + '<div class="conn-desc">' + p.desc + '</div>'
-      + '<div class="conn-status">' + (isConnected ? '✓ Connected' : isLive ? 'Click to connect' : 'Use CSV upload instead') + '</div>'
-      + '</div></div>';
-  }).join('');
-  // Show location selector if multiple locations
-  const locSel = document.getElementById('pos_loc_selector');
-  if (state.locations.length > 1) {
-    locSel.style.display = 'block';
-    locSel.innerHTML = '<div class="f-group"><label class="f-label">Which location?</label><select class="f-select" id="pos_loc_id">' +
-      state.locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('') +
-      '</select></div>';
-  }
-}
-
-function selectPOS(posId) {
-  selectedPOS = posId;
-  document.querySelectorAll('.conn-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('pos_card_' + posId)?.classList.add('selected');
-  document.querySelectorAll('.pos-detail').forEach(d => d.classList.remove('open'));
-  const detail = document.getElementById('pos_detail_' + posId);
-  if (detail) detail.classList.add('open');
-}
-
-function connectPOSOAuth(provider) {
-  const locId = document.getElementById('pos_loc_id')?.value || state.locations[0]?.id;
-  // Store state for when OAuth returns
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, locId, step: 3 }));
-
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + provider);
-  const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
-
-  const urls = {
-    toast:      `${CONFIG.toastOAuthUrl}?client_id=${CONFIG.toastClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-    square:     `${CONFIG.squareOAuthUrl}?client_id=${CONFIG.squareAppId}&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+EMPLOYEES_READ&redirect_uri=${redirectUri}&state=${oauthState2}`,
-    clover:     `${CONFIG.cloverOAuthUrl}?client_id=${CONFIG.cloverAppId}&redirect_uri=${redirectUri}&state=${oauthState2}`,
-    lightspeed: `https://cloud.lightspeedapp.com/oauth/authorize.php?response_type=code&client_id=${CONFIG.lightspeedClientId}&scope=employee:all&redirect_uri=${redirectUri}&state=${oauthState2}`,
-  };
-
-  if (urls[provider]) {
-    window.location.href = urls[provider];
-  }
-}
-
-async function handleOAuthCallback(provider, code, encodedState) {
-  showAlert('cb_alert', `Connecting ${provider}...`, 'info');
-  try {
-    const savedState = JSON.parse(atob(encodedState || '{}'));
-    const clientId = savedState.clientId || localStorage.getItem('rd_client_id');
-    const locId = savedState.locId;
-    state.token = localStorage.getItem('rd_token');
-    state.clientId = clientId;
-
-    // Exchange code for token via our API
-    const res = await apiFetch('/api/oauth/exchange', 'POST', { provider, code, location_id: locId, client_id: clientId });
-    if (res.success) {
-      showAlert('cb_alert', `${provider} connected successfully! Redirecting...`, 'success');
-      // Restore saved state and continue
-      const savedOnboardState = localStorage.getItem('rd_onboard_state');
-      if (savedOnboardState) Object.assign(state, JSON.parse(savedOnboardState));
-      state.connectedPOS[locId] = { provider, status: 'connected' };
-      setTimeout(() => { window.history.replaceState({}, '', window.location.pathname); renderStep(3); }, 1500);
-    } else throw new Error(res.error || 'Connection failed');
-  } catch(e) {
-    showAlert('cb_alert', 'Connection failed: ' + e.message, 'error');
-  }
-}
-
-const CSV_INSTRUCTIONS = {
-  toast: {
-    name: 'Toast POS',
-    steps: [
-      'Log in to your Toast account at <b>pos.toasttab.com</b>',
-      'Go to <b>Reports → Daily Sales Summary</b>',
-      'Select your date range (last 30-90 days recommended)',
-      'Click <b>Export → Download as CSV</b>',
-      'Upload the downloaded file below'
-    ],
-    columns: 'Toast exports include Date, Net Sales, Covers, and Payment Method columns — all supported automatically.'
-  },
-  clover: {
-    name: 'Clover',
-    steps: [
-      'Log in to your Clover dashboard at <b>clover.com/dashboard</b>',
-      'Go to <b>Reporting → Sales Summary</b>',
-      'Select your date range',
-      'Click the <b>Export</b> button (top right)',
-      'Choose <b>CSV</b> format and download',
-      'Upload the downloaded file below'
-    ],
-    columns: 'Clover CSVs include Date, Gross Sales, Net Sales, and Transaction Count — all mapped automatically.'
-  },
-  lightspeed: {
-    name: 'Lightspeed',
-    steps: [
-      'Log in to your Lightspeed back office',
-      'Go to <b>Reports → Sales → Daily Sales</b>',
-      'Set your date range',
-      'Click <b>Export to CSV</b>',
-      'Upload the downloaded file below'
-    ],
-    columns: 'Lightspeed exports are fully supported. Include at minimum Date and Sales columns.'
-  },
-  spoton: {
-    name: 'SpotOn',
-    steps: [
-      'Log in to your SpotOn dashboard',
-      'Go to <b>Analytics → Sales Reports</b>',
-      'Select date range and click <b>Export</b>',
-      'Download the CSV file',
-      'Upload the downloaded file below'
-    ],
-    columns: 'SpotOn exports include all columns needed for food cost and labor tracking.'
-  },
-  revel: {
-    name: 'Revel Systems',
-    steps: [
-      'Log in to your Revel Management Console',
-      'Go to <b>Reports → Sales → Daily Summary</b>',
-      'Select your date range',
-      'Click <b>Export</b> and choose CSV',
-      'Upload the downloaded file below'
-    ],
-    columns: 'Revel exports are fully supported.'
-  },
-  aloha: {
-    name: 'Aloha / NCR',
-    steps: [
-      'Open your Aloha Manager or NCR Silver back office',
-      'Go to <b>Reports → Daily Sales Report</b>',
-      'Set date range and run the report',
-      'Click <b>Export → CSV</b>',
-      'Upload the downloaded file below'
-    ],
-    columns: 'Aloha exports are supported. Include Date, Net Sales, and Cover Count columns if available.'
-  },
-  micros: {
-    name: 'Oracle MICROS',
-    steps: [
-      'Log in to your MICROS Reporting & Analytics portal',
-      'Navigate to <b>Sales Summary Report</b>',
-      'Select your locations and date range',
-      'Click <b>Export → CSV</b>',
-      'Upload the downloaded file below'
-    ],
-    columns: 'MICROS exports are fully supported.'
-  },
-  other: {
-    name: 'your POS',
-    steps: [
-      'Log in to your POS back office or reporting portal',
-      'Find the <b>Sales Summary</b> or <b>Daily Sales Report</b> section',
-      'Select your date range (last 30-90 days is ideal)',
-      'Export as <b>CSV</b>',
-      'Upload the downloaded file below'
-    ],
-    columns: 'We need at minimum: Date, Gross or Net Sales. Covers/transactions, food cost, and payment breakdown are optional but improve accuracy.'
-  }
-};
-
-function showCSVInstructions() {
-  const type = document.getElementById('csv_pos_type').value;
-  const instructDiv = document.getElementById('csv_instructions');
-  if (!type) { instructDiv.style.display = 'none'; return; }
-  const data = CSV_INSTRUCTIONS[type];
-  document.getElementById('csv_pos_name').textContent = data.name;
-  document.getElementById('csv_steps').innerHTML = data.steps.map(s => '<li>' + s + '</li>').join('');
-  document.getElementById('csv_columns_note').textContent = data.columns;
-  instructDiv.style.display = 'block';
-}
-
-function handleCSVDrop(event, type) {
-  event.preventDefault();
-  document.getElementById('csv_drop_zone').style.borderColor = '';
-  var file = event.dataTransfer.files[0];
-  if (file) previewGenericCSV(file, type || 'sales', 'csv_preview', 'pos_alert');
-}
-
-async function showCSVPreview(file, type) {
-  // Route through previewGenericCSV for consistent behavior
-  await previewGenericCSV(file, type || 'sales', 'csv_preview', 'pos_alert');
-}
-
-async function doCSVUpload(type) {
-  // Route through doGenericUpload for consistent behavior
-  await doGenericUpload(type || 'sales', 'csv_preview', 'pos_alert');
-}
-
-async function uploadCSV(type, input) {
-  const file = input.files[0];
-  if (!file) return;
-  // Show preview first for pos_csv, direct upload for others
-  if (input.id === 'pos_csv') {
-    showCSVPreview(file, type);
-    return;
-  }
-  const text = await file.text();
-  const locId = state.locations[0]?.id;
-  try {
-    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type, content: text });
-    showAlert('pos_alert', '✓ Data uploaded — your dashboard will update shortly.', 'success');
-    state.connectedPOS[locId] = { provider: 'csv', status: 'connected' };
-    renderPOSStep();
-  } catch(e) {
-    showAlert('pos_alert', e.message, 'error');
-  }
-}
-
-function skipPOS() {
-  showAlert('pos_alert', 'No problem — you can connect your POS from Settings after signup.', 'info');
-  setTimeout(() => goToStep(4), 1200);
-}
-
-// ── STEP 4: DELIVERY ──────────────────────────────────────────────────────────
-const DELIVERY_PLATFORMS = [
-  { id:'doordash', icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF3008"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">DD</text></svg>', name:'DoorDash',   desc:'Coming soon — use CSV for now',  live:false },
-  { id:'ubereats', icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#06C167"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">UE</text></svg>', name:'Uber Eats',  desc:'Coming soon — use CSV for now',  live:false },
-  { id:'grubhub',  icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#F63440"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">GH</text></svg>', name:'GrubHub',    desc:'Coming soon — use CSV for now',  live:false },
-  { id:'csv',      icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#4A5568"/><rect x="7" y="8" width="14" height="2" rx="1" fill="white"/><rect x="7" y="13" width="14" height="2" rx="1" fill="white"/><rect x="7" y="18" width="10" height="2" rx="1" fill="white"/></svg>', name:'CSV Upload', desc:'Upload payout reports manually', live:true  },
-];
-
-function renderDeliveryStep() {
-  const grid = document.getElementById('del_grid');
-  grid.innerHTML = DELIVERY_PLATFORMS.map(p => {
-    const anyLoc = state.locations[0];
-    const isConn = state.connectedDelivery[anyLoc?.id]?.providers?.includes(p.id);
-    const isLive = p.live !== false;
-    return '<div class="conn-card ' + (isConn ? 'connected' : '') + '" '
-      + (isLive ? 'onclick="selectDelivery(\'' + p.id + '\')"' : '')
-      + ' id="del_card_' + p.id + '" style="' + (isLive ? '' : 'opacity:0.45;cursor:not-allowed') + '">'
-      + '<div class="conn-icon">' + p.icon + '</div>'
-      + '<div>'
-      + '<div class="conn-name">' + p.name + (isLive ? '' : ' <span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);background:#f0ece4;padding:2px 6px;border-radius:10px">soon</span>') + '</div>'
-      + '<div class="conn-desc">' + p.desc + '</div>'
-      + '<div class="conn-status">' + (isConn ? '✓ Connected' : isLive ? 'Click to connect' : 'Use CSV upload instead') + '</div>'
-      + '</div></div>';
-  }).join('');
-}
-
-function selectDelivery(platformId) {
-  document.querySelectorAll('#del_grid .conn-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('del_card_' + platformId)?.classList.add('selected');
-  document.querySelectorAll('.del-detail').forEach(d => d.classList.remove('open'));
-  document.getElementById('del_detail_' + platformId)?.classList.add('open');
-}
-
-async function connectDeliveryOAuth(platform) {
-  const locId = state.locations[0]?.id;
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider: platform, locId, step: 4 }));
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + platform);
-  const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
-
-  const urls = {
-    doordash: `https://identity.doordash.com/auth?response_type=code&client_id=${CONFIG.doordashClientId}&redirect_uri=${redirectUri}&scope=merchant.report&state=${oauthState2}`,
-    ubereats:  `https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=${CONFIG.uberClientId}&redirect_uri=${redirectUri}&scope=eats.report&state=${oauthState2}`,
-    grubhub:  `https://api.grubhub.com/oauth/authorize?response_type=code&client_id=${CONFIG.grubhubClientId}&redirect_uri=${redirectUri}&state=${oauthState2}`,
-  };
-  if (urls[platform]) window.location.href = urls[platform];
-}
-
-async function setDeliveryCommission(platform) {
-  const rate = document.getElementById(`${platform}_rate`)?.value;
-  const locId = state.locations[0]?.id;
-  if (!rate) return;
-  try {
-    await apiFetch('/api/delivery/commission', 'POST', { client_id: state.clientId, location_id: locId, platform, commission_rate: parseFloat(rate) });
-    if (!state.connectedDelivery[locId]) state.connectedDelivery[locId] = { providers: [] };
-    if (!state.connectedDelivery[locId].providers.includes(platform)) state.connectedDelivery[locId].providers.push(platform);
-    document.getElementById('del_card_' + platform)?.classList.add('connected');
-    showAlert('del_alert', `${platform} commission rate saved.`, 'success');
-  } catch(e) {
-    showAlert('del_alert', e.message, 'error');
-  }
-}
-
-function skipDelivery() {
-  showAlert('del_alert', 'You can connect delivery platforms from Settings anytime.', 'info');
-  setTimeout(() => goToStep(5), 1000);
-}
-
-// ── STEP 5: PAYROLL ───────────────────────────────────────────────────────────
-const PAYROLL_SYSTEMS = [
-  { id:'homebase',       icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#6C4BFF"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">HB</text></svg>', name:'Homebase',         desc:'Most common in restaurants · Scheduling + payroll' , live:false},
-  { id:'gusto', live:false,          icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#F45D48"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="white">G</text></svg>', name:'Gusto',            desc:'Popular for small businesses' },
-  { id:'7shifts',        icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#1B6FE4"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">7S</text></svg>',  name:'7shifts',         desc:'Restaurant-specific scheduling' , live:false},
-  { id:'square_payroll', icon:'⬛', name:'Square Payroll',   desc:'If you use Square POS' },
-  { id:'toast_payroll',  icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#FF6B35"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="10" font-weight="900" fill="white">TP</text></svg>', name:'Toast Payroll',    desc:'Built into Toast — auto-synced' , live:false},
-  { id:'adp', live:false,            icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#CC0000"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">ADP</text></svg>', name:'ADP',              desc:'Enterprise payroll' , live:false},
-  { id:'csv',            icon:'📄', name:'CSV Export',       desc:'Export weekly hours manually' },
-];
-
-function renderPayrollStep() {
-  const grid = document.getElementById('payroll_grid');
-  grid.innerHTML = PAYROLL_SYSTEMS.map(function(p) {
-    var isConn = state.connectedPayroll && state.connectedPayroll[state.locations[0] && state.locations[0].id] && state.connectedPayroll[state.locations[0].id].provider === p.id;
-    var isLive = p.live !== false;
-    return '<div class="conn-card ' + (isConn ? 'connected' : '') + '" '
-      + (isLive ? 'onclick="selectPayroll(\'' + p.id + '\')"' : '')
-      + ' id="pay_card_' + p.id + '" style="' + (isLive ? '' : 'opacity:0.45;cursor:not-allowed') + '">'
-      + '<div class="conn-icon">' + p.icon + '</div>'
-      + '<div>'
-      + '<div class="conn-name">' + p.name + (isLive ? '' : ' <span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);background:#f0ece4;padding:2px 6px;border-radius:10px">soon</span>') + '</div>'
-      + '<div class="conn-desc">' + p.desc + '</div>'
-      + '<div class="conn-status">' + (isConn ? '\u2713 Connected' : isLive ? 'Click to connect' : 'Use CSV upload instead') + '</div>'
-      + '</div></div>';
-  }).join('');
-}
-
-function selectPayroll(provider) {
-  document.querySelectorAll('#payroll_grid .conn-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('pay_card_' + provider)?.classList.add('selected');
-  document.querySelectorAll('.pay-detail').forEach(d => d.classList.remove('open'));
-  document.getElementById('pay_detail_' + provider)?.classList.add('open');
-}
-
-async function connectPayrollOAuth(provider) {
-  localStorage.setItem('rd_oauth_state', JSON.stringify({ provider, step: 5 }));
-  const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname + '?callback=' + provider);
-  const oauthState2 = btoa(JSON.stringify({ clientId: state.clientId }));
-
-  const urls = {
-    homebase: `https://app.joinhomebase.com/oauth/authorize?client_id=${CONFIG.homebaseClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-    gusto:    `https://api.gusto.com/oauth/authorize?client_id=${CONFIG.gustoClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-    '7shifts': `https://app.7shifts.com/oauth2/authorize?client_id=${CONFIG.shiftsClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-  };
-  if (urls[provider]) window.location.href = urls[provider];
-}
-
-function skipPayroll() {
-  showAlert('pay_alert', 'Labor data will show as estimated until payroll is connected.', 'info');
-  setTimeout(() => goToStep(6), 1000);
-}
-
-// ── STEP 6: REVIEW + PAYMENT ─────────────────────────────────────────────────
-function renderReviewStep() {
-  const posCount = Object.keys(state.connectedPOS).length;
-  const delCount = Object.values(state.connectedDelivery).reduce((s, d) => s + (d.providers?.length || 0), 0);
-
-  document.getElementById('review_content').innerHTML = `
-    <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName}</span></div>
-    <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}</span></div>
-    <div class="summary-row"><span class="summary-label">POS Connected</span><span class="summary-val ${posCount > 0 ? 'good' : 'warn'}">${posCount > 0 ? posCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Delivery Platforms</span><span class="summary-val ${delCount > 0 ? 'good' : 'warn'}">${delCount > 0 ? delCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email}</span></div>
-  `;
-}
-
-async function startCheckout() {
-  setLoading('checkout_btn', true);
-  try {
-    localStorage.setItem('rd_onboard_state', JSON.stringify(state));
-
-    // Check if this client is a pilot account - bypass Stripe if so
-    const clientId = state.clientId || localStorage.getItem('rd_client_id');
-    if (clientId) {
-      const clientData = await apiFetch('/api/clients/' + clientId);
-      if (clientData && clientData.is_pilot) {
-        // Pilot account - skip billing, go straight to dashboard
-        localStorage.setItem('rd_pilot', 'true');
-        localStorage.removeItem('rd_onboarding');
-        localStorage.setItem('rd_setup_complete', 'true');
-        await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
-        window.location.href = '/dashboard';
-        return;
-      }
-    }
-
-    const res = await apiFetch('/api/create-checkout-session', 'POST', {
-      user_id: state.userId,
-      email: state.email,
-      price_id: CONFIG.priceId,
-    });
-    window.location.href = res.url;
-  } catch(e) {
-    showAlert('review_alert', e.message, 'error');
-    setLoading('checkout_btn', false);
-  }
-}
-
-async function handlePaymentSuccess(sessionId) {
-  localStorage.removeItem('rd_onboarding');
-  localStorage.setItem('rd_setup_complete', 'true');
-  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-  document.getElementById('panel_success').style.display = 'block';
-  // Trigger initial data sync
-  try {
-    const clientId = localStorage.getItem('rd_client_id');
-    await apiFetch('/api/sync/trigger', 'POST', { client_id: clientId });
-  } catch(e) {}
-}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-const val = id => document.getElementById(id)?.value?.trim() || '';
-
-function showAlert(id, msg, type) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = msg;
-  el.className = `alert show ${type}`;
+function val(id){ return (document.getElementById(id)||{}).value || ''; }
+function setBtn(id, loading){
+  var b = document.getElementById(id);
+  if(!b) return;
+  b.disabled = loading;
+  b.textContent = loading ? 'Please wait...' : b.dataset.label || b.textContent;
+}
+function showAlert(id, msg, type){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.className = 'alert show ' + type;
+  el.innerHTML = msg;
+}
+function clearAlert(id){
+  var el = document.getElementById(id);
+  if(el){ el.className = 'alert'; el.innerHTML = ''; }
+}
+function save1(){
+  var n = val('s1_name'), e = val('s1_email');
+  if(n) localStorage.setItem('rd_s1_name', n);
+  if(e) localStorage.setItem('rd_s1_email', e);
+}
+function saveState(){
+  localStorage.setItem('rd_onboard_state', JSON.stringify(state));
 }
 
-function clearAlerts() {
-  document.querySelectorAll('.alert').forEach(a => a.classList.remove('show'));
-}
-
-function setLoading(id, loading) {
-  const btn = document.getElementById(id);
-  if (!btn) return;
-  if (loading) {
-    btn.disabled = true;
-    btn._orig = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span>Please wait...';
-  } else {
-    btn.disabled = false;
-    btn.innerHTML = btn._orig || btn.innerHTML;
-  }
-}
-
-async function supabaseFetch(path, method, body) {
-  const res = await fetch(CONFIG.supabaseUrl + path, {
-    method,
-    headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.supabaseKey },
-    body: JSON.stringify(body)
+async function sbFetch(path, method, body){
+  var res = await fetch(SB_URL + path, {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+    body: body ? JSON.stringify(body) : undefined,
   });
   return res.json();
 }
 
-async function apiFetch(path, method = 'GET', body = null) {
-  const token = state.token || localStorage.getItem('rd_token');
-  const opts = {
-    method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(CONFIG.apiBase + path, opts);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || data.error || 'Request failed');
+async function apiFetch(path, method, body){
+  var token = state.token || localStorage.getItem('rd_token');
+  var res = await fetch(API + path, {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json', ...(token ? {'Authorization': 'Bearer ' + token} : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  var data = await res.json();
+  if(!res.ok) throw new Error(data.detail || data.message || 'Request failed');
   return data;
 }
 
-
-// API key connection helper
-async function connectAPIKey(provider, fieldMap) {
-  const locId = state.locations[0]?.id;
-  const credentials = {};
-  // Collect field values dynamically
-  const fieldIds = {
-    revel:  ['revel_url','revel_key','revel_secret'],
-    spoton: ['spoton_key','spoton_loc'],
-    adp:    ['adp_client_id','adp_secret'],
-  };
-  (fieldIds[provider] || []).forEach(id => {
-    credentials[id.replace(provider + '_','')] = document.getElementById(id)?.value || '';
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function show(n){
+  // Hide all
+  ['1','1b','2','3','4','5','6','_success'].forEach(function(s){
+    var el = document.getElementById('step' + s);
+    if(el) el.style.display = 'none';
   });
-  try {
-    await apiFetch('/api/integrations/apikey', 'POST', {
-      client_id: state.clientId, location_id: locId, provider, credentials
-    });
-    state.connectedPOS[locId] = { provider, status: 'connected' };
-    showAlert('pos_alert', provider + ' connected.', 'success');
-    renderPOSStep();
-  } catch(e) {
-    showAlert('pos_alert', e.message, 'error');
-  }
-}
-
-function renderStep(n) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById('panel' + n);
-  if (panel) panel.classList.add('active');
-  for (let i = 1; i <= 6; i++) {
-    const s = document.getElementById('prog' + i);
-    const c = document.getElementById('conn' + i);
-    if (!s) continue;
-    s.classList.remove('active','done');
-    if (i < n) {
-      s.classList.add('done');
-      s.style.cursor = 'pointer';
-      s.onclick = (function(step){ return function(){ goToStep(step); }; })(i);
-    } else {
-      s.style.cursor = 'default';
-      s.onclick = null;
+  // Show target
+  var target = document.getElementById('step' + n);
+  if(target) target.style.display = 'block';
+  // Update state
+  state.step = n;
+  saveState();
+  // Update progress bar
+  var stepNum = parseInt(n) || (n === '1b' ? 1 : 1);
+  for(var i=1; i<=6; i++){
+    var s = document.getElementById('prog' + i);
+    var c = document.getElementById('conn' + i);
+    if(s){
+      s.className = 'prog-step' + (i < stepNum ? ' done' : '') + (i === stepNum ? ' active' : '');
+      s.textContent = i < stepNum ? '✓' : '' + i;
     }
-    if (i === n) s.classList.add('active');
-    if (c) c.classList.toggle('done', i < n);
+    if(c) c.className = 'prog-conn' + (i < stepNum ? ' done' : '');
   }
   window.scrollTo(0,0);
-  if (n === 2) renderLocationForms();
-  if (n === 3) renderPOSStep();
-  if (n === 4) renderDeliveryStep();
-  if (n === 5) renderPayrollStep();
-  if (n === 6) renderReviewStep();
+  // Render dynamic content
+  if(n === '1b') renderCategories();
+  if(n === 2)    renderLocations();
+  if(n === 3)    renderPOS();
+  if(n === 4)    renderDelivery();
+  if(n === 5)    renderPayroll();
+  if(n === 6)    renderReview();
 }
 
-// ── DELIVERY CSV INSTRUCTIONS ─────────────────────────────────────────────────
-var DELIVERY_CSV_STEPS = {
-  doordash: {
-    name: 'DoorDash',
-    steps: [
-      'Log in to <b>restaurant.doordash.com</b>',
-      'Go to <b>Financials → Payouts</b>',
-      'Select your date range',
-      'Click <b>Download CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  ubereats: {
-    name: 'Uber Eats',
-    steps: [
-      'Log in to <b>restaurants.ubereats.com</b>',
-      'Go to <b>Payments → Statements</b>',
-      'Select the statement period',
-      'Click <b>Download</b> to get the CSV',
-      'Upload the file here'
-    ]
-  },
-  grubhub: {
-    name: 'Grubhub',
-    steps: [
-      'Log in to <b>restaurant.grubhub.com</b>',
-      'Go to <b>Financials → Payment History</b>',
-      'Select date range',
-      'Click <b>Export</b> to download CSV',
-      'Upload the file here'
-    ]
-  },
-  other: {
-    name: 'your platform',
-    steps: [
-      'Log in to your delivery platform dashboard',
-      'Find the <b>Financials</b> or <b>Payments</b> section',
-      'Export your payout report as CSV',
-      'Upload the file here'
-    ]
-  }
-};
+// ── STEP 1: ACCOUNT ───────────────────────────────────────────────────────────
+async function createAccount(){
+  clearAlert('alert1');
+  var email = val('s1_email').trim();
+  var pw    = val('s1_pw');
+  var pw2   = val('s1_pw2');
+  var name  = val('s1_name').trim();
 
-function showDeliveryCSVInstructions() {
-  var platform = document.getElementById('del_csv_platform').value;
-  var div = document.getElementById('del_csv_instructions');
-  if (!platform) { div.style.display = 'none'; return; }
-  var data = DELIVERY_CSV_STEPS[platform];
-  document.getElementById('del_csv_platform_name').textContent = data.name;
-  document.getElementById('del_csv_steps').innerHTML = data.steps.map(function(s){ return '<li>' + s + '</li>'; }).join('');
-  div.style.display = 'block';
-}
+  if(!email || !pw || !name) return showAlert('alert1', 'Please fill in all fields.', 'error');
+  if(pw.length < 8) return showAlert('alert1', 'Password must be at least 8 characters.', 'error');
+  if(pw !== pw2) return showAlert('alert1', 'Passwords do not match.', 'error');
 
-function handleDeliveryCSVDrop(event) {
-  event.preventDefault();
-  var file = event.dataTransfer.files[0];
-  if (file) previewGenericCSV(file, 'delivery', 'del_csv_preview', 'del_alert');
-}
+  var btn = document.getElementById('s1_btn');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
 
-function previewDeliveryCSV(input) {
-  if (input.files[0]) previewGenericCSV(input.files[0], 'delivery', 'del_csv_preview', 'del_alert');
-}
-
-// ── PAYROLL CSV INSTRUCTIONS ──────────────────────────────────────────────────
-var PAYROLL_CSV_STEPS = {
-  gusto: {
-    name: 'Gusto',
-    steps: [
-      'Log in to <b>app.gusto.com</b>',
-      'Go to <b>Reports → Payroll Reports</b>',
-      'Select your payroll period',
-      'Click <b>Download CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  adp: {
-    name: 'ADP',
-    steps: [
-      'Log in to your ADP portal',
-      'Go to <b>Reports → Payroll Summary</b>',
-      'Select date range and click <b>Export → CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  paychex: {
-    name: 'Paychex',
-    steps: [
-      'Log in to <b>mypaychex.com</b>',
-      'Go to <b>Reports → Payroll Reports</b>',
-      'Select your payroll period and export as CSV',
-      'Upload the file here'
-    ]
-  },
-  homebase: {
-    name: 'Homebase',
-    steps: [
-      'Log in to <b>joinhomebase.com</b>',
-      'Go to <b>Reports → Timesheets</b>',
-      'Select your date range',
-      'Click <b>Export CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  '7shifts': {
-    name: '7shifts',
-    steps: [
-      'Log in to <b>app.7shifts.com</b>',
-      'Go to <b>Reports → Labor Report</b>',
-      'Select date range',
-      'Click <b>Export → CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  toast_payroll: {
-    name: 'Toast Payroll',
-    steps: [
-      'Log in to your Toast account',
-      'Go to <b>Payroll → Reports</b>',
-      'Select your pay period',
-      'Click <b>Export CSV</b>',
-      'Upload the file here'
-    ]
-  },
-  other: {
-    name: 'your payroll system',
-    steps: [
-      'Log in to your payroll or scheduling system',
-      'Find the <b>Reports</b> section',
-      'Export hours and wages as CSV for your date range',
-      'Upload the file here'
-    ]
-  }
-};
-
-function showPayrollCSVInstructions() {
-  var source = document.getElementById('pay_csv_source').value;
-  var div = document.getElementById('pay_csv_instructions');
-  if (!source) { div.style.display = 'none'; return; }
-  var data = PAYROLL_CSV_STEPS[source];
-  if (!data) return;
-  document.getElementById('pay_csv_source_name').textContent = data.name;
-  document.getElementById('pay_csv_steps').innerHTML = data.steps.map(function(s){ return '<li>' + s + '</li>'; }).join('');
-  div.style.display = 'block';
-}
-
-function handlePayrollCSVDrop(event) {
-  event.preventDefault();
-  var file = event.dataTransfer.files[0];
-  if (file) previewGenericCSV(file, 'labor', 'payroll_csv_preview', 'pay_alert');
-}
-
-function previewPayrollCSV(input) {
-  if (input.files[0]) previewGenericCSV(input.files[0], 'labor', 'payroll_csv_preview', 'pay_alert');
-}
-
-// ── GENERIC CSV PREVIEW + UPLOAD ─────────────────────────────────────────────
-async function previewGenericCSV(file, type, previewId, alertId) {
-  var text = await file.text();
-  var lines = text.trim().split('\n').slice(0, 4);
-  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
-  var preview = document.getElementById(previewId);
-  preview.style.display = 'block';
-  preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:6px">PREVIEW — First 3 rows of your file</div>'
-    + '<div style="overflow-x:auto;margin-bottom:10px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
-    + headers.map(function(h){ return '<th style="padding:5px 8px;background:var(--dark);color:white;font-size:8px;font-family:IBM Plex Mono,monospace;text-align:left">' + h.slice(0,16) + '</th>'; }).join('')
-    + '</tr></thead><tbody>'
-    + lines.slice(1,4).map(function(row){
-        return '<tr>' + row.split(',').map(function(cell){
-          return '<td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px">' + cell.replace(/"/g,'').trim().slice(0,16) + '</td>';
-        }).join('') + '</tr>';
-      }).join('')
-    + '</tbody></table></div>'
-    + '<div style="display:flex;gap:8px;align-items:center">'
-    + '<button class="btn-gold" style="padding:8px 18px" onclick="doGenericUpload(' + JSON.stringify(type) + ',' + JSON.stringify(previewId) + ',' + JSON.stringify(alertId) + ')">✓ Upload This File</button>'
-    + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
-    + '</div>';
-  window['_pendingCSV_' + type] = { file: file, text: text };
-}
-
-async function doGenericUpload(type, previewId, alertId) {
-  var pending = window['_pendingCSV_' + type];
-  if (!pending) {
-    showAlert(alertId || 'pos_alert', 'Please select a file first.', 'error');
-    return;
-  }
-  if (!state.clientId) {
-    showAlert(alertId || 'pos_alert', 'Please complete account setup first.', 'error');
-    return;
-  }
-  var locId = state.locations[0]?.id || localStorage.getItem('rd_client_id');
-  var previewEl = document.getElementById(previewId);
   try {
-    if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';
-    var validation = await apiFetch('/api/csv/validate', 'POST', { type: type, content: pending.text });
-    if (!validation.valid) {
-      if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px"><strong>Cannot upload this file:</strong><br>' + validation.issues.join('<br>') + '<br><br>Check that you exported the correct report from your system.</div>';
+    var authRes = await sbFetch('/auth/v1/signup', 'POST', { email: email, password: pw });
+
+    if(authRes.error){
+      showAlert('alert1', authRes.error.message || 'Signup failed. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Create Account →';
       return;
     }
-    if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Uploading ' + validation.row_count + ' rows...</div>';
-    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text });
-    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows uploaded — your dashboard will update within a few minutes.</div>';
-    showAlert(alertId, 'Data uploaded successfully.', 'success');
+
+    state.email = email;
+    state.userId = authRes.user && authRes.user.id;
+    state.token = authRes.access_token;
+    state.restaurantName = name;
+
+    if(!state.token || !state.userId){
+      showAlert('alert1', 'Account created! Please sign in to continue.', 'success');
+      btn.disabled = false;
+      btn.textContent = 'Create Account →';
+      setTimeout(function(){ window.location.href = '/login'; }, 2000);
+      return;
+    }
+
+    localStorage.setItem('rd_token', state.token);
+
+    // Create client record
+    btn.textContent = 'Setting up...';
+    var clientRes = await apiFetch('/api/clients', 'POST', {
+      user_id: state.userId,
+      name: name,
+      email: email,
+      status: 'pending_payment',
+      referred_by: state.referredBy || undefined,
+    });
+    state.clientId = clientRes.id;
+    localStorage.setItem('rd_client_id', state.clientId);
+
+    saveState();
+    show('1b');
+
   } catch(e) {
-    var errMsg = e.message || 'Upload failed. Please try again.';
-    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px">Upload failed: ' + errMsg + '</div>';
-    showAlert(alertId || 'pos_alert', errMsg, 'error');
-    console.error('Upload error:', e);
+    showAlert('alert1', e.message || 'Something went wrong. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Create Account →';
   }
 }
 
+// ── STEP 1B: CATEGORIES ───────────────────────────────────────────────────────
+var ALL_CATS = [
+  { group: 'Restaurant Type', items: ['Fast Casual','Quick Service (QSR)','Full Service / Casual Dining','Fine Dining','Café / Coffee Shop','Bar & Grill','Bakery','Food Hall'] },
+  { group: 'Cuisine', items: ['American','Italian / Pizza','Mexican / Latin','Asian','Mediterranean','Breakfast / Brunch','Burgers','Seafood','BBQ','Other'] },
+];
+
+function renderCategories(){
+  var g = document.getElementById('cat_grid');
+  if(!g) return;
+  g.innerHTML = ALL_CATS.map(function(group){
+    return '<div class="cat-group"><div class="cat-group-label">' + group.group + '</div><div>'
+      + group.items.map(function(item){
+          var sel = state.categories.indexOf(item) >= 0;
+          return '<button class="cat-btn' + (sel?' sel':'') + '" onclick="toggleCat(this,\'' + item.replace(/'/g,"&#39;") + '\')">' + item + '</button>';
+        }).join('')
+      + '</div></div>';
+  }).join('');
+}
+
+function toggleCat(btn, item){
+  var idx = state.categories.indexOf(item);
+  if(idx >= 0){ state.categories.splice(idx,1); btn.classList.remove('sel'); }
+  else { state.categories.push(item); btn.classList.add('sel'); }
+}
+
+async function saveCategories(){
+  if(state.categories.length === 0) return showAlert('alert1b','Please select at least one category.','error');
+  clearAlert('alert1b');
+  localStorage.setItem('rd_categories', JSON.stringify(state.categories));
+  if(state.clientId){
+    apiFetch('/api/clients/' + state.clientId + '/categories', 'POST', { categories: state.categories }).catch(function(){});
+  }
+  show(2);
+}
+
+// ── STEP 2: LOCATIONS ─────────────────────────────────────────────────────────
+function addLocation(){
+  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', foodTarget:31, laborTarget:34 });
+  renderLocations();
+}
+
+function removeLocation(i){
+  state.locations.splice(i,1);
+  renderLocations();
+}
+
+function updateLoc(i, key, val){
+  state.locations[i][key] = val;
+  if(key === 'foodTarget' || key === 'laborTarget') updatePrime(i);
+}
+
+function updatePrime(i){
+  var el = document.getElementById('prime_' + i);
+  if(!el) return;
+  var f = parseFloat(state.locations[i].foodTarget) || 31;
+  var l = parseFloat(state.locations[i].laborTarget) || 34;
+  el.textContent = (f+l).toFixed(1) + '% (auto)';
+}
+
+function renderLocations(){
+  if(state.locations.length === 0) addLocation();
+  var c = document.getElementById('loc_forms');
+  if(!c) return;
+  c.innerHTML = state.locations.map(function(loc,i){
+    return '<div class="loc-block">'
+      + '<div class="loc-num">Location ' + (i+1) + (i===0?' · Primary':'') + (i>0?' <button onclick="removeLocation('+i+')" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">✕ Remove</button>':'') + '</div>'
+      + '<div class="f-row"><div class="f-group"><label class="f-label">Location Name (e.g. Downtown, Midtown)</label>'
+      + '<input class="f-input" placeholder="e.g. Downtown" value="' + (loc.name||'') + '" oninput="updateLoc('+i+',\'name\',this.value)"></div>'
+      + '<div class="f-group"><label class="f-label">Address</label>'
+      + '<input class="f-input" placeholder="458 W 46th St, New York" value="' + (loc.address||'') + '" oninput="updateLoc('+i+',\'address\',this.value)"></div></div>'
+      + '<div class="section-div">Fixed Monthly Costs</div>'
+      + '<div class="f-row3">'
+      + '<div class="f-group"><label class="f-label">Rent ($)</label><input class="f-input" type="number" placeholder="8200" value="' + (loc.rent||'') + '" oninput="updateLoc('+i+',\'rent\',this.value)"></div>'
+      + '<div class="f-group"><label class="f-label">Utilities ($)</label><input class="f-input" type="number" placeholder="1800" value="' + (loc.utilities||'') + '" oninput="updateLoc('+i+',\'utilities\',this.value)"></div>'
+      + '<div class="f-group"><label class="f-label">Insurance ($)</label><input class="f-input" type="number" placeholder="980" value="' + (loc.insurance||'') + '" oninput="updateLoc('+i+',\'insurance\',this.value)"></div>'
+      + '</div>'
+      + '<div class="section-div">Cost Targets</div>'
+      + '<div class="f-row3">'
+      + '<div class="f-group"><label class="f-label">Food Cost Target %</label>'
+      + '<input class="f-input" type="number" placeholder="31" value="' + (loc.foodTarget||'') + '" oninput="updateLoc('+i+',\'foodTarget\',this.value)">'
+      + '<div class="f-hint">Typical: 28–35%</div></div>'
+      + '<div class="f-group"><label class="f-label">Labor Cost Target %</label>'
+      + '<input class="f-input" type="number" placeholder="34" value="' + (loc.laborTarget||'') + '" oninput="updateLoc('+i+',\'laborTarget\',this.value)">'
+      + '<div class="f-hint">Typical: 28–38%</div></div>'
+      + '<div class="f-group"><label class="f-label">Prime Cost Target %</label>'
+      + '<div class="f-input" id="prime_' + i + '" style="background:#f5f0e8;color:var(--muted)">' + ((loc.foodTarget||31)+(loc.laborTarget||34)).toFixed(1) + '% (auto)</div>'
+      + '<div class="f-hint">Food + Labor · Under 62–65%</div></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function saveLocations(){
+  clearAlert('alert2');
+  var valid = state.locations.every(function(l){ return l.name && l.address; });
+  if(!valid) return showAlert('alert2','Please enter a name and address for every location.','error');
+
+  var btn = document.getElementById('s2_btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  try {
+    var clientId = state.clientId || localStorage.getItem('rd_client_id');
+    if(!clientId) throw new Error('Session expired — please refresh.');
+    state.clientId = clientId;
+
+    var saved = await apiFetch('/api/locations/bulk', 'POST', {
+      client_id: clientId,
+      locations: state.locations,
+    });
+    state.locations = saved.locations || state.locations;
+    saveState();
+    show(3);
+  } catch(e){
+    showAlert('alert2', e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Save & Continue →';
+}
+
+// ── SYSTEMS DATA ──────────────────────────────────────────────────────────────
+function svgIcon(bg, text, size){
+  size = size || 13;
+  return '<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="' + bg + '"/><text x="14" y="20" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="' + size + '" font-weight="900" fill="white">' + text + '</text></svg>';
+}
+
+var POS_SYSTEMS = [
+  { id:'square',  icon:'<svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#006AFF"/><rect x="7" y="7" width="14" height="14" rx="2" fill="white"/><rect x="11" y="11" width="6" height="6" fill="#006AFF"/></svg>', name:'Square', desc:'Auto-connects', live:true },
+  { id:'toast',   icon:svgIcon('#FF6B35','T'), name:'Toast POS',   desc:'Coming soon', live:false },
+  { id:'clover',  icon:svgIcon('#1DA462','C'), name:'Clover',      desc:'Coming soon', live:false },
+  { id:'csv',     icon:svgIcon('#4A5568','CSV',10), name:'Other / CSV', desc:'Any POS', live:true },
+];
+
+var DEL_SYSTEMS = [
+  { id:'doordash', icon:svgIcon('#FF3008','DD'), name:'DoorDash',  desc:'CSV upload', live:true },
+  { id:'ubereats', icon:svgIcon('#06C167','UE'), name:'Uber Eats', desc:'CSV upload', live:true },
+  { id:'grubhub',  icon:svgIcon('#F63440','GH'), name:'GrubHub',   desc:'CSV upload', live:true },
+];
+
+var PAY_SYSTEMS = [
+  { id:'gusto',    icon:svgIcon('#F45D48','G'),  name:'Gusto',         desc:'Coming soon', live:false },
+  { id:'homebase', icon:svgIcon('#6C4BFF','HB'), name:'Homebase',      desc:'Coming soon', live:false },
+  { id:'adp',      icon:svgIcon('#CC0000','ADP',10), name:'ADP',       desc:'Coming soon', live:false },
+  { id:'csv',      icon:svgIcon('#4A5568','CSV',10), name:'CSV Upload', desc:'Any payroll', live:true },
+];
+
+// ── CSV UPLOAD ────────────────────────────────────────────────────────────────
+function renderCSVUpload(type, alertId, previewId, instructions){
+  var locId = (state.locations[0] || {}).id || '';
+  return '<div class="section-div">CSV Upload</div>'
+    + (instructions || '')
+    + '<div class="csv-zone" onclick="document.getElementById(\'file_' + type + '\').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event,\'' + type + '\',\'' + alertId + '\',\'' + previewId + '\')">'
+    + '<input type="file" id="file_' + type + '" accept=".csv" style="display:none" onchange="handleFile(this,\'' + type + '\',\'' + alertId + '\',\'' + previewId + '\')">'
+    + '<div class="csv-zone-icon">📄</div>'
+    + '<div class="csv-zone-label">Drag & drop CSV here, or click to browse</div>'
+    + '</div>'
+    + '<div id="' + previewId + '" class="csv-preview"></div>';
+}
+
+function handleDrop(e, type, alertId, previewId){
+  e.preventDefault();
+  var file = e.dataTransfer.files[0];
+  if(file) processCSV(file, type, alertId, previewId);
+}
+
+function handleFile(input, type, alertId, previewId){
+  var file = input.files[0];
+  if(file) processCSV(file, type, alertId, previewId);
+}
+
+async function processCSV(file, type, alertId, previewId){
+  var prev = document.getElementById(previewId);
+  if(prev) prev.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);padding:8px">Reading file...</div>';
+
+  var text = await file.text();
+  var lines = text.trim().split('\n');
+  var headers = lines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+
+  // Show preview
+  if(prev){
+    var previewHtml = '<div style="overflow-x:auto;margin:10px 0"><table style="font-size:10px;border-collapse:collapse;width:100%"><thead><tr>'
+      + headers.slice(0,5).map(function(h){ return '<th style="padding:4px 8px;background:var(--dark);color:#fff;text-align:left;font-family:IBM Plex Mono,monospace;font-size:8px">' + h.slice(0,16) + '</th>'; }).join('')
+      + '</tr></thead><tbody>'
+      + lines.slice(1,3).map(function(row){
+          return '<tr>' + row.split(',').slice(0,5).map(function(v){
+            return '<td style="padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-size:10px">' + v.replace(/"/g,'').trim().slice(0,16) + '</td>';
+          }).join('') + '</tr>';
+        }).join('')
+      + '</tbody></table></div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">' + (lines.length-1) + ' rows · ' + file.name + '</div>'
+      + '<button class="btn-gold" onclick="uploadCSV(\'' + type + '\',\'' + alertId + '\',\'' + previewId + '\')" style="font-size:9px;padding:8px 16px">✓ Upload This File</button>';
+    prev.innerHTML = previewHtml;
+    window['_csv_' + type] = { text: text, name: file.name };
+  }
+}
+
+async function uploadCSV(type, alertId, previewId){
+  var pending = window['_csv_' + type];
+  if(!pending) return;
+
+  var prev = document.getElementById(previewId);
+  if(prev) prev.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);padding:8px">Uploading...</div>';
+
+  try {
+    var clientId = state.clientId || localStorage.getItem('rd_client_id');
+    var locId = (state.locations[0] || {}).id || '';
+    await apiFetch('/api/csv/upload', 'POST', {
+      client_id: clientId,
+      location_id: locId,
+      type: type,
+      content: pending.text,
+    });
+    if(prev) prev.innerHTML = '<div style="padding:10px;background:#e8f5ee;border-radius:8px;color:var(--green);font-size:12px">✓ ' + pending.name + ' uploaded — your dashboard will update shortly.</div>';
+    showAlert(alertId, '✓ Data uploaded successfully.', 'success');
+  } catch(e){
+    if(prev) prev.innerHTML = '<div style="padding:10px;background:#fdf0ee;border-radius:8px;color:var(--red);font-size:12px">Upload failed: ' + e.message + '</div>';
+    showAlert(alertId, e.message, 'error');
+  }
+}
+
+// ── STEP 3: POS ───────────────────────────────────────────────────────────────
+function renderPOS(){
+  var grid = document.getElementById('pos_grid');
+  var details = document.getElementById('pos_details');
+  if(!grid) return;
+
+  grid.innerHTML = POS_SYSTEMS.map(function(p){
+    var cs = !p.live;
+    return '<div class="conn-card' + (cs?' coming-soon':'') + '" id="pcard_' + p.id + '"'
+      + (p.live ? ' onclick="selectPOS(\'' + p.id + '\')"' : '') + '>'
+      + '<div class="conn-icon">' + p.icon + '</div>'
+      + '<div class="conn-name">' + p.name + '</div>'
+      + '<div class="conn-desc">' + p.desc + '</div>'
+      + (cs ? '<div class="conn-badge">soon</div>' : '')
+      + '</div>';
+  }).join('');
+
+  details.innerHTML = ''
+    + '<div class="detail" id="pd_square"><div class="detail-title">Connect Square</div><div class="detail-sub">One-click OAuth — authorize in 30 seconds</div><button class="oauth-btn" onclick="connectSquare()">🔗 Connect with Square →</button></div>'
+    + '<div class="detail" id="pd_csv">'
+    + renderCSVUpload('sales', 'alert3', 'csv_prev_sales',
+        '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Your POS System</label>'
+        + '<select class="f-select" onchange="showPOSInstructions(this.value)">'
+        + '<option value="">Select your POS →</option>'
+        + '<option value="toast">Toast</option><option value="square">Square</option>'
+        + '<option value="clover">Clover</option><option value="lightspeed">Lightspeed</option>'
+        + '<option value="other">Other</option></select></div>'
+        + '<div id="pos_inst" class="inst-box"></div>')
+    + '</div>';
+}
+
+function selectPOS(id){
+  document.querySelectorAll('.conn-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('.detail').forEach(function(d){ if(d.id.startsWith('pd_')) d.classList.remove('open'); });
+  var card = document.getElementById('pcard_' + id);
+  if(card) card.classList.add('selected');
+  var det = document.getElementById('pd_' + id);
+  if(det) det.classList.add('open');
+}
+
+function showPOSInstructions(pos){
+  var box = document.getElementById('pos_inst');
+  if(!box) return;
+  var inst = {
+    toast: ['Log in to toast.com/restaurant-admin','Go to Reports → Export → Daily Sales Summary','Set date range (last 90 days)','Click Export CSV and save the file','Upload the file below'],
+    square: ['Log in to squareup.com/dashboard','Go to Reports → Sales Summary','Select Custom Date Range → last 90 days','Click Export (top right) → Download CSV','Upload the file below'],
+    clover: ['Log in to clover.com/dashboard','Go to Reporting → Transactions','Filter by date (last 90 days)','Click Export → CSV','Upload the file below'],
+    lightspeed: ['Log in to lightspeedpos.com','Go to Reports → Sales → Summary','Set date range to last 90 days','Click Export → CSV','Upload the file below'],
+    other: ['Find your sales report in your POS back office','Export as CSV for the last 30-90 days','Upload the file below — we\'ll match the columns automatically'],
+  };
+  var steps = inst[pos];
+  if(!steps){ box.classList.remove('open'); return; }
+  box.className = 'inst-box open';
+  box.innerHTML = '<div class="inst-title">How to export from ' + pos.charAt(0).toUpperCase()+pos.slice(1) + '</div>'
+    + '<ol class="inst-steps">' + steps.map(function(s){ return '<li>' + s + '</li>'; }).join('') + '</ol>';
+}
+
+function connectSquare(){
+  var locId = (state.locations[0] || {}).id || '';
+  var redir = encodeURIComponent(window.location.origin + '/onboarding');
+  var oauthState = btoa(JSON.stringify({ locId: locId, clientId: state.clientId || localStorage.getItem('rd_client_id') }));
+  window.location.href = 'https://connect.squareup.com/oauth2/authorize?client_id=' + SQ_APP_ID + '&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+EMPLOYEES_READ&redirect_uri=' + redir + '&state=' + oauthState;
+}
+
+// ── STEP 4: DELIVERY ──────────────────────────────────────────────────────────
+function renderDelivery(){
+  var grid = document.getElementById('del_grid');
+  var details = document.getElementById('del_details');
+  if(!grid) return;
+
+  grid.innerHTML = DEL_SYSTEMS.map(function(p){
+    return '<div class="conn-card" id="dcard_' + p.id + '" onclick="selectDel(\'' + p.id + '\')">'
+      + '<div class="conn-icon">' + p.icon + '</div>'
+      + '<div class="conn-name">' + p.name + '</div>'
+      + '<div class="conn-desc">' + p.desc + '</div>'
+      + '</div>';
+  }).join('');
+
+  details.innerHTML = DEL_SYSTEMS.map(function(p){
+    return '<div class="detail" id="dd_' + p.id + '">'
+      + renderCSVUpload(p.id + '_delivery', 'alert4', 'dprev_' + p.id,
+          '<div class="f-hint" style="margin-bottom:10px">Export your payout report from ' + p.name + ' Merchant portal → Payments → Payouts → Export CSV</div>')
+      + '</div>';
+  }).join('');
+}
+
+function selectDel(id){
+  document.querySelectorAll('#del_grid .conn-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('[id^="dd_"]').forEach(function(d){ d.classList.remove('open'); });
+  var card = document.getElementById('dcard_' + id);
+  if(card) card.classList.add('selected');
+  var det = document.getElementById('dd_' + id);
+  if(det) det.classList.add('open');
+}
+
+// ── STEP 5: PAYROLL ───────────────────────────────────────────────────────────
+function renderPayroll(){
+  var grid = document.getElementById('pay_grid');
+  var details = document.getElementById('pay_details');
+  if(!grid) return;
+
+  grid.innerHTML = PAY_SYSTEMS.map(function(p){
+    var cs = !p.live;
+    return '<div class="conn-card' + (cs?' coming-soon':'') + '" id="pycard_' + p.id + '"'
+      + (p.live ? ' onclick="selectPay(\'' + p.id + '\')"' : '') + '>'
+      + '<div class="conn-icon">' + p.icon + '</div>'
+      + '<div class="conn-name">' + p.name + '</div>'
+      + '<div class="conn-desc">' + p.desc + '</div>'
+      + (cs ? '<div class="conn-badge">soon</div>' : '')
+      + '</div>';
+  }).join('');
+
+  details.innerHTML = '<div class="detail" id="pyd_csv">'
+    + renderCSVUpload('labor', 'alert5', 'payprev',
+        '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Payroll System</label>'
+        + '<select class="f-select"><option value="">Select your payroll →</option>'
+        + '<option>Gusto</option><option>ADP</option><option>Homebase</option>'
+        + '<option>7shifts</option><option>Other</option></select></div>')
+    + '</div>';
+}
+
+function selectPay(id){
+  document.querySelectorAll('#pay_grid .conn-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('[id^="pyd_"]').forEach(function(d){ d.classList.remove('open'); });
+  var card = document.getElementById('pycard_' + id);
+  if(card) card.classList.add('selected');
+  var det = document.getElementById('pyd_' + id);
+  if(det) det.classList.add('open');
+}
+
+// ── STEP 6: REVIEW ────────────────────────────────────────────────────────────
+function renderReview(){
+  var card = document.getElementById('review_card');
+  if(!card) return;
+  var locs = state.locations.length;
+  var posConn = Object.keys(window._csv_sales || {}).length > 0 ? 'CSV uploaded' : 'Not connected yet';
+  card.innerHTML = '<div class="panel-title" style="font-size:18px;margin-bottom:16px">Summary</div>'
+    + '<div class="review-row"><span class="review-label">Restaurant</span><span class="review-val">' + (state.restaurantName||'—') + '</span></div>'
+    + '<div class="review-row"><span class="review-label">Locations</span><span class="review-val">' + locs + ' location' + (locs!==1?'s':'') + '</span></div>'
+    + '<div class="review-row"><span class="review-label">Account</span><span class="review-val">' + (state.email||'—') + '</span></div>'
+    + '<div class="review-row"><span class="review-label">Plan</span><span class="review-val" style="color:var(--green)">30-day free pilot → $500/mo</span></div>';
+}
+
+async function startCheckout(){
+  var btn = document.getElementById('s6_btn');
+  btn.disabled = true; btn.textContent = 'Setting up...';
+
+  try {
+    var clientId = state.clientId || localStorage.getItem('rd_client_id');
+    if(!clientId) throw new Error('Session issue — please refresh.');
+
+    // Check for pilot
+    var clientData = await apiFetch('/api/clients/' + clientId);
+    if(clientData && clientData.is_pilot){
+      localStorage.setItem('rd_pilot','true');
+      localStorage.setItem('rd_setup_complete','true');
+      await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    // Stripe checkout
+    var res = await apiFetch('/api/create-checkout-session', 'POST', {
+      user_id: state.userId || clientData.user_id,
+      email: state.email || clientData.email,
+      price_id: PRICE_ID,
+    });
+    window.location.href = res.url;
+  } catch(e){
+    showAlert('alert6', e.message, 'error');
+    btn.disabled = false; btn.textContent = 'Start Free 30-Day Pilot →';
+  }
+}
+
+// ── OAUTH CALLBACK ────────────────────────────────────────────────────────────
+async function handleOAuthCallback(provider, code, stateParam){
+  try {
+    var savedState = JSON.parse(atob(stateParam || btoa('{}')));
+    var clientId = savedState.clientId || localStorage.getItem('rd_client_id');
+    var locId = savedState.locId || ((state.locations[0]||{}).id||'');
+    var token = state.token || localStorage.getItem('rd_token');
+
+    var res = await fetch(API + '/api/oauth/exchange', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+token},
+      body: JSON.stringify({ provider: provider, code: code, location_id: locId, client_id: clientId }),
+    });
+    var data = await res.json();
+    if(data.success){
+      show(3);
+    } else {
+      show(3);
+    }
+  } catch(e){ show(3); }
+}
+
+// ── PAYMENT SUCCESS ───────────────────────────────────────────────────────────
+async function handlePaymentSuccess(sessionId){
+  localStorage.setItem('rd_setup_complete','true');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if(clientId) await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
+  show('_success');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async function(){
+  var params = new URLSearchParams(window.location.search);
+  var callback = params.get('callback');
+  var code = params.get('code');
+  var oauthState = params.get('state');
+  var payment = params.get('payment');
+
+  // Handle OAuth callback
+  if(callback && code){
+    await handleOAuthCallback(callback, code, oauthState);
+    return;
+  }
+
+  // Handle Stripe success
+  if(payment === 'success'){
+    await handlePaymentSuccess(params.get('session_id'));
+    return;
+  }
+
+  // Resume if mid-onboarding
+  var token = localStorage.getItem('rd_token');
+  var clientId = localStorage.getItem('rd_client_id');
+  if(token && clientId){
+    try {
+      var client = await fetch(API + '/api/clients/' + clientId, {
+        headers: {'Authorization':'Bearer '+token}
+      }).then(function(r){ return r.json(); });
+
+      if(client && client.setup_complete === false){
+        // Restore state
+        var saved = localStorage.getItem('rd_onboard_state');
+        if(saved){ try{ Object.assign(state, JSON.parse(saved)); }catch(e){} }
+        state.token = token;
+        state.clientId = clientId;
+        state.email = client.email || state.email;
+        state.restaurantName = client.name || state.restaurantName;
+        var resumeStep = (state.step && state.step > 1) ? state.step : 2;
+        show(resumeStep);
+        return;
+      }
+    } catch(e){}
+  }
+
+  // Fresh start
+  show(1);
+});
 </script>
 </body>
 </html>
