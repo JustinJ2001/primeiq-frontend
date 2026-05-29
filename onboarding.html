@@ -347,13 +347,16 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="del_csv_platform_name"></span></div>
         <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
       </div>
-      <div class="csv-upload" onclick="document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleDeliveryCSVDrop(event)">
+      <div id="del_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your platform above before uploading</div>
+      <div id="del_upload_section" style="display:none">
+      <div class="csv-upload" onclick="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}handleDeliveryCSVDrop(event)">
         <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert',document.getElementById('del_csv_platform').value)">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
       </div>
       <div id="del_csv_preview" style="margin-top:12px"></div>
+      </div><!-- end del_upload_section -->
     </div>
     <div style="margin-top:16px;display:flex;gap:10px">
       <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Continue →</button>
@@ -417,12 +420,15 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="pay_csv_source_name"></span></div>
         <ol id="pay_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
       </div>
-      <div class="csv-upload" onclick="document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handlePayrollCSVDrop(event)">
+      <div id="pay_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your payroll system above before uploading</div>
+      <div id="pay_upload_section" style="display:none">
+      <div class="csv-upload" onclick="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}handlePayrollCSVDrop(event)">
         <input type="file" id="labor_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'labor','payroll_csv_preview','pay_alert')">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Click to upload labor CSV</div>
       </div>
       <div id="payroll_csv_preview" style="margin-top:10px"></div>
+      </div><!-- end pay_upload_section -->
     </div>
     <div style="margin-top:16px;display:flex;gap:10px">
       <button class="btn-gold" onclick="goToStep(6)" style="flex:1">Review & Subscribe →</button>
@@ -1474,6 +1480,10 @@ var DELIVERY_CSV_STEPS = {
 function showDeliveryCSVInstructions() {
   var platform = document.getElementById('del_csv_platform').value;
   var div = document.getElementById('del_csv_instructions');
+  var prompt = document.getElementById('del_select_prompt');
+  var section = document.getElementById('del_upload_section');
+  if (prompt) prompt.style.display = platform ? 'none' : 'block';
+  if (section) section.style.display = platform ? 'block' : 'none';
   if (!platform) { div.style.display = 'none'; return; }
   var data = DELIVERY_CSV_STEPS[platform];
   document.getElementById('del_csv_platform_name').textContent = data.name;
@@ -1500,6 +1510,10 @@ var PAYROLL_CSV_STEPS = {
 function showPayrollCSVInstructions() {
   var source = document.getElementById('pay_csv_source').value;
   var div = document.getElementById('pay_csv_instructions');
+  var prompt = document.getElementById('pay_select_prompt');
+  var section = document.getElementById('pay_upload_section');
+  if (prompt) prompt.style.display = source ? 'none' : 'block';
+  if (section) section.style.display = source ? 'block' : 'none';
   if (!source) { div.style.display = 'none'; return; }
   var data = PAYROLL_CSV_STEPS[source];
   if (!data) return;
