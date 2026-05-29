@@ -1548,7 +1548,7 @@ async function previewGenericCSV(file, type, previewId, alertId) {
       }).join('')
     + '</tbody></table></div>'
     + '<div style="display:flex;gap:8px;align-items:center">'
-    + '<button class="btn-gold" style="padding:8px 18px" onclick="doGenericUpload(' + JSON.stringify(type) + ',' + JSON.stringify(previewId) + ',' + JSON.stringify(alertId) + ')">✓ Save This File</button>'
+    + '<button class="btn-gold" style="padding:8px 18px" onclick="doGenericUpload(\'' + type + '\',\'' + previewId + '\',\'' + alertId + '\')">✓ Save This File</button>'
     + '<span style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + file.name + ' · ' + Math.round(file.size/1024) + 'KB</span>'
     + '</div>';
   window['_pendingCSV_' + type] = { file: file, text: text, rowCount: allLines.length - 1 };
