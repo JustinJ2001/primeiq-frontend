@@ -261,7 +261,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <div class="conn-detail-sub">Select your POS below for step-by-step export instructions</div>
       <div style="margin:14px 0">
         <label class="f-label">My POS system is</label>
-        <select id="csv_pos_type" onchange="showCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
+        <select id="csv_pos_type" onchange="showCSVInstructions(); toggleCSVUploadZone()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
           <option value="">Select your POS →</option>
           <option value="toast">Toast</option>
           <option value="square">Square</option>
@@ -280,6 +280,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
         <div id="csv_columns_note" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
       </div>
       <div id="csv_loc_selector" style="margin-bottom:12px"></div>
+      <div id="csv_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your POS system above before uploading</div>
       <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
         <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
@@ -1125,6 +1126,17 @@ const CSV_INSTRUCTIONS = {
   square: { name: 'Square', steps: ['Log in to squareup.com/dashboard','Go to Reports → Sales Summary','Select Custom Date Range → last 90 days','Click Export (top right) → Download CSV','Upload the file below'], columns: 'Square exports include all needed columns.' },
   other: { name: 'your POS', steps: ['Log in to your POS back office or reporting portal','Find the <b>Sales Summary</b> or <b>Daily Sales Report</b> section','Select your date range (last 30-90 days is ideal)','Export as <b>CSV</b>','Upload the downloaded file below'], columns: 'We need at minimum: Date, Gross or Net Sales.' }
 };
+
+function toggleCSVUploadZone() {
+  var type = document.getElementById('csv_pos_type') && document.getElementById('csv_pos_type').value;
+  var prompt = document.getElementById('csv_select_prompt');
+  var zone = document.getElementById('csv_drop_zone');
+  if (prompt) prompt.style.display = type ? 'none' : 'block';
+  if (zone) {
+    zone.style.opacity = type ? '1' : '0.4';
+    zone.style.pointerEvents = type ? 'auto' : 'none';
+  }
+}
 
 function showCSVInstructions() {
   const type = document.getElementById('csv_pos_type').value;
