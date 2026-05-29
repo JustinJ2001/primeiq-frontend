@@ -281,8 +281,8 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       </div>
       <div id="csv_loc_selector" style="margin-bottom:12px"></div>
       <div id="csv_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your POS system above before uploading</div>
-      <div class="csv-upload" id="csv_drop_zone" onclick="document.getElementById('pos_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleCSVDrop(event,'sales')">
-        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
+      <div class="csv-upload" id="csv_drop_zone" onclick="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');return;}document.getElementById('pos_csv').click()" ondragover="event.preventDefault();if(!document.getElementById('csv_pos_type').value){event.preventDefault();return;}this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');return;}handleCSVDrop(event,'sales')">
+        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');this.value='';return;}previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Accepts .csv files · Your data stays private</div>
