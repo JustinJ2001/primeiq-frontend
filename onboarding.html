@@ -202,7 +202,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="pos_loc_selector"></div>
     <button class="add-loc" onclick="addLocation()">+ Add Another Location</button>
     <button class="btn-gold" id="s2_btn" onclick="saveLocations()" style="margin-top:20px">Save & Continue →</button>
-    <button class="btn-outline" onclick="goToStep(1)">← Back</button>
+    
   </div>
   <!-- STEP 3: POS -->
   <div class="panel" id="panel3">
@@ -580,11 +580,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Case 10: validate token and clientId are real (not empty/null/undefined strings)
   if (!token || !clientId || clientId.length < 10) {
+    // No session — show step 1 for fresh signup
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
     return;
   }
+  // Token+clientId exist — user already started onboarding
+  // They should login, not re-do step 1
+  // (API check below will resume them at correct step or redirect to login if expired)
 
   // Make API call to check client status
   var clientResp;
@@ -834,45 +838,13 @@ async function createAccount() {
 
   clearAlerts();
 
-  // ── RETURNING USER: token+clientId already in localStorage ───────────────
-  // If either token or clientId is missing, clear both — partial state is invalid
-  if (!lsGet('rd_token') || !lsGet('rd_client_id')) {
-    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-  }
+  // If account already exists — send to login, never allow re-signup
   if (lsGet('rd_token') && lsGet('rd_client_id')) {
-    if (!email || !password) {
-      showAlert('s1_alert', 'Please enter your email and password to continue.', 'info');
-      return;
-    }
-    setLoading('s1_btn', true);
-    // Different email = different account, clear and fall through to fresh signup
-    var storedEmail = (lsGet('rd_s1_email') || '').toLowerCase();
-    if (storedEmail && email !== storedEmail) {
-      lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-      setLoading('s1_btn', false);
-      // Fall through to fresh signup below
-    } else {
-      // Same email — verify password
-      var check = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
-      if (check.error) {
-        showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
-        setLoading('s1_btn', false);
-        return;
-      }
-      // Password correct — refresh token and continue
-      state.token = check.access_token;
-      state.userId = check.user && check.user.id;
-      state.email = email;
-      state.restaurantName = name || lsGet('rd_s1_name');
-      state.clientId = lsGet('rd_client_id');
-      lsSet('rd_token', state.token);
-      setLoading('s1_btn', false);
-      goToStep(2);
-      return;
-    }
+    window.location.href = '/login';
+    return;
   }
 
-  // ── FRESH SIGNUP ──────────────────────────────────────────────────────────
+  // Validate fields
   if (!email || !password || !name) return showAlert('s1_alert', 'Please fill in all fields.', 'error');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('s1_alert', 'Please enter a valid email address.', 'error');
   if (password.length < 8) return showAlert('s1_alert', 'Password must be at least 8 characters.', 'error');
@@ -882,47 +854,45 @@ async function createAccount() {
   setLoading('s1_btn', true);
 
   try {
-    // Step 1: Create Supabase auth user
     var authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email: email, password: password });
 
     if (authRes.error) {
-      // Signup failed — handle rate limit
       if (authRes.error.status === 429) {
         showAlert('s1_alert', 'Too many attempts. Please wait a minute and try again.', 'error');
         setLoading('s1_btn', false);
         return;
       }
-      showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
+      // Any signup error — account likely exists, send to login
+      showAlert('s1_alert', 'An account with this email already exists. <a href="/login" style="color:var(--gold)">Sign in here →</a>', 'error');
       setLoading('s1_btn', false);
       return;
     }
 
     state.email = email;
-    state.userId = authRes.user && (authRes.user.id || authRes.id);
+    state.userId = authRes.user && authRes.user.id;
     state.token  = authRes.access_token;
     state.restaurantName = name;
 
     if (!state.token || !state.userId) {
-      showAlert('s1_alert', 'Account created! Please sign in to continue.', 'success');
+      showAlert('s1_alert', 'Account created! Please <a href="/login" style="color:var(--gold)">sign in here</a> to continue.', 'success');
       setLoading('s1_btn', false);
-      setTimeout(function(){ window.location.href = '/login'; }, 2000);
       return;
     }
 
-    // Save token immediately before any API calls
-    if (state.token) { lsSet('rd_token', state.token); } else { lsRemove('rd_token'); }
+    // Save token immediately
+    lsSet('rd_token', state.token);
 
-    // Step 2: Create client record in our DB
-    // API will reject with 409 if email already exists (prevents password reset exploit)
+    // Create client record — API rejects with 409 if email already exists
     var clientRes;
     try {
       clientRes = await apiFetch('/api/clients', 'POST', {
         user_id: state.userId, name: name, email: email, status: 'pending_payment',
-        ...(state.referredBy ? { referred_by: state.referredBy } : {})
+        referred_by: state.referredBy || undefined
       });
     } catch(clientErr) {
       if (clientErr.message && clientErr.message.includes('already exists')) {
-        showAlert('s1_alert', 'An account with this email already exists. Please <a href="/login" style="color:var(--gold)">sign in here</a>.', 'error');
+        showAlert('s1_alert', 'An account with this email already exists. <a href="/login" style="color:var(--gold)">Sign in here →</a>', 'error');
+        lsRemove('rd_token');
         setLoading('s1_btn', false);
         return;
       }
