@@ -976,10 +976,21 @@ async function createAccount() {
     // Save token immediately — before any API calls so it's never lost
     state.token && lsSet('rd_token', state.token);
     state.restaurantName = name;
-    const clientRes = await apiFetch('/api/clients', 'POST', {
-      user_id: state.userId, name, email, status: 'pending_payment',
-      ...(state.referredBy ? { referred_by: state.referredBy } : {})
-    });
+    var clientRes;
+    try {
+      clientRes = await apiFetch('/api/clients', 'POST', {
+        user_id: state.userId, name, email, status: 'pending_payment',
+        ...(state.referredBy ? { referred_by: state.referredBy } : {})
+      });
+    } catch(clientErr) {
+      if (clientErr.message && clientErr.message.includes('already exists')) {
+        // Email exists — wrong password was used to reset. Show clear message.
+        showAlert('s1_alert', 'An account with this email already exists. Please <a href="/login" style="color:var(--gold)">sign in here</a> with your original password.', 'error');
+        setLoading('s1_btn', false);
+        return;
+      }
+      throw clientErr;
+    }
     if (!clientRes || !clientRes.id) throw new Error('Account setup failed. Please try again.');
     state.clientId = clientRes.id;
     lsSet('rd_client_id', state.clientId);
