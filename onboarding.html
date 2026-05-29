@@ -511,6 +511,10 @@ const oauthCode = urlParams.get('code');
 const oauthState = urlParams.get('state');
 
 window.addEventListener('DOMContentLoaded', async () => {
+  // Clean up partial localStorage state — if either token or clientId missing, clear both
+  if ((!lsGet('rd_token') && lsGet('rd_client_id')) || (lsGet('rd_token') && !lsGet('rd_client_id'))) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
+  }
   // Issue 57: save referral param immediately
   var refParam = new URLSearchParams(window.location.search).get('ref');
   if (refParam) {
@@ -814,192 +818,128 @@ function renderStep(n) {
 }
 
 async function createAccount() {
-  // Issue 41: rate limit button clicks
+  // Rate limit
   var now = Date.now();
   if (window._lastCreateAttempt && now - window._lastCreateAttempt < 3000) {
     showAlert('s1_alert', 'Please wait a moment before trying again.', 'info');
     return;
   }
   window._lastCreateAttempt = now;
-  // If token+clientId exist in localStorage, handle returning user
-  if (lsGet('rd_token') && lsGet('rd_client_id')) {
-    const emailVal = val('s1_email');
-    const pwVal = val('s1_password');
 
-    // Always require email+password when returning to step 1
-    // This covers: same account continuing, wrong password, deleted account, different email
-    if (!emailVal || !pwVal) {
+  var email    = val('s1_email').toLowerCase().trim();
+  var password = val('s1_password');
+  var confirm  = val('s1_confirm');
+  var name     = val('s1_name').trim();
+
+  clearAlerts();
+
+  // ── RETURNING USER: token+clientId already in localStorage ───────────────
+  // If either token or clientId is missing, clear both — partial state is invalid
+  if (!lsGet('rd_token') || !lsGet('rd_client_id')) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
+  }
+  if (lsGet('rd_token') && lsGet('rd_client_id')) {
+    if (!email || !password) {
       showAlert('s1_alert', 'Please enter your email and password to continue.', 'info');
       return;
     }
-
     setLoading('s1_btn', true);
-
-    // Issue 10: different email — clear session and do fresh signup below
-    var storedEmail = lsGet('rd_s1_email');
-    if (storedEmail && emailVal.toLowerCase() !== storedEmail.toLowerCase()) {
+    // Different email = different account, clear and fall through to fresh signup
+    var storedEmail = (lsGet('rd_s1_email') || '').toLowerCase();
+    if (storedEmail && email !== storedEmail) {
       lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
       setLoading('s1_btn', false);
-      // Fall through to fresh signup
+      // Fall through to fresh signup below
     } else {
-      // Same email — try to sign in with provided password
-      var signInCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: emailVal, password: pwVal });
-
-      if (signInCheck.error) {
-        var errMsg = signInCheck.error.message || '';
-        // If error says invalid credentials = wrong password — stop here
-        // If error says user not found = account deleted — clear and allow fresh signup
-        if (errMsg.toLowerCase().includes('invalid') || errMsg.toLowerCase().includes('credentials') || errMsg.toLowerCase().includes('password')) {
-          showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
-          setLoading('s1_btn', false);
-          return;
-        } else {
-          // Account likely deleted — clear session and fall through to fresh signup
-          lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-          setLoading('s1_btn', false);
-        }
-      } else {
-        // Sign in succeeded — account exists and password correct
-        state.token = signInCheck.access_token;
-        state.userId = signInCheck.user?.id;
-        lsSet('rd_token', state.token);
-        lsSet('rd_client_id', lsGet('rd_client_id')); // keep existing client ID
-        // Update name if changed
-        var newName = val('s1_name');
-        if (newName && newName !== lsGet('rd_s1_name')) {
-          var cid = lsGet('rd_client_id');
-          if (cid) apiFetch('/api/clients/' + cid, 'PATCH', { name: newName }).catch(function(){});
-          lsSet('rd_s1_name', newName);
-          state.restaurantName = newName;
-        }
-        state.clientId = lsGet('rd_client_id');
+      // Same email — verify password
+      var check = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
+      if (check.error) {
+        showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
         setLoading('s1_btn', false);
-        goToStep(2);
         return;
       }
+      // Password correct — refresh token and continue
+      state.token = check.access_token;
+      state.userId = check.user && check.user.id;
+      state.email = email;
+      state.restaurantName = name || lsGet('rd_s1_name');
+      state.clientId = lsGet('rd_client_id');
+      lsSet('rd_token', state.token);
+      setLoading('s1_btn', false);
+      goToStep(2);
+      return;
     }
   }
-  const email    = val('s1_email');
-  const password = val('s1_password');
-  const confirm  = val('s1_confirm');
-  const name     = val('s1_name');
-  clearAlerts();
+
+  // ── FRESH SIGNUP ──────────────────────────────────────────────────────────
   if (!email || !password || !name) return showAlert('s1_alert', 'Please fill in all fields.', 'error');
-  // Issue 22: validate email format
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('s1_alert', 'Please enter a valid email address.', 'error');
   if (password.length < 8) return showAlert('s1_alert', 'Password must be at least 8 characters.', 'error');
   if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return showAlert('s1_alert', 'Password must contain at least one letter and one number.', 'error');
   if (password !== confirm) return showAlert('s1_alert', 'Passwords do not match.', 'error');
+
   setLoading('s1_btn', true);
+
   try {
-    // Before signup, check if this email already has an account
-    // by trying to sign in — if sign in fails with invalid_credentials the account exists
-    // but the password is wrong. We must block signup to prevent password reset.
-    // Attempt signup first — Supabase will tell us if email already exists
-    const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
-    
+    // Step 1: Create Supabase auth user
+    var authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email: email, password: password });
+
     if (authRes.error) {
-      // Signup failed — email likely already exists
-      // Try signing in with provided password to verify
-      var signInAttempt = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password });
-      if (!signInAttempt.error) {
-        // Correct password — continue with existing account
-        state.email = email;
-        state.userId = signInAttempt.user?.id;
-        state.token = signInAttempt.access_token;
-        state.token && lsSet('rd_token', state.token);
-        state.restaurantName = name;
-        var existingClient = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-        if (existingClient && existingClient.id) {
-          state.clientId = existingClient.id;
-          lsSet('rd_client_id', state.clientId);
-          lsSet('rd_onboarding', 'true');
-          lsSet('rd_s1_email', email);
-          goToStep('1b');
-          setLoading('s1_btn', false);
-          return;
-        }
-      } else {
-        // Wrong password for existing account — block to prevent password reset
-        showAlert('s1_alert', 'An account with this email already exists. Please use your original password or <a href="/login" style="color:var(--gold)">sign in here</a>.', 'error');
-        setLoading('s1_btn', false);
-        return;
-      }
-    }
-    if (authRes.error) {
-      // Handle rate limiting
+      // Signup failed — handle rate limit
       if (authRes.error.status === 429) {
         showAlert('s1_alert', 'Too many attempts. Please wait a minute and try again.', 'error');
         setLoading('s1_btn', false);
         return;
       }
-      var signInRes = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
-      if (signInRes.error) {
-        showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
-        setLoading('s1_btn', false);
-        return;
-      }
-      state.email = email;
-      state.userId = signInRes.user?.id;
-      state.token = signInRes.access_token;
-      lsSet('rd_token', state.token);
-      lsSet('rd_onboarding', 'true');
-      var existing = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-      if (existing && existing.id) {
-        state.clientId = existing.id;
-        lsSet('rd_client_id', existing.id);
-      } else {
-        // Issue 11: client record missing — create it now
-        try {
-          var newClient = await apiFetch('/api/clients', 'POST', {
-            user_id: state.userId, name: state.restaurantName || emailVal, email: emailVal,
-            status: 'pending_payment', referred_by: state.referredBy || undefined
-          });
-          state.clientId = newClient.id;
-          lsSet('rd_client_id', newClient.id);
-        } catch(e2) {}
-      }
-      goToStep(2);
+      showAlert('s1_alert', authRes.error.message || 'Signup failed. Please try again.', 'error');
       setLoading('s1_btn', false);
       return;
     }
+
     state.email = email;
-    state.userId = authRes.user?.id || authRes.id;
+    state.userId = authRes.user && (authRes.user.id || authRes.id);
     state.token  = authRes.access_token;
-    if (!state.token) {
-      showAlert('s1_alert', 'Account created! Please sign in at primeiq.io/login to continue.', 'success');
+    state.restaurantName = name;
+
+    if (!state.token || !state.userId) {
+      showAlert('s1_alert', 'Account created! Please sign in to continue.', 'success');
       setLoading('s1_btn', false);
       setTimeout(function(){ window.location.href = '/login'; }, 2000);
       return;
     }
-    if (!state.userId) throw new Error('Could not create account. Please try again.');
-    // Save token immediately — before any API calls so it's never lost
-    state.token && lsSet('rd_token', state.token);
-    state.restaurantName = name;
+
+    // Save token immediately before any API calls
+    lsSet('rd_token', state.token);
+
+    // Step 2: Create client record in our DB
+    // API will reject with 409 if email already exists (prevents password reset exploit)
     var clientRes;
     try {
       clientRes = await apiFetch('/api/clients', 'POST', {
-        user_id: state.userId, name, email, status: 'pending_payment',
+        user_id: state.userId, name: name, email: email, status: 'pending_payment',
         ...(state.referredBy ? { referred_by: state.referredBy } : {})
       });
     } catch(clientErr) {
       if (clientErr.message && clientErr.message.includes('already exists')) {
-        // Email exists — wrong password was used to reset. Show clear message.
-        showAlert('s1_alert', 'An account with this email already exists. Please <a href="/login" style="color:var(--gold)">sign in here</a> with your original password.', 'error');
+        showAlert('s1_alert', 'An account with this email already exists. Please <a href="/login" style="color:var(--gold)">sign in here</a>.', 'error');
         setLoading('s1_btn', false);
         return;
       }
       throw clientErr;
     }
+
     if (!clientRes || !clientRes.id) throw new Error('Account setup failed. Please try again.');
+
     state.clientId = clientRes.id;
     lsSet('rd_client_id', state.clientId);
     lsSet('rd_onboarding', 'true');
-    // Issue 37: store email for welcome note on next step
     lsSet('rd_s1_email', email);
+    lsSet('rd_s1_name', name);
+
     goToStep('1b');
-  } catch (e) {
-    showAlert('s1_alert', e.message, 'error');
+
+  } catch(e) {
+    showAlert('s1_alert', e.message || 'Something went wrong. Please try again.', 'error');
   }
   setLoading('s1_btn', false);
 }
