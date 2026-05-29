@@ -795,16 +795,22 @@ function renderStep(n) {
       s.classList.add('done');
       s.querySelector('.prog-num').textContent = '✓';
       // Issue 19: warn on unsaved changes
-      s.style.cursor = 'pointer';
-      s.onclick = (function(step, currentStep) {
-        return function() {
-          if (step < currentStep && window._unsavedChanges) {
-            if (!confirm('You have unsaved changes. Go back anyway?')) return;
-            window._unsavedChanges = false;
-          }
-          goToStep(step);
-        };
-      })(i + 1, progN);
+      // Step 1 is never clickable once passed — account already created
+      if (i + 1 === 1) {
+        s.style.cursor = 'default';
+        s.onclick = null;
+      } else {
+        s.style.cursor = 'pointer';
+        s.onclick = (function(step, currentStep) {
+          return function() {
+            if (step < currentStep && window._unsavedChanges) {
+              if (!confirm('You have unsaved changes. Go back anyway?')) return;
+              window._unsavedChanges = false;
+            }
+            goToStep(step);
+          };
+        })(i + 1, progN);
+      }
     } else {
       s.querySelector('.prog-num').textContent = String(i + 1);
       s.style.cursor = 'default';
