@@ -844,11 +844,8 @@ async function createAccount() {
 
   clearAlerts();
 
-  // If account already exists — send to login, never allow re-signup
-  if (lsGet('rd_token') && lsGet('rd_client_id')) {
-    window.location.href = '/login';
-    return;
-  }
+  // Clear any stale session before attempting fresh signup
+  lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
 
   // Validate fields
   if (!email || !password || !name) return showAlert('s1_alert', 'Please fill in all fields.', 'error');
