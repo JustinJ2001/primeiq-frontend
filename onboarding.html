@@ -348,7 +348,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
         <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
       </div>
       <div class="csv-upload" onclick="document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="handleDeliveryCSVDrop(event)">
-        <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert')">
+        <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert',document.getElementById('del_csv_platform').value)">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
@@ -1514,7 +1514,7 @@ function handlePayrollCSVDrop(event) {
   if (file) previewGenericCSV(file, 'labor', 'payroll_csv_preview', 'pay_alert');
 }
 
-async function previewGenericCSV(file, type, previewId, alertId) {
+async function previewGenericCSV(file, type, previewId, alertId, platform) {
   // Issue 35: check file type
   if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
     showAlert(alertId, 'Please upload a CSV file (.csv format only).', 'error');
@@ -1579,7 +1579,7 @@ async function doGenericUpload(type, previewId, alertId) {
       return;
     }
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Uploading ' + validation.row_count + ' rows...</div>';
-    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text });
+    await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text, ...(pending.platform ? { platform: pending.platform } : {}) });
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows saved — click Continue → to proceed.</div>';
     showAlert(alertId, 'Data uploaded successfully.', 'success');
   } catch(e) {
