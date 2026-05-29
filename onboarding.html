@@ -895,44 +895,37 @@ async function createAccount() {
     // Before signup, check if this email already has an account
     // by trying to sign in — if sign in fails with invalid_credentials the account exists
     // but the password is wrong. We must block signup to prevent password reset.
-    var preCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password });
-    if (!preCheck.error) {
-      // Sign in succeeded — account exists with this password, just continue
-      state.email = email;
-      state.userId = preCheck.user?.id;
-      state.token = preCheck.access_token;
-      state.token && lsSet('rd_token', state.token);
-      state.restaurantName = name;
-      // Get or create client record
-      var existingClient = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
-      if (existingClient && existingClient.id) {
-        state.clientId = existingClient.id;
-        lsSet('rd_client_id', state.clientId);
-        lsSet('rd_onboarding', 'true');
-        lsSet('rd_s1_email', email);
-        goToStep('1b');
-        setLoading('s1_btn', false);
-        return;
-      }
-      // No client record — create one and continue
-      var newClient = await apiFetch('/api/clients', 'POST', { user_id: state.userId, name, email, status: 'pending_payment', ...(state.referredBy ? { referred_by: state.referredBy } : {}) });
-      if (newClient && newClient.id) {
-        state.clientId = newClient.id;
-        lsSet('rd_client_id', state.clientId);
-        lsSet('rd_onboarding', 'true');
-        lsSet('rd_s1_email', email);
-        goToStep('1b');
-        setLoading('s1_btn', false);
-        return;
-      }
-    } else if (preCheck.error && (preCheck.error.error_code === 'invalid_credentials' || (preCheck.error.msg || '').includes('Invalid login'))) {
-      // Account exists but wrong password — block signup to prevent password reset
-      showAlert('s1_alert', 'An account with this email already exists. Please use your original password or <a href="/login" style="color:var(--gold)">sign in here</a>.', 'error');
-      setLoading('s1_btn', false);
-      return;
-    }
-    // Email not found — proceed with fresh signup
+    // Attempt signup first — Supabase will tell us if email already exists
     const authRes = await supabaseFetch('/auth/v1/signup', 'POST', { email, password, options: { emailRedirectTo: 'https://primeiq.io/onboarding?confirmed=1' } });
+    
+    if (authRes.error) {
+      // Signup failed — email likely already exists
+      // Try signing in with provided password to verify
+      var signInAttempt = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email, password });
+      if (!signInAttempt.error) {
+        // Correct password — continue with existing account
+        state.email = email;
+        state.userId = signInAttempt.user?.id;
+        state.token = signInAttempt.access_token;
+        state.token && lsSet('rd_token', state.token);
+        state.restaurantName = name;
+        var existingClient = await apiFetch('/api/clients/by-user/' + state.userId).catch(function(){ return null; });
+        if (existingClient && existingClient.id) {
+          state.clientId = existingClient.id;
+          lsSet('rd_client_id', state.clientId);
+          lsSet('rd_onboarding', 'true');
+          lsSet('rd_s1_email', email);
+          goToStep('1b');
+          setLoading('s1_btn', false);
+          return;
+        }
+      } else {
+        // Wrong password for existing account — block to prevent password reset
+        showAlert('s1_alert', 'An account with this email already exists. Please use your original password or <a href="/login" style="color:var(--gold)">sign in here</a>.', 'error');
+        setLoading('s1_btn', false);
+        return;
+      }
+    }
     if (authRes.error) {
       // Handle rate limiting
       if (authRes.error.status === 429) {
