@@ -846,11 +846,18 @@ async function createAccount() {
       var signInCheck = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: emailVal, password: pwVal });
 
       if (signInCheck.error) {
-        // Wrong password OR account deleted (Supabase returns error for both)
-        // Try fresh signup to handle the deleted account case
-        setLoading('s1_btn', false);
-        lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
-        // Fall through to fresh signup below — if account exists Supabase will error and we handle it there
+        var errMsg = signInCheck.error.message || '';
+        // If error says invalid credentials = wrong password — stop here
+        // If error says user not found = account deleted — clear and allow fresh signup
+        if (errMsg.toLowerCase().includes('invalid') || errMsg.toLowerCase().includes('credentials') || errMsg.toLowerCase().includes('password')) {
+          showAlert('s1_alert', 'Incorrect password. Please try again.', 'error');
+          setLoading('s1_btn', false);
+          return;
+        } else {
+          // Account likely deleted — clear session and fall through to fresh signup
+          lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
+          setLoading('s1_btn', false);
+        }
       } else {
         // Sign in succeeded — account exists and password correct
         state.token = signInCheck.access_token;
