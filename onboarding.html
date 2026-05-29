@@ -511,8 +511,9 @@ const oauthCode = urlParams.get('code');
 const oauthState = urlParams.get('state');
 
 window.addEventListener('DOMContentLoaded', async () => {
-  // Clean up partial localStorage state — if either token or clientId missing, clear both
-  if ((!lsGet('rd_token') && lsGet('rd_client_id')) || (lsGet('rd_token') && !lsGet('rd_client_id'))) {
+  // Clean up partial localStorage state — if either token or clientId missing/invalid, clear both
+  var _t = window.localStorage.getItem('rd_token'); var _c = window.localStorage.getItem('rd_client_id');
+  if ((!_t || _t==='undefined' || _t==='null' || !_c || _c==='undefined' || _c==='null') && (_t || _c)) {
     lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_categories','rd_referred_by']);
   }
   // Issue 57: save referral param immediately
@@ -909,7 +910,7 @@ async function createAccount() {
     }
 
     // Save token immediately before any API calls
-    lsSet('rd_token', state.token);
+    if (state.token) { lsSet('rd_token', state.token); } else { lsRemove('rd_token'); }
 
     // Step 2: Create client record in our DB
     // API will reject with 409 if email already exists (prevents password reset exploit)
@@ -1352,7 +1353,12 @@ const val = id => document.getElementById(id)?.value?.trim() || '';
 
 // Safe localStorage helpers — handle disabled/full localStorage gracefully
 function lsGet(key) {
-  try { return window.localStorage.getItem(key); } catch(e) { return null; }
+  try {
+    var v = window.localStorage.getItem(key);
+    // Treat 'undefined', 'null', empty string as missing
+    if (v === null || v === 'undefined' || v === 'null' || v === '') return null;
+    return v;
+  } catch(e) { return null; }
 }
 function lsSet(key, value) {
   try {
