@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — PrimeIQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f4;--border:rgba(40,25,5,0.1);--gold:#b8860b;--dark:#1a1208;--muted:#8a7a5a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-height:1.7;}
+.header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:#e8b84b;}
+.logo em{font-style:italic;color:#f5ead6;}
+.main{max-width:720px;margin:48px auto;padding:0 20px 80px;}
+h1{font-family:'Playfair Display',serif;font-size:32px;margin-bottom:8px;}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:40px;letter-spacing:0.08em;}
+.faq-group{margin-bottom:32px;}
+.faq-group-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.faq-item{margin-bottom:0;border-bottom:1px solid var(--border);}
+.faq-q{font-size:15px;font-weight:700;color:var(--dark);padding:16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.faq-q:hover{color:var(--gold);}
+.faq-toggle{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--muted);transition:transform 0.2s;}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.7;padding:0 0 16px;display:none;}
+.faq-a.open{display:block;}
+.faq-toggle.open{transform:rotate(45deg);}
+a{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="logo"><em>Prime</em>IQ</div></div>
+  <a href="/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);text-decoration:none;">← Home</a>
+</div>
+<div class="main">
+  <h1>Frequently Asked Questions</h1>
+  <div class="sub">Everything you need to know before signing up</div>
+
+  <div class="faq-group">
+    <div class="faq-group-title">Getting Started</div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How long does setup take? <span class="faq-toggle">+</span></div><div class="faq-a">About 10 minutes. You enter your location details and fixed costs, then either connect your POS directly (Square works automatically) or upload a CSV export from your POS system. Your dashboard populates within a few minutes of uploading data.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What POS systems do you support? <span class="faq-toggle">+</span></div><div class="faq-a">Square connects automatically. For Toast, Clover, Lightspeed, Revel, SpotOn, and any other system — you export your daily sales report as a CSV and upload it. We map the columns automatically. If your POS can export to CSV, PrimeIQ can read it.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Do I need to connect my payroll system? <span class="faq-toggle">+</span></div><div class="faq-a">No — it's optional. If you don't connect payroll, your labor cost will show as estimated based on your target %. Connecting payroll (or uploading a labor CSV) gives you actual vs. scheduled hours and overtime alerts.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I add more locations later? <span class="faq-toggle">+</span></div><div class="faq-a">Yes. Go to Settings → Locations and click "+ Add New Location". No additional cost — the $500/month covers unlimited locations.</div></div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-title">Data & Updates</div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How often does my data update? <span class="faq-toggle">+</span></div><div class="faq-a">For connected POS systems (Square), data syncs automatically every morning before 6am. For CSV uploads, data updates as soon as you upload. We recommend uploading a fresh CSV weekly or connecting your POS for fully automatic updates.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How far back can I see data? <span class="faq-toggle">+</span></div><div class="faq-a">As far back as your CSV export goes. If you export 12 months of data from your POS, your dashboard will show 12 months of history. We recommend starting with at least 30-90 days for useful trend data.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Is my data secure? <span class="faq-toggle">+</span></div><div class="faq-a">Yes. Your data is encrypted at rest and in transit, stored in Supabase on AWS infrastructure. Each account can only access its own data. We never sell your data. See our <a href="/privacy">Privacy Policy</a> for full details.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I export my data? <span class="faq-toggle">+</span></div><div class="faq-a">Yes — use the Export CSV button in any dashboard view to download that data. You can also request a full data export by emailing justin@primeiq.io.</div></div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-title">Pricing & Billing</div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What does $500/month include? <span class="faq-toggle">+</span></div><div class="faq-a">Everything — unlimited locations, all dashboard features, daily and weekly email reports, CSV uploads, direct support from Justin. No per-location fees, no feature tiers, no hidden charges.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <span class="faq-toggle">+</span></div><div class="faq-a">Yes. Cancel from Settings → Billing or email justin@primeiq.io. Cancellations take effect at the end of your current billing period. No cancellation fees.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Is there a free trial? <span class="faq-toggle">+</span></div><div class="faq-a">We offer pilot access to a small number of operators before charging. Email justin@primeiq.io to ask about pilot status. The demo dashboard at <a href="/dashboard?demo=1">primeiq.io/dashboard?demo=1</a> shows exactly what you'd get with your own data.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What happens after the pilot ends? <span class="faq-toggle">+</span></div><div class="faq-a">You'll get an email from Justin before the pilot ends. If you want to continue, you subscribe at $500/month. If not, your account stays read-only for 30 days then your data is deleted.</div></div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-title">Support</div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How do I get help? <span class="faq-toggle">+</span></div><div class="faq-a">Reply to any email from justin@primeiq.io — I check it throughout the day. For urgent issues, email justin@primeiq.io directly. Response time is usually under 2 hours during business hours.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Do you help with setup? <span class="faq-toggle">+</span></div><div class="faq-a">Yes. If you're having trouble getting your data in, email justin@primeiq.io and I'll walk you through it. Setup support is included in the subscription.</div></div>
+  </div>
+</div>
+
+<script>
+function toggleFaq(el) {
+  var answer = el.nextElementSibling;
+  var toggle = el.querySelector('.faq-toggle');
+  var isOpen = answer.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-a').forEach(function(a){ a.classList.remove('open'); });
+  document.querySelectorAll('.faq-toggle').forEach(function(t){ t.classList.remove('open'); });
+  // Open clicked if it was closed
+  if (!isOpen) { answer.classList.add('open'); toggle.classList.add('open'); }
+}
+</script>
+</body>
+</html>

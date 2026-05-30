@@ -117,6 +117,26 @@ function shareNative() {
     copyLink();
   }
 }
+
+// Load referral stats
+(async function() {
+  try {
+    var token = localStorage.getItem('rd_token');
+    if (!token || !refCode) return;
+    var res = await fetch('https://restaurant-api-68re.onrender.com/api/referrals/' + refCode, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var data = await res.json();
+    if (data.total_referrals > 0) {
+      var statsDiv = document.createElement('div');
+      statsDiv.style.cssText = 'background:#edf7f2;border:1px solid rgba(45,122,79,0.15);border-radius:8px;padding:14px 16px;margin-top:16px;';
+      statsDiv.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:#2d7a4f;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Your Referrals</div>' +
+        '<div style="font-size:24px;font-family:Playfair Display,serif;color:#1a1208;margin-bottom:4px;">' + data.active_referrals + ' active</div>' +
+        '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#8a7a5a;">' + data.total_referrals + ' total · ' + data.credits_earned + ' month' + (data.credits_earned !== 1 ? 's' : '') + ' credited</div>';
+      document.querySelector('.card').appendChild(statsDiv);
+    }
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

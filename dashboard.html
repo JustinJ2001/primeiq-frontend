@@ -814,6 +814,31 @@ body::before {
 .freshness-bar.ok { background:rgba(45,122,79,0.06); border-color:rgba(45,122,79,0.15); color:var(--green); }
 .freshness-bar.stale { background:rgba(192,57,43,0.08); border-color:rgba(192,57,43,0.2); color:var(--red); }
 .freshness-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  border: 1.5px dashed rgba(255,220,130,0.15);
+  border-radius: 12px;
+  margin: 20px 0;
+}
+.empty-state-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+.empty-state-title { font-family: 'Playfair Display', serif; font-size: 20px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+.empty-state-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.25); margin-bottom: 20px; letter-spacing: 0.06em; line-height: 1.8; }
+.empty-state-btn { display: inline-block; padding: 10px 22px; background: var(--gold, #b8860b); color: #fff; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-decoration: none; letter-spacing: 0.08em; }
+
+
+@keyframes shimmer { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 4px;
+}
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 28px; width: 60%; margin-bottom: 12px; }
+.skeleton-card { padding: 20px; }
+
 </style>
 <script>
 // Instant redirect before any rendering - prevents flash
@@ -872,6 +897,7 @@ window.addEventListener('error', function(e) {
     <button onclick="clearCustomDate()" style="padding:8px 14px;border-radius:6px;border:1px solid rgba(40,25,5,0.12);background:#fff;font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;color:#8a7a5a;">Clear</button>
   </div>
 </div>
+<div id="offline_banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#c0392b;padding:8px 20px;text-align:center;z-index:9998;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are offline — data may be outdated</div>
 <div id="demo_banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#b8860b;padding:10px 20px;text-align:center;z-index:9999;align-items:center;justify-content:center;gap:16px;">
   <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are viewing demo data</span>
   <a href="/onboarding" style="padding:6px 14px;background:#fff;color:#b8860b;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;font-weight:700;">Start Free Trial →</a>
@@ -1019,7 +1045,7 @@ window.addEventListener('error', function(e) {
 
 <!-- MAIN -->
 <main class="main">
-  <div class="topbar">
+  <div class="topbar"><span id="freshness_indicator" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);margin-left:12px;"></span>
     <div class="topbar-left">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="page-title" id="pageTitle">Dashboard Overview</div>
@@ -1326,6 +1352,119 @@ function printPL() {
   printWin.print();
 }
 
+
+
+
+
+
+
+// Proactive token refresh — check every 5 minutes, refresh if expiring within 10 minutes
+
+async 
+// Offline detection
+window.addEventListener('online', function() {
+  var el = document.getElementById('offline_banner');
+  if (el) el.style.display = 'none';
+  loadDashboardData(); // Reload data when back online
+});
+window.addEventListener('offline', function() {
+  var el = document.getElementById('offline_banner');
+  if (el) el.style.display = 'flex';
+});
+
+async function safeApiFetch(path, containerId, onSuccess, onError) {
+  try {
+    var data = await apiFetch(path);
+    if (onSuccess) onSuccess(data);
+  } catch(e) {
+    if (containerId) {
+      var el = document.getElementById(containerId);
+      if (el) el.innerHTML = '<div style="padding:16px;font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.2);text-align:center;">Failed to load — ' + (e.message||'unknown error') + '</div>';
+    }
+    if (onError) onError(e);
+  }
+}
+
+function scheduleTokenRefresh() {
+  setInterval(async function() {
+    try {
+      var token = localStorage.getItem('rd_token');
+      if (!token) return;
+      var payload = JSON.parse(atob(token.split('.')[1]));
+      var expiresIn = payload.exp - Math.floor(Date.now()/1000);
+      if (expiresIn < 600) { // Less than 10 minutes left
+        await refreshToken();
+      }
+    } catch(e) {}
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
+
+function trendArrow(current, previous, lowerIsBetter) {
+  if (!previous || previous === 0) return '';
+  var pct = ((current - previous) / previous * 100);
+  var up = pct > 0;
+  var good = lowerIsBetter ? !up : up;
+  var color = good ? '#81c995' : '#e57373';
+  var arrow = up ? '↑' : '↓';
+  return '<span style="font-size:11px;color:'+color+';margin-left:6px;font-family:IBM Plex Mono,monospace;">'+arrow+' '+Math.abs(pct).toFixed(1)+'%</span>';
+}
+
+function updateDateRangeLabel(period) {
+  var el = document.getElementById('date_range_label');
+  if (!el) return;
+  var today = new Date();
+  var fmt = function(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+  var labels = {
+    today: 'Today · ' + fmt(today),
+    week: 'Week of ' + fmt(new Date(today.setDate(today.getDate()-today.getDay()))) + ' – ' + fmt(new Date()),
+    month: today.toLocaleDateString('en-US',{month:'long',year:'numeric'}),
+    quarter: 'This Quarter',
+    ytd: 'Year to Date'
+  };
+  el.textContent = labels[period] || period;
+}
+
+function updateFreshnessIndicator(lastUpdated) {
+  var el = document.getElementById('freshness_indicator');
+  if (!el) return;
+  if (!lastUpdated) { el.textContent = 'No data yet'; el.style.color = 'rgba(255,255,255,0.2)'; return; }
+  var now = new Date();
+  var updated = new Date(lastUpdated);
+  var diffMins = Math.floor((now - updated) / 60000);
+  var text, color;
+  if (diffMins < 60) { text = 'Updated ' + diffMins + 'm ago'; color = '#81c995'; }
+  else if (diffMins < 1440) { text = 'Updated ' + Math.floor(diffMins/60) + 'h ago'; color = '#f0a030'; }
+  else { text = 'Updated ' + Math.floor(diffMins/1440) + 'd ago'; color = '#e57373'; }
+  el.textContent = text;
+  el.style.color = color;
+}
+
+function showSkeletonLoaders() {
+  var cards = document.querySelectorAll('.kpi-card, .chart-card, .data-card');
+  cards.forEach(function(card) {
+    if (!card.dataset.originalContent) {
+      card.dataset.originalContent = card.innerHTML;
+    }
+    card.innerHTML = '<div class="skeleton-card">' +
+      '<div class="skeleton skeleton-title"></div>' +
+      '<div class="skeleton skeleton-text" style="width:80%"></div>' +
+      '<div class="skeleton skeleton-text" style="width:60%"></div>' +
+      '<div class="skeleton skeleton-text" style="width:70%"></div>' +
+      '</div>';
+  });
+}
+
+function showEmptyState(containerId, icon, title, sub, btnText, btnHref) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '<div class="empty-state">' +
+    '<div class="empty-state-icon">' + icon + '</div>' +
+    '<div class="empty-state-title">' + title + '</div>' +
+    '<div class="empty-state-sub">' + sub + '</div>' +
+    (btnText ? '<a href="' + btnHref + '" class="empty-state-btn">' + btnText + '</a>' : '') +
+    '</div>';
+}
+
 function signOutDashboard() {
   var keys = ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_onboard_state','rd_locations_draft','rd_categories','rd_referred_by','rd_s1_name','rd_s1_email','rd_pilot'];
   keys.forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} });
@@ -1441,6 +1580,8 @@ function clearCustomDate() {
   if (panel) panel.style.display = 'none';
   loadDashboardData();
 }
+
+scheduleTokenRefresh();
 
 async function loadDashboardData() {
   // Track usage

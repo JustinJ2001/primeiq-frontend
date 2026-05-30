@@ -136,9 +136,13 @@ window.addEventListener('error', function(e) {
     <div id="loc_tabs" class="loc-tab-bar"></div>
     <div id="loc_form"></div>
     <button class="btn-gold" onclick="saveLocation()" style="margin-top:8px">Save Location</button>
+    <button class="btn-outline" onclick="addNewLocation()" style="margin-top:8px">+ Add New Location</button>
   </div>
 
   <!-- DATA UPLOAD -->
+  <div id="sync_notification" style="display:none;background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--green);">
+    ✓ Data uploaded — your dashboard will update within a few minutes. <a href="/dashboard" style="color:var(--gold);">View Dashboard →</a>
+  </div>
   <div class="section">
     <div class="section-title">Upload Data</div>
     <div class="section-sub">Upload a fresh CSV export from your POS, payroll system, or delivery platform</div>
@@ -317,7 +321,7 @@ function renderLocationForm(idx) {
   var loc = state.locations[idx];
   if (!loc) return;
   document.getElementById('loc_form').innerHTML = '<div class="f-row">'+
-    '<div class="f-group"><label class="f-label">Location Name</label><input class="f-input" id="lf_name" value="'+(loc.name||'')+'"></div>'+
+    '<div class="f-group"><label class="f-label">Location Name</label><input class="f-input" id="lf_name" value="'+(loc.name||'')+'" oninput="updateTabName(this.value)"></div>'+
     '<div class="f-group"><label class="f-label">Address</label><input class="f-input" id="lf_address" value="'+(loc.address||'')+'"></div>'+
     '</div>'+
     '<div style="font-family:IBM Plex Mono,monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Monthly Fixed Costs</div>'+
@@ -335,6 +339,35 @@ function renderLocationForm(idx) {
 
 function field(id, label, val) {
   return '<div class="f-group"><label class="f-label">'+label+'</label><input class="f-input" id="'+id+'" type="number" value="'+(val||'')+'"></div>';
+}
+
+
+async 
+function updateTabName(newName) {
+  var tabs = document.querySelectorAll('.loc-tab');
+  if (tabs[state.activeLocIdx]) {
+    tabs[state.activeLocIdx].textContent = newName || 'Location ' + (state.activeLocIdx+1);
+  }
+}
+
+async function addNewLocation() {
+  var name = prompt('New location name (e.g. Downtown, Midtown):');
+  if (!name || !name.trim()) return;
+  var address = prompt('Address:');
+  if (!address || !address.trim()) return;
+  try {
+    var clientId = lsGet('rd_client_id');
+    var saved = await apiFetch('/api/locations/bulk', 'POST', {
+      client_id: clientId,
+      locations: [{ name: name.trim(), address: address.trim(), rent: 0, utilities: 0, insurance: 0, supplies: 0, marketing: 0, software: 0, foodTarget: 31, laborTarget: 34 }]
+    });
+    if (saved && saved.locations) {
+      state.locations = state.locations.concat(saved.locations);
+      renderLocationTabs();
+      renderLocationForm(state.locations.length - 1);
+      showAlert('loc_alert', 'Location added.', 'success');
+    }
+  } catch(e) { showAlert('loc_alert', e.message, 'error'); }
 }
 
 async function saveLocation() {
@@ -426,7 +459,7 @@ async function handleSettingsCSV(file) {
     }
     preview.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);padding:10px">Uploading ' + validation.row_count + ' rows...</div>';
     await apiFetch('/api/csv/upload', 'POST', { client_id: clientId, location_id: locId, type: type, content: text });
-    preview.innerHTML = '<div style="padding:12px;background:var(--green-bg);border-radius:8px;color:var(--green);font-size:12px">✓ ' + validation.row_count + ' rows uploaded. Dashboard will update shortly.</div>';
+    document.getElementById('sync_notification') && (document.getElementById('sync_notification').style.display='block'); preview.innerHTML = '<div style="padding:12px;background:var(--green-bg);border-radius:8px;color:var(--green);font-size:12px">✓ ' + validation.row_count + ' rows uploaded. Dashboard will update shortly.</div>';
     showAlert('upload_alert', 'Data uploaded successfully.', 'success');
   } catch(e) {
     preview.innerHTML = '<div style="padding:12px;background:var(--red-bg);border-radius:8px;color:var(--red);font-size:12px">Upload failed: ' + e.message + '</div>';

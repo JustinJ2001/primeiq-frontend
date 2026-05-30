@@ -79,12 +79,20 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
       <div class="stat"><div class="stat-label">Active (Paying)</div><div class="stat-val" id="stat_active" style="color:var(--green)">—</div></div>
       <div class="stat"><div class="stat-label">Pilot</div><div class="stat-val" id="stat_pilot" style="color:var(--gold)">—</div></div>
       <div class="stat"><div class="stat-label">Pending Setup</div><div class="stat-val" id="stat_pending" style="color:var(--amber)">—</div></div>
+      <div class="stat"><div class="stat-label">MRR</div><div class="stat-val" id="stat_mrr" style="color:#e8b84b">—</div></div>
     </div>
 
     <!-- CLIENTS TABLE -->
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div class="section-title" style="margin:0">All Clients</div>
+        <select id="filter_status" onchange="filterClients()" style="padding:7px 12px;border:1.5px solid rgba(255,255,255,0.1);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);outline:none;margin-right:8px;">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="pilot">Pilot</option>
+          <option value="pending">Onboarding</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
         <input type="text" id="search_input" placeholder="Search..." oninput="filterClients()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:10px;outline:none;width:180px;">
       </div>
       <div class="client-row header-row">
@@ -158,6 +166,8 @@ async function loadData() {
     // Stats
     document.getElementById('stat_total').textContent = allClients.length;
     document.getElementById('stat_active').textContent = allClients.filter(function(c){ return c.status === 'active' && !c.is_pilot; }).length;
+    var payingCount = allClients.filter(function(c){ return c.status === 'active' && !c.is_pilot; }).length;
+    document.getElementById('stat_mrr').textContent = '$' + (payingCount * 500).toLocaleString();
     document.getElementById('stat_pilot').textContent = allClients.filter(function(c){ return c.is_pilot; }).length;
     document.getElementById('stat_pending').textContent = allClients.filter(function(c){ return !c.setup_complete; }).length;
     document.getElementById('last_refreshed').textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -202,8 +212,15 @@ function renderClients(clients) {
 
 function filterClients() {
   var q = document.getElementById('search_input').value.toLowerCase();
+  var statusFilter = document.getElementById('filter_status').value;
   renderClients(allClients.filter(function(c){
-    return (c.name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q);
+    var matchesSearch = (c.name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q);
+    var matchesStatus = !statusFilter ||
+      (statusFilter === 'pilot' && c.is_pilot) ||
+      (statusFilter === 'active' && c.status === 'active' && !c.is_pilot) ||
+      (statusFilter === 'pending' && !c.setup_complete) ||
+      (statusFilter === 'cancelled' && c.status === 'cancelled');
+    return matchesSearch && matchesStatus;
   }));
 }
 
