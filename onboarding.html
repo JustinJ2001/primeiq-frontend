@@ -205,7 +205,7 @@ window.addEventListener('error', function(e) {
     </div>
   </div>
   <script>(function(){try{var n=window.localStorage.getItem("rd_s1_name"),e=window.localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}}catch(ex){};})()</script>
-  <div id="different_account_hint" style="display:none;text-align:center;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3)">Not your account? <a href="#" onclick="signOutAndLogin()" style="color:rgba(255,255,255,0.4);text-decoration:underline;">Sign in with a different account →</a></div>
+  <div id="different_account_hint" style="display:none;text-align:center;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Not your account? <a href="#" onclick="signOutAndLogin()" style="color:var(--gold);text-decoration:none;">Sign in with a different account →</a></div>
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
     <div class="panel-title">What kind of restaurant are you?</div>
@@ -1022,7 +1022,7 @@ function renderLocationForms() {
           <input class="f-input" type="number" placeholder="800" value="${loc.marketing || ''}" oninput="updateLocation(${i},'marketing',this.value)"></div>
         <div class="f-group"><label class="f-label">Software</label>
           <input class="f-input" type="number" placeholder="310" value="${loc.software || ''}" oninput="updateLocation(${i},'software',this.value)"></div>
-
+        ${(loc.custom_costs||[]).map(function(cc,ci){ return '<div class="f-group"><label class="f-label" style="display:flex;justify-content:space-between;">' + cc.label + '<span onclick="removeObCustomCost(' + i + ',' + ci + ')" style="color:var(--red);cursor:pointer;font-weight:400">✕ Remove</span></label><input class="f-input" type="number" placeholder="0" value="' + (cc.value||0) + '" oninput="updateCustomCostOb(' + i + ',' + ci + ',this.value)"></div>'; }).join('')}
           <div class="f-hint">Used for break-even calculator</div></div>
       </div>
       <div class="section-divider">Cost Targets</div>
