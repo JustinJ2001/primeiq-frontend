@@ -213,14 +213,31 @@ async function sendReset() {
 (async function(){
   try {
     var t = localStorage.getItem('rd_token');
-    var c = localStorage.getItem('rd_client_id');
+    var clientId = localStorage.getItem('rd_client_id');
     var done = localStorage.getItem('rd_setup_complete');
-    if (!t || !c) return;
-    // Verify token is still valid
+    if (!t || !clientId) return;
+    // Verify Supabase token is still valid
     var r = await fetch('https://rkxhrdecrqtqoorjyfel.supabase.co/auth/v1/user', {
       headers: { 'Authorization': 'Bearer ' + t, 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw' }
     });
-    if (r.status !== 200) { localStorage.removeItem('rd_token'); return; }
+    if (r.status !== 200) {
+      // Token invalid — clear and stay on login
+      localStorage.removeItem('rd_token');
+      localStorage.removeItem('rd_client_id');
+      localStorage.removeItem('rd_setup_complete');
+      return;
+    }
+    // Verify client record still exists in our DB
+    var cr = await fetch('https://restaurant-api-68re.onrender.com/api/clients/' + clientId, {
+      headers: { 'Authorization': 'Bearer ' + t }
+    });
+    if (cr.status === 404 || cr.status === 403) {
+      // Account deleted or access denied — clear all keys and stay on login
+      ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_pilot','rd_last_period'].forEach(function(k){ localStorage.removeItem(k); });
+      return;
+    }
+    if (!cr.ok) return; // API error — stay on login, don't redirect
+    // All good — redirect
     if (done === 'true') window.location.href = '/dashboard';
     else window.location.href = '/onboarding';
   } catch(e) {}
