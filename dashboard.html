@@ -831,7 +831,7 @@ body::before {
 <script>
 (function(){
   var p = new URLSearchParams(window.location.search);
-  if(p.get('demo')==='1') { document.getElementById('demo_banner').style.display='flex'; document.querySelector('.sidebar') && (document.querySelector('.sidebar').style.top='44px'); document.querySelector('.main') && (document.querySelector('.main').style.paddingTop='44px'); document.body.style.visibility='visible'; return; }
+  if(p.get('demo')==='1') { var t=localStorage.getItem('rd_token'),ci=localStorage.getItem('rd_client_id'); if(!t||!ci){ var banner=document.getElementById('demo_banner'); banner.style.display='flex'; var bh=banner.offsetHeight||44; document.querySelector('.sidebar') && (document.querySelector('.sidebar').style.top=bh+'px'); document.querySelector('.main') && (document.querySelector('.main').style.marginTop=bh+'px'); document.querySelector('.topbar') && (document.querySelector('.topbar').style.top=bh+'px'); } document.body.style.visibility='visible'; return; }
   var token = localStorage.getItem('rd_token');
   var clientId = localStorage.getItem('rd_client_id');
   var done = localStorage.getItem('rd_setup_complete');
