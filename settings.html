@@ -463,7 +463,7 @@ async function renderIntegrations() {
     if (squareInt) {
       var lastSync = squareInt.last_sync_at ? new Date(squareInt.last_sync_at).toLocaleDateString() : 'never';
       if (statusEl) statusEl.innerHTML = '<span style="color:var(--green)">✓ Connected</span> · Last sync: ' + lastSync;
-      if (actionEl) actionEl.innerHTML = '<button onclick="syncSquareNow()" style="padding:8px 16px;border-radius:7px;border:1.5px solid rgba(45,122,79,0.3);background:var(--green-bg);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);cursor:pointer;letter-spacing:0.06em;">↻ Sync Now</button>';
+      if (actionEl) actionEl.innerHTML = '<button onclick="syncSquareNow()" style="padding:8px 16px;border-radius:7px;border:1.5px solid rgba(45,122,79,0.3);background:var(--green-bg);font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);cursor:pointer;letter-spacing:0.06em;">↻ Sync Now</button>';
     }
   } catch(e) {}
 }
