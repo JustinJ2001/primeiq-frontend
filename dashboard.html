@@ -853,18 +853,7 @@ body::before {
   document.body.style.visibility='visible';
 })();
 </script>
-<script>
-(function(){
-  var p = new URLSearchParams(window.location.search);
-  if(p.get('demo')==='1') { var t=localStorage.getItem('rd_token'),ci=localStorage.getItem('rd_client_id'),done=localStorage.getItem('rd_setup_complete'); if(t&&ci&&done==='true'){ window.history.replaceState({},'','/dashboard'); } else { var banner=document.getElementById('demo_banner'); banner.style.display='flex'; var bh=44; document.querySelector('.sidebar') && (document.querySelector('.sidebar').style.top=bh+'px'); document.querySelector('.main') && (document.querySelector('.main').style.marginTop=bh+'px'); } document.body.style.visibility='visible'; return; }
-  var token = localStorage.getItem('rd_token');
-  var clientId = localStorage.getItem('rd_client_id');
-  var done = localStorage.getItem('rd_setup_complete');
-  if(!token || !clientId || done !== 'true') {
-    window.location.replace(!token ? '/login' : '/onboarding');
-  }
-})();
-</script>
+
 <script>
 // Lightweight frontend error tracking — sends to API
 window.addEventListener('error', function(e) {
@@ -1085,8 +1074,8 @@ window.addEventListener('error', function(e) {
 // ── DEMO DATA ────────────────────────────────────────────────────────────────
 
 // ── API CONFIG ────────────────────────────────────────────────────────────────
-const API_BASE    = 'https://restaurant-api-68re.onrender.com';
-const SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
+var API_BASE    = 'https://restaurant-api-68re.onrender.com';
+var SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
 
 // ── AUTH CHECK ────────────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem('rd_token'); }
@@ -1365,7 +1354,7 @@ async
 window.addEventListener('online', function() {
   var el = document.getElementById('offline_banner');
   if (el) el.style.display = 'none';
-  loadDashboardData(); // Reload data when back online
+  if (typeof loadDashboardData === 'function') loadDashboardData();
 });
 window.addEventListener('offline', function() {
   var el = document.getElementById('offline_banner');
@@ -1386,17 +1375,21 @@ async function safeApiFetch(path, containerId, onSuccess, onError) {
 }
 
 function scheduleTokenRefresh() {
-  setInterval(async function() {
-    try {
-      var token = localStorage.getItem('rd_token');
-      if (!token) return;
-      var payload = JSON.parse(atob(token.split('.')[1]));
-      var expiresIn = payload.exp - Math.floor(Date.now()/1000);
-      if (expiresIn < 600) { // Less than 10 minutes left
-        await refreshToken();
-      }
-    } catch(e) {}
-  }, 5 * 60 * 1000); // Every 5 minutes
+  try {
+    setInterval(async function() {
+      try {
+        var token = localStorage.getItem('rd_token');
+        if (!token) return;
+        var parts = token.split('.');
+        if (parts.length !== 3) return;
+        var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        var expiresIn = payload.exp - Math.floor(Date.now()/1000);
+        if (expiresIn < 600) {
+          await refreshToken();
+        }
+      } catch(e) {}
+    }, 5 * 60 * 1000);
+  } catch(e) {}
 }
 
 function trendArrow(current, previous, lowerIsBetter) {
@@ -1819,14 +1812,14 @@ let state = {
   ]
 };
 
-let activePeriod = 'week';
-let activePage = 'overview';
+var activePeriod = 'week';
+var activePage = 'overview';
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const fmtDollar = n => n >= 1000000 ? '$'+(n/1000000).toFixed(1)+'M' : n >= 1000 ? '$'+(n/1000).toFixed(0)+'K' : '$'+n.toLocaleString();
-const fmtPct = n => n.toFixed(1)+'%';
-const periodLabel = { today:'Today', week:'This Week', month:'This Month', quarter:'This Quarter', ytd:'YTD' };
+var $ = id => document.getElementById(id);
+var fmtDollar = n => n >= 1000000 ? '$'+(n/1000000).toFixed(1)+'M' : n >= 1000 ? '$'+(n/1000).toFixed(0)+'K' : '$'+n.toLocaleString();
+var fmtPct = n => n.toFixed(1)+'%';
+var periodLabel = { today:'Today', week:'This Week', month:'This Month', quarter:'This Quarter', ytd:'YTD' };
 
 function totalRevenue(period) { return state.locations.reduce((s,l) => s + l.revenue[period], 0); }
 function avgFoodCost(period)  { return state.locations.reduce((s,l) => s + l.foodCost[period], 0) / state.locations.length; }
@@ -4147,7 +4140,7 @@ function updateSidebarName(name) {
 }
 
 // ── PAGE MAP ─────────────────────────────────────────────────────────────────
-const pageMap = {
+var pageMap = {
   overview:  { title:'Dashboard Overview',       sub:function(){return 'Today · All locations · Auto-synced from '+state.pos;},         render: renderOverview },
   locations: { title:'Location Performance',     sub:function(){return state.locations.length+' locations · '+periodLabel[activePeriod];}, render: renderLocations },
   daily:     { title:'Revenue Over Time',                  sub:function(){return 'This week · Auto-synced from '+state.pos;},                       render: renderDaily },
