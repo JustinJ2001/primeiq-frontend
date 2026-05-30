@@ -1413,7 +1413,7 @@ function showEmptyState(containerId, icon, title, sub, btnText, btnHref) {
 }
 
 function signOutDashboard() {
-  var keys = ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_onboard_state','rd_locations_draft','rd_categories','rd_referred_by','rd_s1_name','rd_s1_email','rd_pilot'];
+  var keys = ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_onboard_state','rd_locations_draft','rd_categories','rd_referred_by','rd_s1_name','rd_s1_email','rd_pilot','rd_last_period'];
   keys.forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} });
   window.location.href = '/login';
 }
@@ -1573,6 +1573,7 @@ async function loadDashboardData() {
     if (data && data.locations && data.locations.length > 0) {
       state = transformAPIData(data);
       updateSidebarName(state.name);
+      if(typeof updateFreshnessIndicator === 'function') updateFreshnessIndicator(data.client && data.client.last_synced_at);
       navigate('overview');
     } else {
       showNoDataBanner();
@@ -1614,27 +1615,17 @@ function showDemoBanner() {
 }
 
 function showNoDataBanner() {
-  var content = document.getElementById('mainContent');
-  if (!content) return;
-  content.innerHTML = [
-    '<div style="padding:40px 32px;max-width:600px">',
-    '<div style="font-family:Playfair Display,serif;font-size:22px;color:var(--dark);margin-bottom:8px">Your dashboard is ready</div>',
-    '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:24px">Upload your data to see your real numbers</div>',
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px">',
-    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 1 — Upload your sales data</div>',
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Export a CSV from your POS. Instructions are in Settings → Upload Data.</div>',
-    '<button onclick="goToSettings()" style="padding:9px 18px;background:var(--gold);color:white;border:none;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer">Go to Settings →</button>',
-    '</div>',
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px">',
-    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 2 — Add your fixed costs</div>',
-    '<div style="font-size:12px;color:var(--muted)">Enter rent, utilities, and insurance in Settings → Locations so we can calculate your estimated P&L.</div>',
-    '</div>',
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">',
-    '<div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">Step 3 — Explore the demo</div>',
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">See what your dashboard will look like with a sample restaurant.</div>',
-    '<button onclick="goToDemo()" style="padding:9px 18px;background:transparent;color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;cursor:pointer">View Demo →</button>',
-    '</div></div>'
-  ].join('');
+  document.body.style.visibility = 'visible';
+  var main = document.getElementById('mainContent');
+  if (main) {
+    main.innerHTML = '<div style="padding:60px 40px;text-align:center;max-width:560px;margin:0 auto;">' +
+      '<div style="font-size:48px;margin-bottom:20px;opacity:0.3">📊</div>' +
+      '<div style="font-family:Playfair Display,serif;font-size:24px;color:rgba(255,255,255,0.7);margin-bottom:10px">No data yet</div>' +
+      '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:28px;line-height:1.8;letter-spacing:0.06em">Upload a CSV export from your POS to populate your dashboard.<br>It takes about 2 minutes.</div>' +
+      '<a href="/settings" style="display:inline-block;padding:12px 28px;background:#b8860b;color:#fff;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.1em;text-decoration:none;text-transform:uppercase;">Upload Data in Settings →</a>' +
+      '<div style="margin-top:16px"><a href="/dashboard?demo=1" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.2);text-decoration:none;">View demo data instead</a></div>' +
+      '</div>';
+  }
 }
 function goToSettings() { window.location.href = '/settings'; }
 function goToDemo() { window.location.href = '/dashboard?demo=1'; }

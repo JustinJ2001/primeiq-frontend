@@ -39,10 +39,10 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .card-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--dark);margin-bottom:3px;}
 .card-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:16px;}
 .f-group{margin-bottom:14px;}
-.f-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.f-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#5a4a2a;display:block;margin-bottom:6px;}
 .f-input,.f-select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'Lato',sans-serif;font-size:13.5px;color:var(--dark);outline:none;transition:border-color 0.15s;}
 .f-input:focus,.f-select:focus{border-color:var(--gold);}
-.f-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;}
+.f-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7a6a4a;margin-top:4px;}
 .f-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
 .f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
 .f-error{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red);margin-top:4px;display:none;}
@@ -989,7 +989,10 @@ function renderLocationForms() {
         <div class="f-group"><label class="f-label">Address</label>
           <input class="f-input" placeholder="458 W 46th St, New York" value="${escapeHtml(loc.address)}" oninput="updateLocation(${i},'address',this.value)"></div>
       </div>
-      <div class="section-divider">Monthly Fixed Costs</div>
+      <div class="section-divider" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Monthly Fixed Costs</span>
+        <button type="button" onclick="addObCustomCost(${i})" style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--gold);background:none;border:1px solid rgba(184,134,11,0.3);border-radius:4px;padding:3px 8px;cursor:pointer;">+ Add Cost</button>
+      </div>
       <div class="f-row3">
         <div class="f-group"><label class="f-label">Rent</label>
           <input class="f-input" type="number" placeholder="8200" value="${loc.rent || ''}" oninput="updateLocation(${i},'rent',this.value)"></div>
@@ -1028,6 +1031,29 @@ function addLocation() {
 }
 
 function removeLocation(i) { state.locations.splice(i, 1); renderLocationForms(); }
+
+
+function addObCustomCost(idx) {
+  var label = prompt('Cost name (e.g. Laundry, Pest Control, Repairs):');
+  if (!label || !label.trim()) return;
+  if (!state.locations[idx].custom_costs) state.locations[idx].custom_costs = [];
+  state.locations[idx].custom_costs.push({ label: label.trim(), value: 0 });
+  lsSet('rd_locations_draft', JSON.stringify(state.locations));
+  renderLocations();
+}
+
+function removeObCustomCost(idx, ci) {
+  if (!state.locations[idx].custom_costs) return;
+  state.locations[idx].custom_costs.splice(ci, 1);
+  lsSet('rd_locations_draft', JSON.stringify(state.locations));
+  renderLocations();
+}
+
+function updateCustomCostOb(idx, ci, val) {
+  if (!state.locations[idx].custom_costs) return;
+  state.locations[idx].custom_costs[ci].value = parseFloat(val)||0;
+  lsSet('rd_locations_draft', JSON.stringify(state.locations));
+}
 
 function updateLocation(i, key, value) { state.locations[i][key] = value; }
 
