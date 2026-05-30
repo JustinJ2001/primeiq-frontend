@@ -831,7 +831,7 @@ body::before {
 <script>
 (function(){
   var p = new URLSearchParams(window.location.search);
-  if(p.get('demo')==='1') { document.getElementById('demo_banner').style.display='flex'; document.body.style.visibility='visible'; return; }
+  if(p.get('demo')==='1') { document.getElementById('demo_banner').style.display='flex'; document.querySelector('.sidebar') && (document.querySelector('.sidebar').style.top='44px'); document.querySelector('.main') && (document.querySelector('.main').style.paddingTop='44px'); document.body.style.visibility='visible'; return; }
   var token = localStorage.getItem('rd_token');
   var clientId = localStorage.getItem('rd_client_id');
   var done = localStorage.getItem('rd_setup_complete');
@@ -872,7 +872,7 @@ window.addEventListener('error', function(e) {
     <button onclick="clearCustomDate()" style="padding:8px 14px;border-radius:6px;border:1px solid rgba(40,25,5,0.12);background:#fff;font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;color:#8a7a5a;">Clear</button>
   </div>
 </div>
-<div id="demo_banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#b8860b;padding:10px 20px;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:center;gap:16px;">
+<div id="demo_banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#b8860b;padding:10px 20px;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:center;gap:16px;">
   <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are viewing demo data</span>
   <a href="/onboarding" style="padding:6px 14px;background:#fff;color:#b8860b;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;font-weight:700;">Start Free Trial →</a>
   <a href="/login" style="padding:6px 14px;border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;">Sign In</a>
