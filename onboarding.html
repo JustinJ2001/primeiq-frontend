@@ -1761,14 +1761,21 @@ async function doGenericUpload(type, previewId, alertId) {
       var locSel = document.getElementById('pos_loc_id') || document.getElementById('del_loc_id') || document.getElementById('pay_loc_id');
       if (locSel) { var opt = locSel.options[locSel.selectedIndex]; locName = opt ? opt.text : ''; }
     } catch(e) {}
-    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows saved' + (locName ? ' for ' + locName : '') + '</div>'
-      + (state.locations.length > 1 ? '<div style="margin-top:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Have another location? Change the dropdown above and upload again.</div>' : '');
-    showAlert(alertId, 'Data uploaded successfully.' + (state.locations.length > 1 ? ' Change the location dropdown to upload for your other location.' : ''), 'success');
-    // Reset all file inputs so browser allows selecting a new file for the next location
+    // Add success to log (accumulates per upload)
+    var logId = previewId + '_log';
+    var logEl = document.getElementById(logId);
+    if (!logEl) {
+      logEl = document.createElement('div');
+      logEl.id = logId;
+      if (previewEl && previewEl.parentNode) previewEl.parentNode.insertBefore(logEl, previewEl);
+    }
+    logEl.innerHTML += '<div style="padding:10px 12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px;margin-bottom:6px">✓ ' + validation.row_count + ' rows uploaded' + (locName ? ' for <strong>' + locName + '</strong>' : '') + '</div>';
+    // Clear preview so upload zone is ready for next location
+    if (previewEl) previewEl.innerHTML = '';
+    showAlert(alertId, 'Uploaded' + (locName ? ' for ' + locName : '') + '.' + (state.locations.length > 1 ? ' Now select your other location and upload again.' : ''), 'success');
+    // Reset file inputs so browser allows re-selecting
     document.querySelectorAll('input[type="file"]').forEach(function(el){ try{ el.value = ''; }catch(e){} });
-    // Clear pending CSV so a fresh file must be selected
-    var types = ['sales','delivery','labor'];
-    types.forEach(function(t){ window['_pendingCSV_' + t] = null; });
+    window['_pendingCSV_' + type] = null;
   } catch(e) {
     var errMsg = e.message || 'Upload failed. Please try again.';
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px">Upload failed: ' + errMsg + '</div>';
