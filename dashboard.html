@@ -2463,8 +2463,9 @@ function renderLabor() {
       <div class="card">
         <div class="card-header"><div><div class="card-title">Actual vs Scheduled Hours · This Week</div><div class="card-sub">From ${state.payroll} · Every employee tracked</div></div><div class="card-badge">⚡ Auto</div></div>
         ${state.locations.map(l => !l.scheduledVsActual ? '' : `
-        <div style="padding:0 20px 6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-top:12px">${l.name}</div>
-        <table class="cost-table" style="margin-bottom:0;min-width:420px">
+        <div style="margin-bottom:8px;border-top:1px solid var(--border);padding-top:8px;background:var(--card)">
+        <div style="padding:0 20px 6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-top:4px">${l.name}</div>
+        <table class="cost-table" style="margin-bottom:0;min-width:420px;background:var(--card)">
           <thead><tr>
             <th>Employee</th><th style="text-align:right">Role</th>
             <th style="text-align:right">Sched</th><th style="text-align:right">Actual</th>
@@ -2480,7 +2481,8 @@ function renderLabor() {
               return '<tr><td style="color:var(--text);font-weight:600">' + s.name + '</td><td class="dim">' + s.role + '</td><td style="color:var(--text)">' + s.scheduled + 'h</td><td style="color:var(--text)">' + s.actual + 'h</td><td class="' + cls + '">' + diffStr + '</td><td><span class="pill ' + pillCls + '">' + tag + '</span></td></tr>';
             }).join('')}
           </tbody>
-        </table></div></div></div>`).join('')}
+        </table>
+        </div></div></div>`).join('')}
         <div style="padding:12px 20px 16px;margin-top:8px;background:var(--amber-bg);border-top:1px solid var(--border)">
           <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:3px">⚠ Overtime costs you 1.5x</div>
           <div style="font-size:10.5px;color:var(--text-dim)">Any hour worked over 40 is paid at 1.5x rate. Catching this Wednesday saves money for the rest of the week. Adjust shifts before it happens, not after.</div>
