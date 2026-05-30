@@ -86,14 +86,18 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-h
     (function() {
       var ref = document.referrer;
       var params = new URLSearchParams(window.location.search);
+      var el = document.getElementById('guide_back');
+      if (!el) return;
       if (params.get('demo') === '1' || ref.includes('demo=1')) {
-        document.getElementById('guide_back').href = '/dashboard?demo=1';
+        el.href = '/dashboard?demo=1'; el.textContent = '← Back to Demo';
       } else if (ref.includes('/dashboard')) {
-        document.getElementById('guide_back').href = '/dashboard';
-      } else if (ref.includes('/settings') || ref.includes('/onboarding')) {
-        document.getElementById('guide_back').href = ref;
+        el.href = '/dashboard'; el.textContent = '← Back to Dashboard';
+      } else if (ref.includes('/settings')) {
+        el.href = '/settings'; el.textContent = '← Back to Settings';
+      } else if (ref.includes('/onboarding')) {
+        el.href = '/onboarding'; el.textContent = '← Back to Setup';
       } else {
-        document.getElementById('guide_back').href = '/';
+        el.href = '/'; el.textContent = '← Home';
       }
     })();
   </script>

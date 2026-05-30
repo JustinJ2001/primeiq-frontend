@@ -31,7 +31,35 @@ a{color:var(--gold);}
 <body>
 <div class="header">
   <div><div class="logo"><em>Prime</em>IQ</div></div>
-  <a href="/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);text-decoration:none;">← Home</a>
+  <a id="back_link" href="/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);text-decoration:none;">← Home</a><script>
+(function() {
+  var ref = document.referrer;
+  var el = document.getElementById('back_link');
+  if (!el) return;
+  if (ref.includes('demo=1')) {
+    el.href = '/dashboard?demo=1';
+    el.textContent = '← Back to Demo';
+  } else if (ref.includes('/dashboard')) {
+    el.href = '/dashboard';
+    el.textContent = '← Back to Dashboard';
+  } else if (ref.includes('/settings')) {
+    el.href = '/settings';
+    el.textContent = '← Back to Settings';
+  } else if (ref.includes('/onboarding')) {
+    el.href = '/onboarding';
+    el.textContent = '← Back to Setup';
+  } else if (ref.includes('/guide')) {
+    el.href = '/guide';
+    el.textContent = '← Back to Guide';
+  } else if (ref.includes('/refer')) {
+    el.href = '/refer';
+    el.textContent = '← Back';
+  } else {
+    el.href = '/';
+    el.textContent = '← Home';
+  }
+})();
+</script>
 </div>
 <div class="main">
   <h1>Frequently Asked Questions</h1>

@@ -114,7 +114,20 @@ window.addEventListener('error', function(e) {
     <div class="logo-sub">Restaurant Analytics</div>
   </div>
   <div class="header-nav">
-    <a href="/dashboard">← Dashboard</a>
+    <a id="settings_back" href="/dashboard">← Dashboard</a><script>
+(function() {
+  var ref = document.referrer;
+  var el = document.getElementById('settings_back');
+  if (!el) return;
+  if (ref.includes('demo=1')) {
+    el.href = '/dashboard?demo=1';
+    el.textContent = '← Demo Dashboard';
+  } else {
+    el.href = '/dashboard';
+    el.textContent = '← Dashboard';
+  }
+})();
+</script>
     <a href="/refer">Refer & Earn</a>
     <a href="/guide">Help</a>
     <a href="#" onclick="signOut()">Sign Out</a>
