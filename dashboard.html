@@ -1152,6 +1152,7 @@ function transformAPIData(apiData) {
 
       // Fixed costs (monthly)
       rent:       loc.rent || 0,
+      custom_costs: loc.custom_costs || [],
       utilities:  loc.utilities || 0,
       insurance:  loc.insurance || 0,
       supplies:   loc.supplies || 0,
@@ -2264,8 +2265,10 @@ function periodFixed(l, p, field) {
 }
 
 function totalFixed(l, p) {
-  return periodFixed(l,p,'rent') + periodFixed(l,p,'utilities') + periodFixed(l,p,'insurance')
+  var standard = periodFixed(l,p,'rent') + periodFixed(l,p,'utilities') + periodFixed(l,p,'insurance')
        + periodFixed(l,p,'supplies') + periodFixed(l,p,'marketing') + periodFixed(l,p,'software');
+  var custom = (l.custom_costs||[]).reduce(function(s,cc){ return s+(parseFloat(cc.value)||0); }, 0);
+  return standard + custom;
 }
 
 function renderCosts() {
@@ -2354,6 +2357,15 @@ function renderCosts() {
               const labels = {rent:'Rent',utilities:'Utilities',insurance:'Insurance',supplies:'Supplies & Smallwares',marketing:'Marketing',software:'Software & POS'};
               return `<tr><td class="ct-label">${labels[field]}</td>${vals.map(v=>`<td style="color:var(--text-dim)">${fmtDollar(Math.round(v))}</td>`).join('')}${state.locations.length > 1 ? `<td style="color:var(--text);font-weight:600">${fmtDollar(Math.round(vals.reduce((a,b)=>a+b,0)))}</td>` : ''}</tr>`;
             }).join('')}
+            ${(function(){
+              var allLabels = {};
+              state.locations.forEach(function(l){ (l.custom_costs||[]).forEach(function(cc){ allLabels[cc.label]=true; }); });
+              return Object.keys(allLabels).map(function(label){
+                var vals = state.locations.map(function(l){ return ((l.custom_costs||[]).find(function(cc){return cc.label===label;})||{value:0}).value||0; });
+                var total = vals.reduce(function(a,b){return a+b;},0);
+                return '<tr><td class="ct-label">'+label+'</td>'+vals.map(function(v){return '<td style="color:var(--text-dim)">'+fmtDollar(Math.round(v))+'</td>';}).join('')+(state.locations.length>1?'<td style="color:var(--text);font-weight:600">'+fmtDollar(Math.round(total))+'</td>':'')+'</tr>';
+              }).join('');
+            })()}
             <tr><td style="font-weight:700;color:var(--text)">Total Fixed</td>${state.locations.map(l=>`<td style="font-weight:600;color:var(--text)">${fmtDollar(Math.round(totalFixed(l,p)))}</td>`).join('')}${state.locations.length > 1 ? `<td style="font-weight:700;color:var(--text)">${fmtDollar(Math.round(state.locations.reduce((s,l)=>s+totalFixed(l,p),0)))}</td>` : ''}</tr>
           </tbody>
         </table></div></div>

@@ -443,7 +443,6 @@ async function addNewLocation() {
 async function saveLocation() {
   var loc = state.locations[state.activeLocIdx];
   if (!loc) return;
-  var loc = state.locations[state.activeLocIdx];
   var body = {
     name: document.getElementById('lf_name').value.trim(),
     address: document.getElementById('lf_address').value.trim(),
