@@ -274,8 +274,9 @@ function setLoading(id, on) {
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadSettings() {
   try {
-    var clientId = lsGet('rd_client_id');
-    var client = await apiFetch('/api/clients/' + clientId);
+    // Use /api/settings which uses proper JWT auth
+    var settingsData = await apiFetch('/api/settings');
+    var client = settingsData.client;
     state.client = client;
 
     // Populate account
@@ -290,21 +291,21 @@ async function loadSettings() {
     statusEl.style.color = status === 'active' ? 'var(--green)' : 'var(--amber)';
     document.getElementById('billing_email').textContent = client.email || '—';
 
-    // Load locations
-    var locsData = await apiFetch('/api/locations?client_id=' + clientId);
-    state.locations = locsData.locations || [];
+    // Load locations from settings response
+    state.locations = settingsData.locations || [];
 
     // Populate location selector for upload
     var sel = document.getElementById('upload_location');
     sel.innerHTML = state.locations.map(function(l){ return '<option value="'+l.id+'">'+l.name+'</option>'; }).join('');
 
     renderLocationTabs();
-    renderLocationForm(0);
+    if (state.locations.length > 0) renderLocationForm(0);
 
   } catch(e) {
     showAlert('global_alert', 'Failed to load settings: ' + e.message, 'error');
+  } finally {
+    document.getElementById('loading_overlay').style.display = 'none';
   }
-  document.getElementById('loading_overlay').style.display = 'none';
 }
 
 // ── LOCATIONS ─────────────────────────────────────────────────────────────────
