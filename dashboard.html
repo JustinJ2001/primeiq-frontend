@@ -1062,7 +1062,7 @@ window.addEventListener('error', function(e) {
       </div>
     <div class="topbar-right">
       <span id="freshness_indicator" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.2);"></span>
-      <button onclick="exportCurrentView()" title="Export current page as CSV" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.color='var(--cream)';this.style.borderColor='rgba(255,220,130,0.3)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ CSV</button>
+      <button onclick="exportCurrentView()" title="Export current page as CSV" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.color='var(--cream)';this.style.borderColor='rgba(255,220,130,0.3)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ Export</button>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
       <button id="themeToggle" style="
         padding:6px 12px; border-radius:8px; border:1px solid var(--border);
@@ -1495,48 +1495,138 @@ apiFetch = async function(path, method, body) {
 };
 
 
-function exportTableToCSV(filename) {
-  // Find the visible table or build from current data
+function exportCurrentView() {
+  var p = activePeriod || 'week';
+  var today = new Date().toISOString().slice(0,10);
   var rows = [];
-  var tables = document.querySelectorAll('table');
-  var bestTable = null;
-  var maxRows = 0;
-  tables.forEach(function(t) {
-    if (t.querySelectorAll('tr').length > maxRows) {
-      maxRows = t.querySelectorAll('tr').length;
-      bestTable = t;
-    }
+
+  function esc(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  function row() { rows.push(Array.from(arguments).map(esc).join(',')); }
+  function blank() { rows.push(''); }
+  function header(title) { rows.push(esc(title)); }
+
+  var rev = totalRevenue(p);
+  var food = avgFoodCost(p);
+  var labor = avgLaborCost(p);
+  var prime = avgPrimeCost(p);
+  var covers = totalCovers(p);
+  var avgChk = overallAvgCheck(p);
+
+  // ── SECTION 1: SUMMARY ──────────────────────────────────────────────────
+  header('PRIMEIQ REPORT — ' + (periodLabel[p] || p).toUpperCase() + ' — Generated ' + today);
+  blank();
+  header('SUMMARY');
+  row('Metric', 'Value', 'Target', 'Status');
+  row('Total Revenue', '$' + Math.round(rev).toLocaleString(), '—', '—');
+  row('Total Covers', covers.toLocaleString(), '—', '—');
+  row('Avg Check', '$' + avgChk.toFixed(2), '—', '—');
+  row('Food Cost %', food.toFixed(1) + '%', state.foodTarget + '%', food <= state.foodTarget ? 'On target' : 'Over by ' + (food - state.foodTarget).toFixed(1) + '%');
+  row('Labor Cost %', labor.toFixed(1) + '%', state.laborTarget + '%', labor <= state.laborTarget ? 'On target' : 'Over by ' + (labor - state.laborTarget).toFixed(1) + '%');
+  row('Prime Cost %', prime.toFixed(1) + '%', state.primeTarget + '%', prime <= state.primeTarget ? 'On target' : 'Over by ' + (prime - state.primeTarget).toFixed(1) + '%');
+  row('Food Cost $', '$' + Math.round(rev * food / 100).toLocaleString(), '—', '—');
+  row('Labor Cost $', '$' + Math.round(rev * labor / 100).toLocaleString(), '—', '—');
+  row('Total Voids', '$' + Math.round(state.locations.reduce(function(s,l){ return s+(l.voids&&l.voids[p]||0); }, 0)).toLocaleString(), '—', '—');
+  row('Total Comps', '$' + Math.round(state.locations.reduce(function(s,l){ return s+(l.comps&&l.comps[p]||0); }, 0)).toLocaleString(), '—', '—');
+
+  // ── SECTION 2: BY LOCATION ───────────────────────────────────────────────
+  blank();
+  header('BY LOCATION');
+  row('Location', 'Revenue', 'Covers', 'Avg Check', 'Food Cost %', 'Labor Cost %', 'Prime Cost %', 'Voids', 'Comps');
+  state.locations.forEach(function(l) {
+    var lPrime = l.foodCost[p] + l.laborCost[p];
+    row(
+      l.name,
+      '$' + Math.round(l.revenue[p]).toLocaleString(),
+      l.covers[p].toLocaleString(),
+      '$' + l.avgCheck[p].toFixed(2),
+      l.foodCost[p].toFixed(1) + '%',
+      l.laborCost[p].toFixed(1) + '%',
+      lPrime.toFixed(1) + '%',
+      '$' + Math.round(l.voids && l.voids[p] || 0).toLocaleString(),
+      '$' + Math.round(l.comps && l.comps[p] || 0).toLocaleString()
+    );
   });
 
-  if (bestTable) {
-    bestTable.querySelectorAll('tr').forEach(function(row) {
-      var cols = [];
-      row.querySelectorAll('th, td').forEach(function(col) {
-        var text = col.innerText.replace(/,/g, ';').replace(/\n/g, ' ').trim();
-        cols.push('"' + text + '"');
-      });
-      if (cols.length) rows.push(cols.join(','));
+  // ── SECTION 3: FIXED COSTS ───────────────────────────────────────────────
+  blank();
+  header('FIXED COSTS (' + (periodLabel[p] || p) + ')');
+  var costFields = ['rent','utilities','insurance','supplies','marketing','software'];
+  var costLabels = {rent:'Rent',utilities:'Utilities',insurance:'Insurance',supplies:'Supplies',marketing:'Marketing',software:'Software'};
+  var headers = ['Cost Item'].concat(state.locations.map(function(l){ return l.name; }));
+  if (state.locations.length > 1) headers.push('Total');
+  row.apply(null, headers);
+  costFields.forEach(function(f) {
+    var vals = state.locations.map(function(l){ return '$' + Math.round(periodFixed(l,p,f)).toLocaleString(); });
+    var total = state.locations.reduce(function(s,l){ return s + periodFixed(l,p,f); }, 0);
+    var rowData = [costLabels[f]].concat(vals);
+    if (state.locations.length > 1) rowData.push('$' + Math.round(total).toLocaleString());
+    row.apply(null, rowData);
+  });
+  // Custom costs
+  var allCustom = {};
+  state.locations.forEach(function(l){ (l.custom_costs||[]).forEach(function(cc){ allCustom[cc.label] = true; }); });
+  Object.keys(allCustom).forEach(function(label) {
+    var vals = state.locations.map(function(l){ return '$' + Math.round(((l.custom_costs||[]).find(function(cc){ return cc.label===label; })||{}).value||0).toLocaleString(); });
+    var total = state.locations.reduce(function(s,l){ return s + (((l.custom_costs||[]).find(function(cc){ return cc.label===label; })||{}).value||0); }, 0);
+    var rowData = [label].concat(vals);
+    if (state.locations.length > 1) rowData.push('$' + Math.round(total).toLocaleString());
+    row.apply(null, rowData);
+  });
+  // Totals
+  var totalFixedVals = state.locations.map(function(l){ return '$' + Math.round(totalFixed(l,p)).toLocaleString(); });
+  var grandTotal = state.locations.reduce(function(s,l){ return s + totalFixed(l,p); }, 0);
+  var totalRow = ['Total Fixed'].concat(totalFixedVals);
+  if (state.locations.length > 1) totalRow.push('$' + Math.round(grandTotal).toLocaleString());
+  row.apply(null, totalRow);
+
+  // ── SECTION 4: DELIVERY ──────────────────────────────────────────────────
+  var totalDelRev = state.locations.reduce(function(s,l){ return s+(l.deliveryRevenue&&l.deliveryRevenue[p]||0); }, 0);
+  if (totalDelRev > 0) {
+    blank();
+    header('DELIVERY (' + (periodLabel[p] || p) + ')');
+    row('Location', 'Gross Revenue', 'Commission (' + state.deliveryCommission + '%)', 'Net Revenue', 'Orders', '% of Total Sales');
+    state.locations.forEach(function(l) {
+      var del = l.deliveryRevenue && l.deliveryRevenue[p] || 0;
+      var comm = Math.round(del * state.deliveryCommission / 100);
+      var net = Math.round(del - comm);
+      var pct = rev > 0 ? (del / rev * 100).toFixed(1) : '0.0';
+      row(l.name, '$' + Math.round(del).toLocaleString(), '$' + comm.toLocaleString(), '$' + net.toLocaleString(), (l.deliveryOrders&&l.deliveryOrders[p]||0).toLocaleString(), pct + '%');
     });
-  } else {
-    rows.push('"No data available"');
   }
 
+  // ── SECTION 5: ESTIMATED P&L ─────────────────────────────────────────────
+  blank();
+  header('ESTIMATED P&L (' + (periodLabel[p] || p) + ')');
+  var foodAmt = Math.round(rev * food / 100);
+  var laborAmt = Math.round(rev * labor / 100);
+  var fixedTotal = Math.round(state.locations.reduce(function(s,l){ return s + totalFixed(l,p); }, 0));
+  var ccAmt = Math.round(rev * state.ccFeeRate / 100);
+  var delCommAmt = Math.round(totalDelRev * state.deliveryCommission / 100);
+  var netIncome = rev - foodAmt - laborAmt - fixedTotal - ccAmt - delCommAmt;
+  row('Line Item', 'Amount', '% of Revenue');
+  row('Revenue', '$' + Math.round(rev).toLocaleString(), '100%');
+  row('Food Cost', '-$' + foodAmt.toLocaleString(), food.toFixed(1) + '%');
+  row('Labor Cost', '-$' + laborAmt.toLocaleString(), labor.toFixed(1) + '%');
+  row('Fixed Costs', '-$' + fixedTotal.toLocaleString(), (fixedTotal/rev*100).toFixed(1) + '%');
+  row('CC Processing (' + state.ccFeeRate + '%)', '-$' + ccAmt.toLocaleString(), state.ccFeeRate + '%');
+  row('Delivery Commissions', '-$' + delCommAmt.toLocaleString(), totalDelRev > 0 ? (delCommAmt/rev*100).toFixed(1) + '%' : '0%');
+  row('Est. Net Income', (netIncome >= 0 ? '$' : '-$') + Math.abs(Math.round(netIncome)).toLocaleString(), (netIncome/rev*100).toFixed(1) + '%');
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────
+  blank();
+  row('Generated by PrimeIQ', 'primeiq.io', today);
+
+  // ── DOWNLOAD ─────────────────────────────────────────────────────────────
   var csv = rows.join('\n');
-  var blob = new Blob([csv], { type: 'text/csv' });
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = filename || ('primeiq-export-' + new Date().toISOString().slice(0,10) + '.csv');
+  a.download = 'primeiq-report-' + (p || 'week') + '-' + today + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-function exportCurrentView() {
-  var page = document.querySelector('.page-title, h2, .section-title');
-  var name = page ? page.innerText.trim().toLowerCase().replace(/\s+/g,'-') : 'dashboard';
-  exportTableToCSV('primeiq-' + name + '-' + new Date().toISOString().slice(0,10) + '.csv');
 }
 
 
