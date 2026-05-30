@@ -1062,6 +1062,7 @@ window.addEventListener('error', function(e) {
       </div>
     <div class="topbar-right">
       <span id="freshness_indicator" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.2);"></span>
+      <button onclick="exportCurrentView()" title="Export current page as CSV" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.color='var(--cream)';this.style.borderColor='rgba(255,220,130,0.3)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">↓ CSV</button>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
       <button id="themeToggle" style="
         padding:6px 12px; border-radius:8px; border:1px solid var(--border);
