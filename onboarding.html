@@ -381,7 +381,8 @@ window.addEventListener('error', function(e) {
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="del_csv_platform_name"></span></div>
         <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
       </div>
-      <div id="del_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your platform above before uploading</div>
+      <div id="del_loc_selector" style="margin-bottom:12px"></div>
+    <div id="del_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your platform above before uploading</div>
       <div id="del_upload_section" style="display:none">
       <div class="csv-upload" onclick="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}handleDeliveryCSVDrop(event)">
         <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert',document.getElementById('del_csv_platform').value)">
@@ -454,6 +455,7 @@ window.addEventListener('error', function(e) {
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="pay_csv_source_name"></span></div>
         <ol id="pay_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
       </div>
+      <div id="pay_loc_selector" style="margin-bottom:12px"></div>
       <div id="pay_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your payroll system above before uploading</div>
       <div id="pay_upload_section" style="display:none">
       <div class="csv-upload" onclick="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}handlePayrollCSVDrop(event)">
@@ -1155,11 +1157,9 @@ function renderPOSStep() {
       + '</div></div>';
   }).join('');
   const locSel = document.getElementById('pos_loc_selector');
-  if (state.locations.length > 1) {
-    locSel.style.display = 'block';
-    locSel.innerHTML = '<div class="f-group"><label class="f-label">Which location?</label><select class="f-select" id="pos_loc_id">' +
-      state.locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('') + '</select></div>';
-  }
+  locSel.style.display = 'block';
+  locSel.innerHTML = '<div class="f-group"><label class="f-label">Upload data for which location?</label><select class="f-select" id="pos_loc_id">' +
+    state.locations.map(l => '<option value="' + l.id + '">' + l.name + '</option>').join('') + '</select><div class="f-hint">Make sure this matches the location you exported from your POS</div></div>';
 }
 
 function selectPOS(posId) {
@@ -1258,6 +1258,13 @@ const DELIVERY_PLATFORMS = [
 ];
 
 function renderDeliveryStep() {
+  // Populate location selector
+  var delLoc = document.getElementById('del_loc_selector');
+  if (delLoc) {
+    delLoc.innerHTML = '<div class="f-group"><label class="f-label">Upload data for which location?</label><select class="f-select" id="del_loc_id">' +
+      state.locations.map(function(l){ return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('') +
+      '</select><div class="f-hint">Make sure this matches the location you exported from your delivery platform</div></div>';
+  }
   const grid = document.getElementById('del_grid');
   grid.innerHTML = DELIVERY_PLATFORMS.map(p => {
     const anyLoc = state.locations[0];
@@ -1323,6 +1330,13 @@ const PAYROLL_SYSTEMS = [
 ];
 
 function renderPayrollStep() {
+  // Populate location selector
+  var payLoc = document.getElementById('pay_loc_selector');
+  if (payLoc) {
+    payLoc.innerHTML = '<div class="f-group"><label class="f-label">Upload data for which location?</label><select class="f-select" id="pay_loc_id">' +
+      state.locations.map(function(l){ return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('') +
+      '</select><div class="f-hint">Make sure this matches the location you exported from your payroll system</div></div>';
+  }
   const grid = document.getElementById('payroll_grid');
   grid.innerHTML = PAYROLL_SYSTEMS.map(function(p) {
     var isConn = state.connectedPayroll && state.connectedPayroll[state.locations[0] && state.locations[0].id] && state.connectedPayroll[state.locations[0].id].provider === p.id;
@@ -1678,7 +1692,11 @@ async function doGenericUpload(type, previewId, alertId) {
   var pending = window['_pendingCSV_' + type];
   if (!pending) { showAlert(alertId || 'pos_alert', 'Please select a file first.', 'error'); return; }
   if (!state.clientId) { showAlert(alertId || 'pos_alert', 'Please complete account setup first.', 'error'); return; }
-  var csvLocEl = document.getElementById('csv_loc_id'); var locId = (csvLocEl && csvLocEl.value) || state.locations[0]?.id || lsGet('rd_client_id');
+  var csvLocEl = document.getElementById('csv_loc_id')
+    || document.getElementById('pos_loc_id')
+    || document.getElementById('del_loc_id')
+    || document.getElementById('pay_loc_id');
+  var locId = (csvLocEl && csvLocEl.value) || (state.locations[0] && state.locations[0].id) || lsGet('rd_client_id');
   var previewEl = document.getElementById(previewId);
   try {
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Validating your file...</div>';

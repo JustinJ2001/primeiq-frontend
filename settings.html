@@ -161,7 +161,10 @@ window.addEventListener('error', function(e) {
     <div id="loc_alert" class="alert"></div>
     <div id="loc_tabs" class="loc-tab-bar"></div>
     <div id="loc_form"></div>
-    <button class="btn-gold" onclick="saveLocation()" style="margin-top:8px">Save Location</button>
+    <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+      <button class="btn-gold" onclick="saveLocation()" style="flex:1">Save Location</button>
+      <button id="delete_loc_btn" onclick="deleteLocation()" style="padding:10px 16px;border-radius:8px;border:1.5px solid rgba(192,57,43,0.3);background:transparent;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--red,#c0392b);cursor:pointer;letter-spacing:0.06em;transition:all 0.2s;" onmouseover="this.style.background='rgba(192,57,43,0.06)'" onmouseout="this.style.background='transparent'">✕ Delete Location</button>
+    </div>
     <button class="btn-outline" onclick="addNewLocation()" style="margin-top:8px">+ Add New Location</button>
   </div>
 
@@ -405,6 +408,9 @@ function updateCustomCost(idx, ci, val) {
 }
 
 function renderLocationForm(idx) {
+  // Show/hide delete button based on location count
+  var delBtn = document.getElementById('delete_loc_btn');
+  if (delBtn) delBtn.style.display = state.locations.length <= 1 ? 'none' : 'inline-block';
   state.activeLocIdx = idx;
   renderLocationTabs();
   var loc = state.locations[idx];
@@ -464,6 +470,30 @@ async function addNewLocation() {
       showAlert('loc_alert', 'Location added.', 'success');
     }
   } catch(e) { showAlert('loc_alert', e.message, 'error'); }
+}
+
+
+async function deleteLocation() {
+  var loc = state.locations[state.activeLocIdx];
+  if (!loc) return;
+  if (state.locations.length <= 1) {
+    showAlert('global_alert', 'You must have at least one location.', 'error');
+    return;
+  }
+  if (!confirm('Delete "' + loc.name + '"? This cannot be undone. All data uploaded for this location will remain in your account but the location will be removed from your dashboard.')) return;
+  try {
+    // Mark location as inactive via API
+    if (loc.id) {
+      await apiFetch('/api/settings/location/' + loc.id, 'PUT', { is_active: false });
+    }
+    state.locations.splice(state.activeLocIdx, 1);
+    state.activeLocIdx = 0;
+    renderLocationTabs();
+    renderLocationForm(0);
+    showAlert('global_alert', 'Location deleted.', 'success');
+  } catch(e) {
+    showAlert('global_alert', 'Failed to delete location: ' + e.message, 'error');
+  }
 }
 
 async function saveLocation() {
