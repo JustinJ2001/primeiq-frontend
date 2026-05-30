@@ -814,13 +814,46 @@ body::before {
 .freshness-bar.ok { background:rgba(45,122,79,0.06); border-color:rgba(45,122,79,0.15); color:var(--green); }
 .freshness-bar.stale { background:rgba(192,57,43,0.08); border-color:rgba(192,57,43,0.2); color:var(--red); }
 .freshness-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
-/* Hide footer nav items on desktop — they live in sidebar-footer */
-.nav-footer-item { display:none; }
-@media (max-width:768px), (pointer:coarse) and (max-width:900px) {
-  .nav-footer-item { display:flex; }
+
+
+
+
+
+/* Mobile footer utility bar — sits above bottom nav */
+.mobile-util-bar {
+  display: none;
 }
-
-
+@media (max-width:768px), (pointer:coarse) and (max-width:900px) {
+  .mobile-util-bar {
+    display: flex;
+    position: fixed;
+    bottom: 56px; /* sits above the 56px bottom nav */
+    left: 0; right: 0;
+    background: #1c1408;
+    border-top: 1px solid rgba(255,220,130,0.12);
+    z-index: 199;
+    justify-content: space-around;
+    padding: 6px 0;
+  }
+  .mobile-util-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: rgba(255,220,130,0.5);
+    text-decoration: none;
+    padding: 4px 12px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    background: none;
+    border: none;
+  }
+  .mobile-util-btn span { font-size: 14px; }
+  /* Push main content up to account for both bars */
+  .main { padding-bottom: 112px !important; }
+}
 
 </style>
 <script>
@@ -902,11 +935,6 @@ window.addEventListener('error', function(e) {
     <div class="nav-item" data-page="breakeven"><span class="nav-icon">⊕</span> Break-even</div>
     <div class="nav-item" data-page="forecast"><span class="nav-icon">◈</span> Sales Forecast</div>
     <div class="nav-item" data-page="benchmark"><span class="nav-icon">◎</span> Industry Benchmarks</div>
-    <div class="nav-group-label nav-footer-item" style="margin-top:auto"></div>
-    <a href="/refer" class="nav-item nav-footer-item" style="text-decoration:none"><span class="nav-icon">↗</span> Refer</a>
-    <a href="/settings" class="nav-item nav-footer-item" style="text-decoration:none"><span class="nav-icon">⚙</span> Settings</a>
-    <a href="/guide" class="nav-item nav-footer-item" style="text-decoration:none"><span class="nav-icon">?</span> Guide</a>
-    <div class="nav-item nav-footer-item" onclick="signOutDashboard()"><span class="nav-icon">→</span> Sign Out</div>
   </nav>
 <div class="sidebar-footer">
       <div style="display:flex;gap:8px;margin-bottom:12px;padding:0 8px;">
@@ -1320,7 +1348,15 @@ function printPL() {
     printWin.document.write(t.outerHTML);
     printWin.document.write('<br>');
   });
-  printWin.document.write('</body></html>');
+  printWin.document.write('
+<div class="mobile-util-bar">
+  <a href="/refer" class="mobile-util-btn"><span>↗</span>Refer</a>
+  <a href="/settings" class="mobile-util-btn"><span>⚙</span>Settings</a>
+  <a href="/guide" class="mobile-util-btn"><span>?</span>Guide</a>
+  <button class="mobile-util-btn" onclick="signOutDashboard()"><span>→</span>Sign Out</button>
+</div>
+
+</body></html>');
   printWin.document.close();
   printWin.print();
 }
