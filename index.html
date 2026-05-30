@@ -75,7 +75,7 @@ nav{padding:20px 40px;display:flex;align-items:center;justify-content:space-betw
 .footer-logo em{font-style:italic;color:#f5ead6;}
 .footer-links{display:flex;gap:20px;}
 .footer-links a{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;letter-spacing:0.06em;}
-@media(max-width:700px){.hero h1{font-size:34px;}.features-grid,.numbers-grid{grid-template-columns:1fr;}.hero{padding:60px 20px 50px;}.nav-links{display:none;}.footer{flex-direction:column;gap:16px;text-align:center;}}
+@media(max-width:700px){.hero h1{font-size:34px;}.features-grid{grid-template-columns:1fr 1fr;}.numbers-grid{grid-template-columns:1fr;}.hero{padding:60px 20px 50px;}.nav-links{display:none;}.footer{flex-direction:column;gap:16px;text-align:center;}}
 
 /* ── CONTRAST OVERRIDES ── */
 .hero-label { font-size: 12px !important; color: #e8b84b !important; }
@@ -138,32 +138,87 @@ nav{padding:20px 40px;display:flex;align-items:center;justify-content:space-betw
       <div class="feature">
         <div class="feature-icon">◈</div>
         <div class="feature-title">Daily Dashboard</div>
-        <div class="feature-desc">Revenue, food cost, labor cost, and prime cost for every location. Updated automatically from your POS every morning.</div>
+        <div class="feature-desc">Revenue, food cost, labor cost, and prime cost for every location — updated every morning. One number tells you if today is going to be a good day or a problem.</div>
       </div>
       <div class="feature">
         <div class="feature-icon">⊕</div>
         <div class="feature-title">Break-Even Calculator</div>
-        <div class="feature-desc">How many covers you need before you start making money today. Share it with your floor manager every shift.</div>
+        <div class="feature-desc">How many covers you need before you start making money today. Calculated from your actual rent, labor, and food cost. Share it with your floor manager every shift.</div>
       </div>
       <div class="feature">
         <div class="feature-icon">⏱</div>
         <div class="feature-title">Sales by Hour</div>
-        <div class="feature-desc">Which hours drive revenue and which are dead. Built-in staffing guide tells you exactly how many FOH and BOH you need per hour.</div>
+        <div class="feature-desc">Which hours drive revenue and which are dead. Built-in staffing guide tells you exactly how many FOH and BOH you need per hour so you stop overstaffing slow windows.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">Revenue Over Time</div>
+        <div class="feature-desc">Your revenue history by day, week, month, quarter, and year-to-date. See trends, spot your best and worst periods, and track whether you are growing or sliding.</div>
       </div>
       <div class="feature">
         <div class="feature-icon">🛵</div>
         <div class="feature-title">Delivery Tracking</div>
-        <div class="feature-desc">What you actually made from DoorDash, Uber Eats, and Grubhub after commission. Most operators are surprised how little it is.</div>
+        <div class="feature-desc">What you actually made from DoorDash, Uber Eats, and Grubhub after commission — not what they say you made. Most operators are surprised how little is left after fees.</div>
       </div>
       <div class="feature">
         <div class="feature-icon">⚠</div>
         <div class="feature-title">Voids & Comps</div>
-        <div class="feature-desc">Every voided transaction logged automatically. Alerts fire when a location goes above 2% — before it becomes a real problem.</div>
+        <div class="feature-desc">Every voided transaction and comp logged from your POS. Unusual patterns by employee or item show up immediately — before it costs you thousands.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⊞</div>
+        <div class="feature-title">Labor & Scheduling</div>
+        <div class="feature-desc">Actual vs scheduled hours by employee. Overtime alerts fire before anyone hits 40 hours — early enough to adjust the schedule before it costs you 1.5x.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">◎</div>
+        <div class="feature-title">Menu Performance</div>
+        <div class="feature-desc">Which items are selling and which are dragging down your food cost. Sales mix and estimated margin by item — so you know what to promote and what to cut.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">▦</div>
+        <div class="feature-title">Full Cost Breakdown</div>
+        <div class="feature-desc">Every cost as a percentage of revenue — food, labor, rent, utilities, insurance, delivery commissions, credit card fees, and any custom costs you add. See exactly where your money goes.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💳</div>
+        <div class="feature-title">Payment Methods</div>
+        <div class="feature-desc">How your customers pay — and what each type costs you. Amex costs nearly double what Visa does. See your processing fees broken down by card type and location.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💵</div>
+        <div class="feature-title">Cash Flow & P&L</div>
+        <div class="feature-desc">Full profit and loss statement auto-generated from your connected systems. Every dollar in and out — revenue, COGS, labor, fixed costs, net profit. No accountant needed.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">◎</div>
+        <div class="feature-title">Industry Benchmarks</div>
+        <div class="feature-desc">How your food cost, labor cost, prime cost, and margins compare to similar restaurants in your market. Know if you are top quartile or leaving money on the table.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">◈</div>
+        <div class="feature-title">Sales Forecast</div>
+        <div class="feature-desc">Predicted revenue for the next 7 days based on your rolling 4-week history. Plan staffing and food orders before the week starts — not after you are already in the weeds.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📧</div>
+        <div class="feature-title">Daily Morning Digest</div>
+        <div class="feature-desc">Every morning at 6am, your key numbers from yesterday land in your inbox. Revenue by location, prime cost, covers, and week-so-far pace — before you walk in the door.</div>
       </div>
       <div class="feature">
         <div class="feature-icon">↗</div>
-        <div class="feature-title">Weekly P&L</div>
-        <div class="feature-desc">Full income statement delivered to your inbox every Monday morning. Revenue, COGS, labor, fixed costs, net profit.</div>
+        <div class="feature-title">Weekly P&L Email</div>
+        <div class="feature-desc">Full income statement delivered every Monday morning. Revenue, food cost, labor, fixed costs, and net profit for every location — the Monday morning report your managers actually read.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📍</div>
+        <div class="feature-title">Multi-Location</div>
+        <div class="feature-desc">All your locations in one dashboard. Compare performance side by side, drill into any location, and see your combined numbers. Unlimited locations — one flat price.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title">Works With Your POS</div>
+        <div class="feature-desc">Square connects automatically. Toast, Clover, Lightspeed, and every other POS works via CSV upload — takes 2 minutes and your dashboard populates within a few minutes.</div>
       </div>
     </div>
   </div>
@@ -220,15 +275,20 @@ nav{padding:20px 40px;display:flex;align-items:center;justify-content:space-betw
     <div class="pricing-card">
       <div><span class="price">$500</span><span class="price-period">/month</span></div>
       <ul class="price-features">
-        <li>Daily food cost, labor, prime cost — automatic</li>
-        <li>Unlimited locations</li>
-        <li>Delivery tracking — DoorDash, Uber Eats, Grubhub</li>
-        <li>Sales by hour with staffing guide</li>
-        <li>Voids and comps alerts</li>
-        <li>Break-even calculator</li>
+        <li>Daily dashboard — food cost, labor, prime cost, revenue</li>
+        <li>Daily 6am email digest with yesterday's numbers</li>
         <li>Weekly P&L every Monday morning</li>
-        <li>Works with Toast, Square, Clover, and more</li>
-        <li>Setup included · Direct support</li>
+        <li>Break-even calculator — covers needed before profit</li>
+        <li>Sales by hour with built-in staffing guide</li>
+        <li>Labor tracking — actual vs scheduled, overtime alerts</li>
+        <li>Delivery tracking — DoorDash, Uber Eats, Grubhub net revenue</li>
+        <li>Voids &amp; comps by employee and item</li>
+        <li>Menu performance — top items by revenue and volume</li>
+        <li>Full cost breakdown including custom cost categories</li>
+        <li>Multi-location — unlimited locations, one price</li>
+        <li>Works with Toast, Square, Clover, Lightspeed, and more</li>
+        <li>Setup support included · Reply-to-email direct support</li>
+        <li>Cancel anytime — no contracts</li>
       </ul>
       <a href="/onboarding" class="btn-pricing">Start Free Trial →</a>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);text-align:center;margin-top:12px">Cancel anytime · No contracts · Secure payment via Stripe</div>
