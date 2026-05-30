@@ -2455,12 +2455,6 @@ function renderCosts() {
         <span class="kpi-tag warn">${fmtPct(state.locations.reduce((s,l)=>s+periodRent(l,p),0)/rev*100)} of revenue</span>
         <div class="kpi-sub">Fixed cost · ${periodLabel[p]}</div>
       </div>
-      <div class="kpi-card warn">
-        <div class="kpi-label">Delivery Commissions</div>
-        <div class="kpi-value">${fmtDollar(Math.round(state.locations.reduce((s,l)=>s+l.deliveryRevenue[p]*state.deliveryCommission/100,0)))}</div>
-        <span class="kpi-tag warn">${state.deliveryCommission}% platform fee</span>
-        <div class="kpi-sub">${state.delivery} · ${periodLabel[p]}</div>
-      </div>
     </div>
 
     <div class="card" style="margin-bottom:14px">
@@ -2514,7 +2508,6 @@ function renderCosts() {
             <tr><td class="ct-label">Food & Beverage Cost</td><td class="${foodCls(avgFoodCost(p))}">${fmtDollar(Math.round(rev*avgFoodCost(p)/100))}</td><td class="${foodCls(avgFoodCost(p))}">${fmtPct(avgFoodCost(p))}</td></tr>
             <tr><td class="ct-label">Labor & Payroll</td><td class="${laborCls(avgLaborCost(p))}">${fmtDollar(Math.round(rev*avgLaborCost(p)/100))}</td><td class="${laborCls(avgLaborCost(p))}">${fmtPct(avgLaborCost(p))}</td></tr>
             <tr><td class="ct-label">Credit Card Processing (${state.ccFeeRate}%)</td><td class="ct-warn">${fmtDollar(Math.round(rev*state.ccFeeRate/100))}</td><td class="ct-warn">${fmtPct(state.ccFeeRate)}</td></tr>
-            <tr><td class="ct-label">Delivery Commissions</td><td class="ct-warn">${fmtDollar(Math.round(state.locations.reduce((s,l)=>s+l.deliveryRevenue[p]*state.deliveryCommission/100,0)))}</td><td class="ct-warn">${fmtPct(state.locations.reduce((s,l)=>s+l.deliveryRevenue[p],0)/rev*state.deliveryCommission)}</td></tr>
             <tr><td class="ct-label">Food Waste</td><td class="ct-warn">${fmtDollar(Math.round(rev*state.locations.reduce((s,l)=>s+l.waste[p],0)/state.locations.length/100))}</td><td class="ct-warn">${fmtPct(state.locations.reduce((s,l)=>s+l.waste[p],0)/state.locations.length)}</td></tr>
             <tr><td style="font-weight:700;color:var(--text)">Total Variable</td><td style="font-weight:700;color:var(--text)">${fmtDollar(Math.round(rev*(avgFoodCost(p)+avgLaborCost(p)+state.ccFeeRate)/100+state.locations.reduce((s,l)=>s+l.deliveryRevenue[p]*state.deliveryCommission/100,0)))}</td><td style="font-weight:700">—</td></tr>
           </tbody>
@@ -4251,7 +4244,6 @@ var pageMap = {
   costs:     { title:'Cost Breakdown',           sub:function(){return periodLabel[activePeriod]+' · Food, Labor, Prime Cost';},           render: renderCosts },
   labor:     { title:'Labor & Scheduling',       sub:function(){return periodLabel[activePeriod]+' · From '+state.payroll;},              render: renderLabor },
   menu:      { title:'Menu Performance',         sub:function(){return 'Sales mix + margin by item · From '+state.pos;},                  render: renderMenu },
-  delivery:  { title:'Delivery & Online Orders', sub:function(){return periodLabel[activePeriod]+' · '+state.delivery;},                  render: renderDelivery },
   expenses:  { title:'All Expenses',             sub:function(){return periodLabel[activePeriod]+' · Every cost broken down';},           render: renderExpenses },
   cashflow:  { title:'Cash Flow',                sub:function(){return periodLabel[activePeriod]+' · Full cash in / out';},               render: renderCashflow },
   pl:        { title:'P&L Statement (Estimated)',            sub:function(){return periodLabel[activePeriod]+' · Estimated — tracked costs only';},                   render: renderPL },

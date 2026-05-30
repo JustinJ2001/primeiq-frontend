@@ -153,11 +153,9 @@ window.addEventListener('error', function(e) {
   <div class="prog-conn" id="conn2"></div>
   <div class="prog-step" id="prog3"><div class="prog-num">3</div><div class="prog-label">POS System</div></div>
   <div class="prog-conn" id="conn3"></div>
-  <div class="prog-step" id="prog4"><div class="prog-num">4</div><div class="prog-label">Delivery</div></div>
+  <div class="prog-step" id="prog4"><div class="prog-num">4</div><div class="prog-label">Payroll</div></div>
   <div class="prog-conn" id="conn4"></div>
-  <div class="prog-step" id="prog5"><div class="prog-num">5</div><div class="prog-label">Payroll</div></div>
-  <div class="prog-conn" id="conn5"></div>
-  <div class="prog-step" id="prog6"><div class="prog-num">6</div><div class="prog-label">Subscribe</div></div>
+  <div class="prog-step" id="prog5"><div class="prog-num">5</div><div class="prog-label">Subscribe</div></div>
 </div>
 <div id="page_loader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s">
   <div style="text-align:center">
@@ -331,74 +329,6 @@ window.addEventListener('error', function(e) {
     </div>
     <span class="skip-link" onclick="skipPOS()">Skip — connect from Settings later</span>
   </div>
-  <!-- STEP 4: DELIVERY -->
-  <div class="panel" id="panel4">
-    <div class="panel-title">Connect delivery platforms</div>
-    <div class="panel-sub">Track orders, gross revenue, commissions, and net per platform automatically</div>
-    <div id="del_alert" class="alert"></div>
-    <div class="connect-grid" id="del_grid"></div>
-    <div class="conn-detail del-detail" id="del_detail_doordash">
-      <div class="conn-detail-title">Connect DoorDash</div>
-      <div class="conn-detail-sub">Authorize via DoorDash Merchant portal</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('doordash')">🔗 Connect with DoorDash →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="doordash_rate" type="number" value="22"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('doordash')">Save Rate →</button>
-    </div>
-    <div class="conn-detail del-detail" id="del_detail_ubereats">
-      <div class="conn-detail-title">Connect Uber Eats</div>
-      <div class="conn-detail-sub">Authorize via Uber Eats for Merchants</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('ubereats')">🔗 Connect with Uber Eats →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="ubereats_rate" type="number" value="30"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('ubereats')">Save Rate →</button>
-    </div>
-    <div class="conn-detail del-detail" id="del_detail_grubhub">
-      <div class="conn-detail-title">Connect GrubHub</div>
-      <div class="conn-detail-sub">Authorize via GrubHub for Restaurants</div>
-      <button class="oauth-btn" onclick="connectDeliveryOAuth('grubhub')">🔗 Connect with GrubHub →</button>
-      <div class="section-divider">Or just set your commission rate</div>
-      <div class="f-group"><label class="f-label">Commission Rate %</label>
-        <input class="f-input" id="grubhub_rate" type="number" value="25"></div>
-      <button class="btn-gold" onclick="setDeliveryCommission('grubhub')">Save Rate →</button>
-    </div>
-    <div class="conn-detail del-detail" id="del_detail_csv">
-      <div class="conn-detail-title">Upload Delivery Payout Data</div>
-      <div class="conn-detail-sub">Select your platform for step-by-step export instructions</div>
-      <div style="margin:14px 0">
-        <label class="f-label">Platform</label>
-        <select id="del_csv_platform" onchange="showDeliveryCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select platform →</option>
-          <option value="doordash">DoorDash</option>
-          <option value="ubereats">Uber Eats</option>
-          <option value="grubhub">Grubhub</option>
-          <option value="other">Other platform</option>
-        </select>
-      </div>
-      <div id="del_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="del_csv_platform_name"></span></div>
-        <ol id="del_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
-      </div>
-      <div id="del_loc_selector" style="margin-bottom:12px"></div>
-    <div id="del_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your platform above before uploading</div>
-      <div id="del_upload_section" style="display:none">
-      <div class="csv-upload" onclick="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}document.getElementById('del_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('del_csv_platform').value){showAlert('del_alert','Please select your platform above first.','error');return;}handleDeliveryCSVDrop(event)">
-        <input type="file" id="del_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'delivery','del_csv_preview','del_alert',document.getElementById('del_csv_platform').value)">
-        <div style="font-size:32px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Your data stays private and encrypted</div>
-      </div>
-      <div id="del_csv_preview" style="margin-top:12px"></div>
-      </div><!-- end del_upload_section -->
-    </div>
-    <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Continue →</button>
-      <button class="btn-outline" onclick="goToStep(3)" style="flex:0 0 100px">← Back</button>
-    </div>
-    <span class="skip-link" onclick="skipDelivery()">Skip — connect from Settings later</span>
-  </div>
   <!-- STEP 5: PAYROLL -->
   <div class="panel" id="panel5">
     <div class="panel-title">Connect payroll or scheduling</div>
@@ -539,7 +469,6 @@ let state = {
   categories: [],
   locations: [],
   connectedPOS: {},
-  connectedDelivery: {},
   connectedPayroll: null,
   checkoutComplete: false,
 };
@@ -873,9 +802,8 @@ function renderStep(n) {
   if (n === '1b') renderCategoryGrid();
   if (n === 2) renderLocationForms();
   if (n === 3) renderPOSStep();
-  if (n === 4) renderDeliveryStep();
-  if (n === 5) renderPayrollStep();
-  if (n === 6) renderReviewStep();
+  if (n === 4) renderPayrollStep();
+  if (n === 5) renderReviewStep();
 }
 
 async function createAccount() {
@@ -1395,7 +1323,6 @@ function skipPayroll() {
 
 function renderReviewStep() {
   const posCount = Object.keys(state.connectedPOS).length;
-  const delCount = Object.values(state.connectedDelivery).reduce((s, d) => s + (d.providers?.length || 0), 0);
   // Build fixed costs summary
   var totalFixedCosts = state.locations.reduce(function(sum, loc) {
     return sum + (parseFloat(loc.rent)||0) + (parseFloat(loc.utilities)||0) + (parseFloat(loc.insurance)||0) + (parseFloat(loc.supplies)||0) + (parseFloat(loc.marketing)||0) + (parseFloat(loc.software)||0);
@@ -1407,8 +1334,7 @@ function renderReviewStep() {
     <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}${locNames ? ' · ' + locNames : ''}</span></div>
     <div class="summary-row"><span class="summary-label">Monthly Fixed Costs</span><span class="summary-val">${totalFixedCosts > 0 ? '$' + totalFixedCosts.toLocaleString() + '/mo' : '—'}</span></div>
     <div class="summary-row"><span class="summary-label">POS Connected</span><span class="summary-val ${posCount > 0 ? 'good' : 'warn'}">${posCount > 0 ? posCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Delivery Platforms</span><span class="summary-val ${delCount > 0 ? 'good' : 'warn'}">${delCount > 0 ? delCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
-    <div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
+<div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Account</span><span class="summary-val">${state.email || lsGet('rd_s1_email') || '—'} <span style='font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)'>(wrong email? <a href="mailto:justin@primeiq.io" style="color:var(--gold)">contact us</a>)</span></span></div>`;
 }
 
