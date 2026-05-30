@@ -330,7 +330,7 @@ window.addEventListener('error', function(e) {
     <span class="skip-link" onclick="skipPOS()">Skip — connect from Settings later</span>
   </div>
   <!-- STEP 5: PAYROLL -->
-  <div class="panel" id="panel5">
+  <div class="panel" id="panel4">
     <div class="panel-title">Connect payroll or scheduling</div>
     <div class="panel-sub">We track actual vs scheduled hours, overtime alerts, and labor cost per day</div>
     <div id="pay_alert" class="alert"></div>
@@ -397,13 +397,13 @@ window.addEventListener('error', function(e) {
       </div><!-- end pay_upload_section -->
     </div>
     <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(6)" style="flex:1">Review & Subscribe →</button>
+      <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Review & Subscribe →</button>
       <button class="btn-outline" onclick="goToStep(4)" style="flex:0 0 100px">← Back</button>
     </div>
     <span class="skip-link" onclick="skipPayroll()">Skip — connect from Settings later</span>
   </div>
   <!-- STEP 6: REVIEW + SUBSCRIBE -->
-  <div class="panel" id="panel6">
+  <div class="panel" id="panel5">
     <div class="panel-title">Review and subscribe</div>
     <div class="panel-sub">One flat price · Cancel anytime · Your data is always yours</div>
     <div id="review_alert" class="alert"></div>
@@ -436,7 +436,7 @@ window.addEventListener('error', function(e) {
         Secure payment via Stripe · Cancel from your billing portal · No hidden fees
       </div>
     </div>
-    <button class="btn-outline" onclick="goToStep(5)">← Back</button>
+    <button class="btn-outline" onclick="goToStep(4)">← Back</button>
   </div>
   <!-- SUCCESS -->
   <div id="panel_success" style="display:none;text-align:center;padding:60px 20px">
@@ -1318,7 +1318,7 @@ async function connectPayrollOAuth(provider) {
 
 function skipPayroll() {
   showAlert('pay_alert', 'Labor data will show as estimated until payroll is connected.', 'info');
-  setTimeout(() => goToStep(6), 1000);
+  setTimeout(() => goToStep(5), 1000);
 }
 
 function renderReviewStep() {
