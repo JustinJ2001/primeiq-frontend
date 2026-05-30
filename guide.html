@@ -81,14 +81,21 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-h
     <div class="logo"><em>Prime</em>IQ</div>
     <div class="logo-sub">Restaurant Analytics</div>
   </div>
-  <a id="guide_back" href="/dashboard" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;">← Back</a>
+  <a id="guide_back" href="/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;">← Back</a>
   <script>
-    // If coming from demo, go back to demo dashboard
-    if (document.referrer.includes('demo=1') || new URLSearchParams(window.location.search).get('demo') === '1') {
-      document.getElementById('guide_back').href = '/dashboard?demo=1';
-    } else if (document.referrer.includes('dashboard')) {
-      document.getElementById('guide_back').href = '/dashboard';
-    }
+    (function() {
+      var ref = document.referrer;
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('demo') === '1' || ref.includes('demo=1')) {
+        document.getElementById('guide_back').href = '/dashboard?demo=1';
+      } else if (ref.includes('/dashboard')) {
+        document.getElementById('guide_back').href = '/dashboard';
+      } else if (ref.includes('/settings') || ref.includes('/onboarding')) {
+        document.getElementById('guide_back').href = ref;
+      } else {
+        document.getElementById('guide_back').href = '/';
+      }
+    })();
   </script>
   <script>(function(){try{var t=localStorage.getItem("rd_token"),c=localStorage.getItem("rd_client_id");var el=document.getElementById("guide_back");if(el&&t&&c){el.href="/dashboard";el.textContent="← Dashboard";}}catch(e){}})()</script>
 </div>
