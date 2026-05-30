@@ -904,14 +904,24 @@ async function createAccount() {
     }
 
     state.email = email;
-    state.userId = authRes.user && authRes.user.id;
-    state.token  = authRes.access_token;
+    // Supabase can return token in different places depending on version
+    state.userId = (authRes.user && authRes.user.id) || (authRes.data && authRes.data.user && authRes.data.user.id);
+    state.token  = authRes.access_token || (authRes.data && authRes.data.session && authRes.data.session.access_token) || (authRes.session && authRes.session.access_token);
     state.restaurantName = name;
 
     if (!state.token || !state.userId) {
-      showAlert('s1_alert', 'Account created! Please <a href="/login" style="color:var(--gold)">sign in here</a> to continue.', 'success');
+      // Token missing — try signing in directly to get a session
       setLoading('s1_btn', false);
-      return;
+      var signInFallback = await supabaseFetch('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password });
+      if (!signInFallback.error && signInFallback.access_token) {
+        state.token = signInFallback.access_token;
+        state.userId = signInFallback.user && signInFallback.user.id;
+        setLoading('s1_btn', true);
+      } else {
+        showAlert('s1_alert', 'Account created! Please <a href="/login" style="color:var(--gold)">sign in here</a> to continue.', 'success');
+        setTimeout(function(){ window.location.href = '/login'; }, 2000);
+        return;
+      }
     }
 
     // Save token immediately

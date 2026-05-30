@@ -67,7 +67,8 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-h
     <div class="logo"><em>Prime</em>IQ</div>
     <div class="logo-sub">Restaurant Analytics</div>
   </div>
-  <a href="/dashboard" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;">← Back to Dashboard</a>
+  <a id="guide_back" href="/" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;">← Back</a>
+  <script>(function(){try{var t=localStorage.getItem("rd_token"),c=localStorage.getItem("rd_client_id");var el=document.getElementById("guide_back");if(el&&t&&c){el.href="/dashboard";el.textContent="← Dashboard";}}catch(e){}})()</script>
 </div>
 
 <div class="hero">
@@ -398,7 +399,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-h
 <div class="cta">
   <h2>Questions?</h2>
   <p>Reply to any email from justin@primeiq.io and I'll get back to you same day.</p>
-  <a href="/dashboard">Back to Dashboard →</a>
+  <a id="cta_btn" href="/onboarding">Get Started →</a><script>(function(){var t=localStorage.getItem("rd_token"),c=localStorage.getItem("rd_client_id");var el=document.getElementById("cta_btn");if(el&&t&&c){el.href="/dashboard";el.textContent="Back to Dashboard →";}})()</script>
 </div>
 
 <script>
