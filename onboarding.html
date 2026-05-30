@@ -1115,7 +1115,7 @@ function connectPOSOAuth(provider) {
   const oauthState2 = btoa(JSON.stringify({ locId, clientId: state.clientId }));
   const urls = {
     toast:      `${CONFIG.toastOAuthUrl}?client_id=${CONFIG.toastClientId}&redirect_uri=${redirectUri}&response_type=code&state=${oauthState2}`,
-    square:     `${CONFIG.squareOAuthUrl}?client_id=${CONFIG.squareAppId}&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ&redirect_uri=${redirectUri}&state=${oauthState2}`,
+    square:     `${CONFIG.squareOAuthUrl}?client_id=sq0idp-LrS4XgLI84qclzt2sJ10uQ&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+MERCHANT_PROFILE_READ&redirect_uri=${redirectUri}&state=${oauthState2}`,
     clover:     `${CONFIG.cloverOAuthUrl}?client_id=${CONFIG.cloverAppId}&redirect_uri=${redirectUri}&state=${oauthState2}`,
     lightspeed: `https://cloud.lightspeedapp.com/oauth/authorize.php?response_type=code&client_id=${CONFIG.lightspeedClientId}&scope=employee:all&redirect_uri=${redirectUri}&state=${oauthState2}`,
   };
@@ -1139,7 +1139,14 @@ async function handleOAuthCallback(provider, code, encodedState) {
       const savedOnboardState = lsGet('rd_onboard_state');
       if (savedOnboardState) Object.assign(state, JSON.parse(savedOnboardState));
       state.connectedPOS[locId] = { provider, status: 'connected' };
-      setTimeout(() => { window.history.replaceState({}, '', window.location.pathname); renderStep(3); }, 1500);
+      // Check if user came from settings
+      var returnTo = localStorage.getItem('rd_square_return');
+      localStorage.removeItem('rd_square_return');
+      if (returnTo === 'settings') {
+        setTimeout(() => { window.location.href = '/settings'; }, 1500);
+      } else {
+        setTimeout(() => { window.history.replaceState({}, '', window.location.pathname); renderStep(3); }, 1500);
+      }
     } else throw new Error(res.error || 'Connection failed');
   } catch(e) { showAlert('cb_alert', 'Connection failed: ' + e.message, 'error'); }
 }

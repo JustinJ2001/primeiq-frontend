@@ -173,6 +173,30 @@ window.addEventListener('error', function(e) {
     ✓ Data uploaded — your dashboard will update within a few minutes. <a href="/dashboard" style="color:var(--gold);">View Dashboard →</a>
   </div>
   <div class="section">
+    <div class="section-title">Integrations</div>
+    <div class="section-sub">Connect your POS to sync data automatically</div>
+    <div id="integration_alert" class="alert"></div>
+    <div id="integration_list">
+      <!-- Square -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#006AFF"/><rect x="8" y="8" width="16" height="16" rx="2" fill="white"/><rect x="12" y="12" width="8" height="8" fill="#006AFF"/></svg>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--dark)">Square</div>
+            <div id="square_status_text" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Not connected</div>
+          </div>
+        </div>
+        <div id="square_action">
+          <button onclick="connectSquare()" style="padding:8px 16px;border-radius:7px;border:1.5px solid var(--border);background:#fff;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);cursor:pointer;letter-spacing:0.06em;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Connect Square →</button>
+        </div>
+      </div>
+      <!-- More POS systems -->
+      <div style="padding:14px 0;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Toast, Clover, Lightspeed and others — use CSV upload below</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD DATA -->
+  <div class="section">
     <div class="section-title">Upload Data</div>
     <div class="section-sub">Upload a fresh CSV export from your POS, payroll system, or delivery platform</div>
     <div id="upload_alert" class="alert"></div>
@@ -405,6 +429,60 @@ function updateCustomCost(idx, ci, val) {
   var loc = state.locations[idx];
   if (!loc.custom_costs || !loc.custom_costs[ci]) return;
   loc.custom_costs[ci].value = parseFloat(val) || 0;
+}
+
+function connectSquare() {
+  var token = state.token || localStorage.getItem('rd_token');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  var locId = state.locations && state.locations[0] && state.locations[0].id;
+  if (!locId) {
+    showAlert('integration_alert', 'Please save a location first.', 'error');
+    return;
+  }
+  var redirectUri = encodeURIComponent('https://primeiq.io/onboarding');
+  var oauthState = btoa(JSON.stringify({ locId: locId, clientId: clientId, returnTo: 'settings' }));
+  var url = 'https://connect.squareup.com/oauth2/authorize?client_id=sq0idp-LrS4XgLI84qclzt2sJ10uQ&scope=ORDERS_READ+PAYMENTS_READ+ITEMS_READ+MERCHANT_PROFILE_READ&redirect_uri=' + redirectUri + '&state=' + oauthState;
+  // Save state so onboarding callback knows to redirect back to settings
+  localStorage.setItem('rd_square_return', 'settings');
+  window.location.href = url;
+}
+
+async function renderIntegrations() {
+  var token = state.token || localStorage.getItem('rd_token');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if (!token || !clientId) return;
+  try {
+    var resp = await fetch('https://restaurant-api-68re.onrender.com/api/settings', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var data = await resp.json();
+    var integrations = data.integrations || [];
+    var squareInt = integrations.find(function(i){ return i.pos_type === 'square' && i.is_active; });
+    var statusEl = document.getElementById('square_status_text');
+    var actionEl = document.getElementById('square_action');
+    if (squareInt) {
+      var lastSync = squareInt.last_sync_at ? new Date(squareInt.last_sync_at).toLocaleDateString() : 'never';
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--green)">✓ Connected</span> · Last sync: ' + lastSync;
+      if (actionEl) actionEl.innerHTML = '<button onclick="syncSquareNow()" style="padding:8px 16px;border-radius:7px;border:1.5px solid rgba(45,122,79,0.3);background:var(--green-bg);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);cursor:pointer;letter-spacing:0.06em;">↻ Sync Now</button>';
+    }
+  } catch(e) {}
+}
+
+async function syncSquareNow() {
+  var token = state.token || localStorage.getItem('rd_token');
+  showAlert('integration_alert', 'Syncing Square data...', 'info');
+  try {
+    var resp = await fetch('https://restaurant-api-68re.onrender.com/api/square/sync', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+    });
+    var data = await resp.json();
+    if (data.success) {
+      showAlert('integration_alert', 'Square sync started — data will appear in your dashboard within a few minutes.', 'success');
+    }
+  } catch(e) {
+    showAlert('integration_alert', 'Sync failed. Please try again.', 'error');
+  }
 }
 
 function renderLocationForm(idx) {
