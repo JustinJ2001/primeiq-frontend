@@ -379,15 +379,25 @@ async function saveAccount() {
 async function openBillingPortal() {
   try {
     var token = lsGet('rd_token');
+    var userId = state.client && state.client.user_id;
+    if (!userId) {
+      showAlert('billing_alert', 'Please contact justin@primeiq.io to manage your billing.', 'info');
+      return;
+    }
+    if (state.client && state.client.is_pilot) {
+      showAlert('billing_alert', 'You are on a free pilot — no billing required.', 'info');
+      return;
+    }
     var res = await fetch(API + '/api/create-portal-session', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-      body: JSON.stringify({ user_id: state.client && state.client.user_id })
+      body: JSON.stringify({ user_id: userId })
     });
     var data = await res.json();
     if (data.url) window.location.href = data.url;
+    else showAlert('billing_alert', 'Could not open billing portal. Please contact justin@primeiq.io.', 'error');
   } catch(e) {
-    showAlert('billing_alert', 'Could not open billing portal. Please try again.', 'error');
+    showAlert('billing_alert', 'Could not open billing portal. Please contact justin@primeiq.io.', 'error');
   }
 }
 
