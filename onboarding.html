@@ -200,10 +200,10 @@ window.addEventListener('error', function(e) {
       </div>
       <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
       <div style="text-align:center;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Already have an account? <a href="/login" style="color:var(--gold);text-decoration:none">Sign in →</a></div>
+      <div id="different_account_hint" style="display:none;text-align:center;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Not your account? <a href="#" onclick="signOutAndLogin()" style="color:var(--gold);text-decoration:none;">Sign in with a different account →</a></div>
     </div>
   </div>
   <script>(function(){try{var n=window.localStorage.getItem("rd_s1_name"),e=window.localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}}catch(ex){};})()</script>
-  <div id="different_account_hint" style="display:none;text-align:center;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Not your account? <a href="#" onclick="signOutAndLogin()" style="color:var(--gold);text-decoration:none;">Sign in with a different account →</a></div>
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
     <div class="panel-title">What kind of restaurant are you?</div>
