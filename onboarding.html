@@ -1159,24 +1159,14 @@ function renderPOSStep() {
   // For CSV detail: show one upload section per location
   var posLocSel = document.getElementById('pos_loc_selector');
   if (posLocSel) {
+    posLocSel.style.display = 'block';
     if (state.locations.length > 1) {
-      posLocSel.style.display = 'block';
-      posLocSel.innerHTML = '<div style="background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber);margin-bottom:4px">You have ' + state.locations.length + ' locations — upload a separate CSV for each one below.</div>'
-        + state.locations.map(function(l, li) {
-            return '<div style="margin-bottom:16px;padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff">'
-              + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">' + l.name + '</div>'
-              + '<input type="hidden" id="pos_loc_id_' + li + '" value="' + l.id + '">'
-              + '<div id="pos_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
-              + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
-              + '📄 Upload CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'sales\')">'
-              + '</label>'
-              + '</div>';
-          }).join('');
+      posLocSel.innerHTML = '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Which location is this CSV for?</label>'
+        + '<select class="f-select" id="pos_loc_id" style="margin-top:4px">'
+        + state.locations.map(function(l){ return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('')
+        + '</select><div class="f-hint" style="margin-top:4px">After uploading, change the dropdown and upload again for your other location(s)</div></div>';
     } else {
-      // Single location — just show the location name as context
-      posLocSel.style.display = 'block';
-      posLocSel.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
+      posLocSel.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
     }
   }
 }
@@ -1280,20 +1270,12 @@ function renderDeliveryStep() {
   var delLoc = document.getElementById('del_loc_selector');
   if (delLoc) {
     if (state.locations.length > 1) {
-      delLoc.innerHTML = '<div style="background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber);margin-bottom:4px">You have ' + state.locations.length + ' locations — upload a separate CSV for each one.</div>'
-        + state.locations.map(function(l, li) {
-            return '<div style="margin-bottom:16px;padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff">'
-              + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">' + l.name + '</div>'
-              + '<input type="hidden" id="del_loc_id_' + li + '" value="' + l.id + '">'
-              + '<div id="del_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
-              + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
-              + '📄 Upload delivery CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'delivery\')">'
-              + '</label>'
-              + '</div>';
-          }).join('');
+      delLoc.innerHTML = '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Which location is this for?</label>'
+        + '<select class="f-select" id="del_loc_id" style="margin-top:4px">'
+        + state.locations.map(function(l){ return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('')
+        + '</select><div class="f-hint" style="margin-top:4px">After uploading, change the dropdown and upload again for your other location(s)</div></div>';
     } else {
-      delLoc.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
+      delLoc.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
     }
   }
   const grid = document.getElementById('del_grid');
@@ -1364,20 +1346,12 @@ function renderPayrollStep() {
   var payLoc = document.getElementById('pay_loc_selector');
   if (payLoc) {
     if (state.locations.length > 1) {
-      payLoc.innerHTML = '<div style="background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;padding:10px 14px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber);margin-bottom:4px">You have ' + state.locations.length + ' locations — upload a separate CSV for each one.</div>'
-        + state.locations.map(function(l, li) {
-            return '<div style="margin-bottom:16px;padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff">'
-              + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px">' + l.name + '</div>'
-              + '<input type="hidden" id="pay_loc_id_' + li + '" value="' + l.id + '">'
-              + '<div id="pay_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
-              + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
-              + '📄 Upload labor CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'labor\')">'
-              + '</label>'
-              + '</div>';
-          }).join('');
+      payLoc.innerHTML = '<div class="f-group" style="margin-bottom:12px"><label class="f-label">Which location is this for?</label>'
+        + '<select class="f-select" id="pay_loc_id" style="margin-top:4px">'
+        + state.locations.map(function(l){ return '<option value="' + l.id + '">' + l.name + '</option>'; }).join('')
+        + '</select><div class="f-hint" style="margin-top:4px">After uploading, change the dropdown and upload again for your other location(s)</div></div>';
     } else {
-      payLoc.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
+      payLoc.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">Uploading to: <strong>' + (state.locations[0] && state.locations[0].name || 'your location') + '</strong></div>';
     }
   }
   const grid = document.getElementById('payroll_grid');
@@ -1782,8 +1756,14 @@ async function doGenericUpload(type, previewId, alertId) {
     }
     if (previewEl) previewEl.innerHTML = '<div style="padding:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Uploading ' + validation.row_count + ' rows...</div>';
     await apiFetch('/api/csv/upload', 'POST', { client_id: state.clientId, location_id: locId, type: type, content: pending.text, ...(pending.platform ? { platform: pending.platform } : {}) });
-    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows saved — click Continue → to proceed.</div>';
-    showAlert(alertId, 'Data uploaded successfully.', 'success');
+    var locName = '';
+    try {
+      var locSel = document.getElementById('pos_loc_id') || document.getElementById('del_loc_id') || document.getElementById('pay_loc_id');
+      if (locSel) { var opt = locSel.options[locSel.selectedIndex]; locName = opt ? opt.text : ''; }
+    } catch(e) {}
+    if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows saved' + (locName ? ' for ' + locName : '') + '</div>'
+      + (state.locations.length > 1 ? '<div style="margin-top:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Have another location? Change the location dropdown above and upload again.</div>' : '');
+    showAlert(alertId, 'Data uploaded successfully.' + (state.locations.length > 1 ? ' Change the location dropdown to upload for your other location.' : ''), 'success');
   } catch(e) {
     var errMsg = e.message || 'Upload failed. Please try again.';
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px">Upload failed: ' + errMsg + '</div>';
