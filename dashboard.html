@@ -1699,7 +1699,10 @@ async function loadDashboardData() {
   const isPilot = localStorage.getItem('rd_pilot') === 'true';
   try {
     const data = await apiFetch('/api/overview?period=week');
-    if (data && data.locations && data.locations.length > 0) {
+    if (data && data.error === 'no_locations') {
+      // Account exists but no locations saved — send back to settings to add one
+      showNoLocationsBanner();
+    } else if (data && data.locations && data.locations.length > 0) {
       state = transformAPIData(data);
       updateSidebarName(state.name);
       if(typeof updateFreshnessIndicator === 'function') updateFreshnessIndicator(data.client && data.client.last_synced_at);
@@ -1741,6 +1744,19 @@ function showDemoBanner() {
     <button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:16px">✕</button>
   `;
   document.body.insertBefore(banner, document.body.firstChild);
+}
+
+function showNoLocationsBanner() {
+  document.body.style.visibility = 'visible';
+  var main = document.getElementById('mainContent');
+  if (main) {
+    main.innerHTML = '<div style="padding:60px 40px;text-align:center;max-width:560px;margin:0 auto;">' +
+      '<div style="font-size:48px;margin-bottom:20px;opacity:0.3">📍</div>' +
+      '<div style="font-family:Playfair Display,serif;font-size:24px;color:rgba(255,255,255,0.7);margin-bottom:10px">No locations set up</div>' +
+      '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:28px;line-height:1.8;letter-spacing:0.06em">Your account is set up but no restaurant locations were saved.<br>Add your location in Settings to get started.</div>' +
+      '<a href="/settings" style="display:inline-block;padding:12px 28px;background:#b8860b;color:#fff;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.1em;text-decoration:none;text-transform:uppercase;">Add Location in Settings →</a>' +
+      '</div>';
+  }
 }
 
 function showNoDataBanner() {
