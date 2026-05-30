@@ -316,6 +316,68 @@ function renderLocationTabs() {
   }).join('');
 }
 
+
+function getFixedCosts(loc) {
+  // Standard costs always present
+  var standard = [
+    {key:'rent',label:'Rent'},
+    {key:'utilities',label:'Utilities'},
+    {key:'insurance',label:'Insurance'},
+    {key:'supplies',label:'Supplies'},
+    {key:'marketing',label:'Marketing'},
+    {key:'software',label:'Software'},
+  ];
+  // Custom costs stored in loc.custom_costs array
+  var custom = loc.custom_costs || [];
+  return { standard: standard, custom: custom };
+}
+
+function renderFixedCostFields(idx) {
+  var loc = state.locations[idx];
+  if (!loc) return '';
+  var costs = getFixedCosts(loc);
+  var html = '<div class="f-row3">';
+  // Standard fields with remove button
+  costs.standard.forEach(function(c) {
+    html += '<div class="f-group" style="position:relative">' +
+      '<label class="f-label">' + c.label + '</label>' +
+      '<input class="f-input" id="lf_' + c.key + '" type="number" value="' + (loc[c.key]||'') + '">' +
+      '</div>';
+  });
+  // Custom cost fields
+  (loc.custom_costs||[]).forEach(function(cc, ci) {
+    html += '<div class="f-group" style="position:relative">' +
+      '<label class="f-label" style="display:flex;justify-content:space-between">' + cc.label +
+      '<span onclick="removeCustomCost(' + idx + ',' + ci + ')" style="color:var(--red);cursor:pointer;font-size:10px">✕</span></label>' +
+      '<input class="f-input" type="number" value="' + (cc.value||'') + '" oninput="updateCustomCost(' + idx + ',' + ci + ',this.value)">' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function addCustomCost(idx) {
+  var label = prompt('Cost name (e.g. Laundry, Pest Control, Repairs):');
+  if (!label || !label.trim()) return;
+  var loc = state.locations[idx];
+  if (!loc.custom_costs) loc.custom_costs = [];
+  loc.custom_costs.push({ label: label.trim(), value: 0 });
+  renderLocationForm(idx);
+}
+
+function removeCustomCost(idx, ci) {
+  var loc = state.locations[idx];
+  if (!loc.custom_costs) return;
+  loc.custom_costs.splice(ci, 1);
+  renderLocationForm(idx);
+}
+
+function updateCustomCost(idx, ci, val) {
+  var loc = state.locations[idx];
+  if (!loc.custom_costs || !loc.custom_costs[ci]) return;
+  loc.custom_costs[ci].value = parseFloat(val) || 0;
+}
+
 function renderLocationForm(idx) {
   state.activeLocIdx = idx;
   renderLocationTabs();
@@ -325,16 +387,16 @@ function renderLocationForm(idx) {
     '<div class="f-group"><label class="f-label">Location Name</label><input class="f-input" id="lf_name" value="'+(loc.name||'')+'" oninput="updateTabName(this.value)"></div>'+
     '<div class="f-group"><label class="f-label">Address</label><input class="f-input" id="lf_address" value="'+(loc.address||'')+'"></div>'+
     '</div>'+
-    '<div style="font-family:IBM Plex Mono,monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Monthly Fixed Costs</div>'+
-    '<div class="f-row3">'+
-    field('lf_rent','Rent',loc.rent)+field('lf_utilities','Utilities',loc.utilities)+field('lf_insurance','Insurance',loc.insurance)+
-    field('lf_supplies','Supplies',loc.supplies)+field('lf_marketing','Marketing',loc.marketing)+field('lf_software','Software',loc.software)+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+
+      '<span style="font-family:IBM Plex Mono,monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted)">Monthly Fixed Costs</span>'+
+      '<button onclick="addCustomCost('+idx+')" style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold);background:none;border:1px solid rgba(184,134,11,0.3);border-radius:4px;padding:3px 8px;cursor:pointer;">+ Add Cost</button>'+
     '</div>'+
+    renderFixedCostFields(idx)+
     '<div style="font-family:IBM Plex Mono,monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Cost Targets</div>'+
     '<div class="f-row3">'+
-    '<div class="f-group"><label class="f-label">Food Cost Target %</label><input class="f-input" id="lf_food" type="number" value="'+(loc.food_cost_target||31)+'"></div>'+
-    '<div class="f-group"><label class="f-label">Labor Cost Target %</label><input class="f-input" id="lf_labor" type="number" value="'+(loc.labor_cost_target||34)+'"></div>'+
-    '<div class="f-group"><label class="f-label">Prime Cost Target %</label><input class="f-input" id="lf_prime" type="number" value="'+(loc.prime_cost_target||65)+'"></div>'+
+    '<div class="f-group"><label class="f-label">Food Cost Target %</label><input class="f-input" id="lf_food" type="number" value="'+(loc.food_cost_target||31)+'" oninput="updatePrimeTarget()"></div>'+
+    '<div class="f-group"><label class="f-label">Labor Cost Target %</label><input class="f-input" id="lf_labor" type="number" value="'+(loc.labor_cost_target||34)+'" oninput="updatePrimeTarget()"></div>'+
+    '<div class="f-group"><label class="f-label">Prime Cost Target % <span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">(auto)</span></label><input class="f-input" id="lf_prime" type="number" value="'+((loc.food_cost_target||31)+(loc.labor_cost_target||34))+'" readonly style="background:var(--bg);color:var(--muted);cursor:default"></div>'+
     '</div>';
 }
 
@@ -342,6 +404,14 @@ function field(id, label, val) {
   return '<div class="f-group"><label class="f-label">'+label+'</label><input class="f-input" id="'+id+'" type="number" value="'+(val||'')+'"></div>';
 }
 
+
+
+function updatePrimeTarget() {
+  var food = parseFloat(document.getElementById('lf_food') && document.getElementById('lf_food').value) || 0;
+  var labor = parseFloat(document.getElementById('lf_labor') && document.getElementById('lf_labor').value) || 0;
+  var prime = document.getElementById('lf_prime');
+  if (prime) prime.value = Math.round(food + labor);
+}
 
 function updateTabName(newName) {
   var tabs = document.querySelectorAll('.loc-tab');
@@ -373,6 +443,7 @@ async function addNewLocation() {
 async function saveLocation() {
   var loc = state.locations[state.activeLocIdx];
   if (!loc) return;
+  var loc = state.locations[state.activeLocIdx];
   var body = {
     name: document.getElementById('lf_name').value.trim(),
     address: document.getElementById('lf_address').value.trim(),
@@ -385,6 +456,7 @@ async function saveLocation() {
     food_cost_target: parseFloat(document.getElementById('lf_food').value)||31,
     labor_cost_target: parseFloat(document.getElementById('lf_labor').value)||34,
     prime_cost_target: parseFloat(document.getElementById('lf_prime').value)||65,
+    custom_costs: loc ? (loc.custom_costs||[]) : [],
   };
   try {
     await apiFetch('/api/settings/location/' + loc.id, 'PUT', body);
