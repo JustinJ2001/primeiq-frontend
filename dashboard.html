@@ -1348,15 +1348,7 @@ function printPL() {
     printWin.document.write(t.outerHTML);
     printWin.document.write('<br>');
   });
-  printWin.document.write('
-<div class="mobile-util-bar">
-  <a href="/refer" class="mobile-util-btn"><span>↗</span>Refer</a>
-  <a href="/settings" class="mobile-util-btn"><span>⚙</span>Settings</a>
-  <a href="/guide" class="mobile-util-btn"><span>?</span>Guide</a>
-  <button class="mobile-util-btn" onclick="signOutDashboard()"><span>→</span>Sign Out</button>
-</div>
-
-</body></html>');
+  printWin.document.write('</body></html>');
   printWin.document.close();
   printWin.print();
 }
@@ -4489,6 +4481,12 @@ navigate('overview');
 document.body.style.visibility="visible";
 loadDashboardData();
 </script>
+<div class="mobile-util-bar">
+  <a href="/refer" class="mobile-util-btn"><span>↗</span>Refer</a>
+  <a href="/settings" class="mobile-util-btn"><span>⚙</span>Settings</a>
+  <a href="/guide" class="mobile-util-btn"><span>?</span>Guide</a>
+  <button class="mobile-util-btn" onclick="signOutDashboard()"><span>→</span>Sign Out</button>
+</div>
 <div style="text-align:center;padding:24px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#b0a090">
   <a href="/terms" style="color:#b0a090;margin-right:16px">Terms of Service</a>
   <a href="/privacy" style="color:#b0a090;margin-right:16px">Privacy Policy</a>
