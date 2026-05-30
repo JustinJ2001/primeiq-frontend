@@ -201,9 +201,11 @@ window.addEventListener('error', function(e) {
         </div>
       </div>
       <button class="btn-gold" id="s1_btn" onclick="createAccount()">Create Account →</button>
+      <div style="text-align:center;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">Already have an account? <a href="/login" style="color:var(--gold);text-decoration:none">Sign in →</a></div>
     </div>
   </div>
   <script>(function(){try{var n=window.localStorage.getItem("rd_s1_name"),e=window.localStorage.getItem("rd_s1_email");if(n){var el=document.getElementById("s1_name");if(el)el.value=n;}if(e){var el2=document.getElementById("s1_email");if(el2)el2.value=e;}}catch(ex){};})()</script>
+  <div id="different_account_hint" style="display:none;text-align:center;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3)">Not your account? <a href="#" onclick="signOutAndLogin()" style="color:rgba(255,255,255,0.4);text-decoration:underline;">Sign in with a different account →</a></div>
   <!-- STEP 1B: CATEGORY SELECTION -->
   <div class="panel" id="panel1b">
     <div class="panel-title">What kind of restaurant are you?</div>
@@ -629,6 +631,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   // Token+clientId exist — user already started onboarding
   // They should login, not re-do step 1
+  // Show 'different account' hint since they might want to switch
+  var diffHint = document.getElementById('different_account_hint');
+  if (diffHint) diffHint.style.display = 'block';
   // (API check below will resume them at correct step or redirect to login if expired)
 
   // Make API call to check client status
@@ -1043,20 +1048,27 @@ function addLocation() {
 function removeLocation(i) { state.locations.splice(i, 1); renderLocationForms(); }
 
 
+
+function signOutAndLogin() {
+  var keys = ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_onboard_state','rd_locations_draft','rd_categories','rd_referred_by','rd_s1_name','rd_s1_email','rd_pilot'];
+  keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+  window.location.href = '/login';
+}
+
 function addObCustomCost(idx) {
   var label = prompt('Cost name (e.g. Laundry, Pest Control, Repairs):');
   if (!label || !label.trim()) return;
   if (!state.locations[idx].custom_costs) state.locations[idx].custom_costs = [];
   state.locations[idx].custom_costs.push({ label: label.trim(), value: 0 });
   lsSet('rd_locations_draft', JSON.stringify(state.locations));
-  renderLocations();
+  renderStep(2);
 }
 
 function removeObCustomCost(idx, ci) {
   if (!state.locations[idx].custom_costs) return;
   state.locations[idx].custom_costs.splice(ci, 1);
   lsSet('rd_locations_draft', JSON.stringify(state.locations));
-  renderLocations();
+  renderStep(2);
 }
 
 function updateCustomCostOb(idx, ci, val) {
