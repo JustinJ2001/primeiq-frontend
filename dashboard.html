@@ -815,29 +815,7 @@ body::before {
 .freshness-bar.stale { background:rgba(192,57,43,0.08); border-color:rgba(192,57,43,0.2); color:var(--red); }
 .freshness-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  border: 1.5px dashed rgba(255,220,130,0.15);
-  border-radius: 12px;
-  margin: 20px 0;
-}
-.empty-state-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
-.empty-state-title { font-family: 'Playfair Display', serif; font-size: 20px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
-.empty-state-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.25); margin-bottom: 20px; letter-spacing: 0.06em; line-height: 1.8; }
-.empty-state-btn { display: inline-block; padding: 10px 22px; background: var(--gold, #b8860b); color: #fff; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-decoration: none; letter-spacing: 0.08em; }
 
-
-@keyframes shimmer { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
-.skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
-  border-radius: 4px;
-}
-.skeleton-text { height: 14px; margin-bottom: 8px; }
-.skeleton-title { height: 28px; width: 60%; margin-bottom: 12px; }
-.skeleton-card { padding: 20px; }
 
 </style>
 <script>
@@ -886,7 +864,6 @@ window.addEventListener('error', function(e) {
     <button onclick="clearCustomDate()" style="padding:8px 14px;border-radius:6px;border:1px solid rgba(40,25,5,0.12);background:#fff;font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;color:#8a7a5a;">Clear</button>
   </div>
 </div>
-<div id="offline_banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#c0392b;padding:8px 20px;text-align:center;z-index:9998;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are offline — data may be outdated</div>
 <div id="demo_banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#b8860b;padding:10px 20px;text-align:center;z-index:9999;align-items:center;justify-content:center;gap:16px;">
   <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are viewing demo data</span>
   <a href="/onboarding" style="padding:6px 14px;background:#fff;color:#b8860b;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;font-weight:700;">Start Free Trial →</a>
@@ -1330,7 +1307,6 @@ function printPL() {
   printWin.document.write('<div class="logo">PrimeIQ</div>');
   printWin.document.write('<h1>P&L Statement</h1>');
   printWin.document.write('<p style="color:#8a7a5a;font-family:Courier New,monospace;font-size:10px;margin-bottom:24px;">Generated ' + new Date().toLocaleDateString() + '</p>');
-  // Copy tables from current view
   var tables = document.querySelectorAll('table');
   tables.forEach(function(t) {
     printWin.document.write(t.outerHTML);
@@ -1340,26 +1316,6 @@ function printPL() {
   printWin.document.close();
   printWin.print();
 }
-
-
-
-
-
-
-
-// Proactive token refresh — check every 5 minutes, refresh if expiring within 10 minutes
-
-async 
-// Offline detection
-window.addEventListener('online', function() {
-  var el = document.getElementById('offline_banner');
-  if (el) el.style.display = 'none';
-  if (typeof loadDashboardData === 'function') loadDashboardData();
-});
-window.addEventListener('offline', function() {
-  var el = document.getElementById('offline_banner');
-  if (el) el.style.display = 'flex';
-});
 
 async function safeApiFetch(path, containerId, onSuccess, onError) {
   try {
@@ -1574,7 +1530,6 @@ function clearCustomDate() {
   loadDashboardData();
 }
 
-scheduleTokenRefresh();
 
 async function loadDashboardData() {
   // Track usage
