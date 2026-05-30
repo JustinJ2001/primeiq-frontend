@@ -1011,7 +1011,7 @@ window.addEventListener('error', function(e) {
 
 <!-- MAIN -->
 <main class="main">
-  <div class="topbar"><span id="freshness_indicator" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.2);margin-left:12px;"></span>
+  <div class="topbar">
     <div class="topbar-left">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="page-title" id="pageTitle">Dashboard Overview</div>
@@ -1027,6 +1027,7 @@ window.addEventListener('error', function(e) {
         <button class="period-btn" data-period="ytd">YTD</button>
       </div>
     <div class="topbar-right">
+      <span id="freshness_indicator" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.2);"></span>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
       <button id="themeToggle" style="
         padding:6px 12px; border-radius:8px; border:1px solid var(--border);
