@@ -642,11 +642,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
     clearTimeout(abortTimer);
   } catch(networkErr) {
-    // Network error or timeout — keep localStorage, let them retry
+    // Network error or timeout — clear stale state and show clean step 1
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_pilot']);
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
-    showAlert('s1_alert', 'Having trouble connecting. Please check your internet and try again.', 'info');
     return;
   }
 
@@ -669,12 +669,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Cases 8+9: other HTTP errors (500, 403, etc)
+  // Cases 8+9: other HTTP errors (500, 403, etc) — clear and show clean step 1
   if (clientResp.status >= 400) {
+    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_pilot']);
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
-    showAlert('s1_alert', 'Having trouble connecting. Please try again.', 'info');
     return;
   }
 
@@ -686,7 +686,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
-    showAlert('s1_alert', 'Having trouble connecting. Please try again.', 'info');
     return;
   }
 
