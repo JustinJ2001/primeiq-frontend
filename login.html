@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In — Restaurant Dashboard</title>
+<title>Sign In — PrimeIQ</title>
+<meta name="description" content="Sign in to your PrimeIQ restaurant analytics dashboard.">
+<meta name="theme-color" content="#1a1208">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -31,10 +34,29 @@ body{font-family:"Lato",sans-serif;background:#1a1208;min-height:100vh;display:f
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 </style>
+<script>
+// Lightweight frontend error tracking — sends to API
+window.addEventListener('error', function(e) {
+  try {
+    var clientId = (function(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(ex){return null;} })('rd_client_id');
+    fetch('https://restaurant-api-68re.onrender.com/api/usage/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId || 'anonymous',
+        page: 'error:' + window.location.pathname,
+        error: (e.message || '').slice(0, 200),
+        file: (e.filename || '').slice(0, 100),
+        line: e.lineno
+      })
+    }).catch(function(){});
+  } catch(ex) {}
+});
+</script>
 </head>
 <body>
-<div class="logo"><em>Restaurant</em> Dashboard</div>
-<div class="logo-sub">Financial Intelligence Platform</div>
+<div class="logo"><em>Prime</em>IQ</div>
+<div class="logo-sub">Restaurant Analytics</div>
 <div class="card">
   <div class="card-title">Sign in</div>
   <div class="card-sub">Access your restaurant dashboard</div>
@@ -48,9 +70,12 @@ body{font-family:"Lato",sans-serif;background:#1a1208;min-height:100vh;display:f
   </div>
   <div id="login_panel">
     <div class="f-group"><label class="f-label">Email</label>
-      <input class="f-input" id="email" type="email" placeholder="owner@yourrestaurant.com" onkeydown="if(event.key==='Enter')signIn()"></div>
+      <input class="f-input" id="email" type="email" name="email" autocomplete="email" placeholder="owner@yourrestaurant.com" onkeydown="if(event.key==='Enter')signIn()"></div>
     <div class="f-group"><label class="f-label">Password</label>
-      <input class="f-input" id="password" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter')signIn()"></div>
+      <div style="position:relative">
+        <input class="f-input" id="password" type="password" name="password" autocomplete="current-password" placeholder="Your password" onkeydown="if(event.key==='Enter')signIn()" style="padding-right:40px">
+        <button type="button" onclick="var i=document.getElementById('password');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁</button>
+      </div></div>
     <a class="forgot" onclick="showReset()">Forgot password?</a>
     <button class="btn" id="login_btn" onclick="signIn()">Sign In →</button>
     <button onclick="window.location.href='/dashboard?demo=1'" style="width:100%;padding:12px;margin-top:10px;border:1.5px solid var(--border);border-radius:8px;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:0.06em">View Demo Dashboard →</button>
@@ -84,7 +109,11 @@ function showLogin() {
 }
 
 async function signIn() {
-  const email    = document.getElementById('email').value.trim();
+  // Rate limit
+  var now = Date.now();
+  if (window._lastSignIn && now - window._lastSignIn < 2000) return;
+  window._lastSignIn = now;
+  const email    = document.getElementById('email').value.trim().toLowerCase();
   const password = document.getElementById('password').value;
   if (!email || !password) return showAlert('Please enter your email and password.', 'error');
   setLoading('login_btn', true);
@@ -108,15 +137,15 @@ async function signIn() {
       return;
     }
     // Store token and redirect
-    localStorage.setItem('rd_token', data.access_token);
-    localStorage.setItem('rd_refresh', data.refresh_token);
+    try{localStorage.setItem('rd_token', data.access_token);}catch(e){}
+    try{localStorage.setItem('rd_refresh', data.refresh_token);}catch(e){}
     // Fetch client ID and store it
     try {
       const clientRes = await fetch('https://restaurant-api-68re.onrender.com/api/settings', {
         headers: { 'Authorization': 'Bearer ' + data.access_token }
       });
       const clientData = await clientRes.json();
-      if (clientData.client?.id) localStorage.setItem('rd_client_id', clientData.client.id);
+      if (clientData.client?.id) try{localStorage.setItem('rd_client_id', clientData.client.id);}catch(e){}
     } catch(e) {}
     // Check if onboarding is complete
     var clientId = localStorage.getItem('rd_client_id');
@@ -127,40 +156,63 @@ async function signIn() {
         });
         var checkData = await checkRes.json();
         if (checkData.setup_complete === false) {
-          localStorage.setItem('rd_onboarding', 'true');
+          try{localStorage.setItem('rd_onboarding', 'true');}catch(e){}
           window.location.href = '/onboarding';
           return;
         }
       } catch(e) {}
     }
-    localStorage.setItem('rd_setup_complete', 'true');
+    try{localStorage.setItem('rd_setup_complete', 'true');}catch(e){}
     window.location.href = '/dashboard';
   } catch(e) {
-    showAlert(e.message || 'Sign in failed. Please try again.', 'error');
+    if (e.message && e.message.includes('fetch')) {
+      showAlert('Connection error. Please check your internet and try again.', 'error');
+    } else {
+      showAlert(e.message || 'Sign in failed. Please try again.', 'error');
+    }
   }
   setLoading('login_btn', false);
 }
 
 async function sendReset() {
-  const email = document.getElementById('reset_email').value.trim();
+  const email = document.getElementById('reset_email').value.trim().toLowerCase();
   if (!email) return showAlert('Please enter your email address.', 'error');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('Please enter a valid email address.', 'error');
   setLoading('reset_btn', true);
   try {
-    await fetch(SUPABASE_URL + '/auth/v1/recover', {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/recover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email: email, gotrue_meta_security: {} })
     });
-    showAlert('Check your email for a password reset link.', 'success');
+    // Supabase returns 200 regardless of whether email exists (security best practice)
+    showAlert('If an account exists for ' + email + ', a reset link has been sent. Check your inbox and spam folder.', 'success');
   } catch(e) {
-    showAlert('Something went wrong. Please try again.', 'error');
+    if (e.message && e.message.includes('fetch')) {
+      showAlert('Connection error. Please try again.', 'error');
+    } else {
+      showAlert('Could not send reset email. Please contact justin@primeiq.io for help.', 'error');
+    }
   }
   setLoading('reset_btn', false);
 }
 
-// Auto sign in if token exists and valid
-const token = localStorage.getItem('rd_token');
-if (token) window.location.href = '/dashboard';
+// Auto redirect if already signed in with valid session
+(async function(){
+  try {
+    var t = localStorage.getItem('rd_token');
+    var c = localStorage.getItem('rd_client_id');
+    var done = localStorage.getItem('rd_setup_complete');
+    if (!t || !c) return;
+    // Verify token is still valid
+    var r = await fetch('https://rkxhrdecrqtqoorjyfel.supabase.co/auth/v1/user', {
+      headers: { 'Authorization': 'Bearer ' + t, 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw' }
+    });
+    if (r.status !== 200) { localStorage.removeItem('rd_token'); return; }
+    if (done === 'true') window.location.href = '/dashboard';
+    else window.location.href = '/onboarding';
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

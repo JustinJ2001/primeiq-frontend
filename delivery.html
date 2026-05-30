@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delivery — PrimeIQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('rd_token'),c=localStorage.getItem('rd_client_id');if(!t||!c)window.location.replace('/login');})()</script>
+<style>
+:root{--bg:#faf8f4;--gold:#b8860b;--dark:#1a1208;--green:#2d7a4f;--red:#c0392b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--dark);color:#f5ead6;min-height:100vh;}
+.header{background:var(--dark);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);}
+.logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8b84b;}
+.logo em{font-style:italic;}
+.nav a{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);text-decoration:none;margin-left:16px;letter-spacing:0.06em;}
+.nav a:hover{color:#e8b84b;}
+.main{max-width:960px;margin:0 auto;padding:32px 20px 80px;}
+.page-title{font-family:'Playfair Display',serif;font-size:28px;color:#f5ead6;margin-bottom:4px;}
+.page-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:24px;}
+.period-row{display:flex;gap:8px;margin-bottom:20px;}
+.period-btn{padding:7px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:transparent;font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;letter-spacing:0.06em;}
+.period-btn.active{background:rgba(184,134,11,0.15);border-color:var(--gold);color:var(--gold);}
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.platform-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;}
+.platform-name{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:12px;}
+.platform-net{font-family:'Playfair Display',serif;font-size:28px;color:#f5ead6;margin-bottom:4px;}
+.platform-detail{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);line-height:1.8;}
+.platform-margin{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:9px;margin-top:8px;}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;margin-bottom:16px;}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px;}
+table{width:100%;border-collapse:collapse;}
+th{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);}
+tr:last-child td{border:none;}
+.warning-box{background:rgba(192,112,0,0.08);border:1px solid rgba(192,112,0,0.2);border-radius:10px;padding:16px;margin-bottom:16px;}
+@media(max-width:600px){.platform-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="logo"><em>Prime</em>IQ</div></div>
+  <div class="nav">
+    <a href="/dashboard">← Dashboard</a>
+    <a href="/settings">Settings</a>
+  </div>
+</div>
+<div class="main">
+  <div class="page-title">Delivery & Online Orders</div>
+  <div class="page-sub">Net revenue after platform commissions · DoorDash · Uber Eats · Grubhub</div>
+
+  <div class="period-row">
+    <button class="period-btn active" onclick="setPeriod('week',this)">This Week</button>
+    <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
+    <button class="period-btn" onclick="setPeriod('quarter',this)">This Quarter</button>
+  </div>
+
+  <div class="warning-box">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(192,112,0,0.8);margin-bottom:6px;">Important</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">Delivery orders carry the same food and labor costs as dine-in, but platforms take 15–30% commission. Net margin on delivery is often under 5%. Factor this in when deciding how aggressively to promote delivery.</div>
+  </div>
+
+  <div class="platform-grid" id="platform_grid">
+    <div class="platform-card" style="text-align:center;padding:32px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);">Loading...</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Daily Breakdown</div>
+    <table>
+      <thead><tr><th>Date</th><th>Platform</th><th>Orders</th><th>Gross</th><th>Commission</th><th>Net</th><th>Net Margin</th></tr></thead>
+      <tbody id="delivery_table"><tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,0.2);padding:32px;">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = 'https://restaurant-api-68re.onrender.com';
+function lsGet(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(e){return null;} }
+function fu(n){ return '$'+Math.round(n||0).toLocaleString(); }
+function fp(n){ return (n||0).toFixed(1)+'%'; }
+
+var currentPeriod = 'week';
+
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  loadData();
+}
+
+var PLATFORM_COLORS = { doordash: '#FF3008', ubereats: '#06C167', grubhub: '#F63440', other: '#8a7a5a' };
+var PLATFORM_NAMES = { doordash: 'DoorDash', ubereats: 'Uber Eats', grubhub: 'Grubhub', other: 'Other' };
+
+async function loadData() {
+  var token = lsGet('rd_token');
+  try {
+    var res = await fetch(API + '/api/delivery?period=' + currentPeriod, { headers: { 'Authorization': 'Bearer ' + token } });
+    var data = await res.json();
+    var platforms = data.by_platform || [];
+    var raw = data.raw || [];
+
+    // Platform cards
+    if (platforms.length === 0) {
+      document.getElementById('platform_grid').innerHTML = '<div class="platform-card" style="grid-column:1/-1;text-align:center;padding:32px;"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.2);">No delivery data — upload a payout CSV in Settings</div></div>';
+    } else {
+      document.getElementById('platform_grid').innerHTML = platforms.map(function(p){
+        var margin = p.gross_revenue > 0 ? (p.net_revenue / p.gross_revenue * 100) : 0;
+        var marginColor = margin >= 70 ? '#81c995' : margin >= 50 ? '#f0a030' : '#e57373';
+        var commPct = p.gross_revenue > 0 ? (p.commission / p.gross_revenue * 100) : 0;
+        return '<div class="platform-card">' +
+          '<div class="platform-name" style="color:' + (PLATFORM_COLORS[p.platform]||'#8a7a5a') + '">' + (PLATFORM_NAMES[p.platform]||p.platform) + '</div>' +
+          '<div class="platform-net">' + fu(p.net_revenue) + '</div>' +
+          '<div class="platform-detail">' +
+            'Gross: ' + fu(p.gross_revenue) + '<br>' +
+            'Commission: ' + fu(p.commission) + ' (' + fp(commPct) + ')<br>' +
+            'Orders: ' + (p.orders||0).toLocaleString() +
+          '</div>' +
+          '<div class="platform-margin" style="background:' + marginColor + '22;color:' + marginColor + '">' + fp(margin) + ' net margin</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    // Raw table
+    raw.sort(function(a,b){ return b.date > a.date ? 1 : -1; });
+    document.getElementById('delivery_table').innerHTML = raw.map(function(r){
+      var margin = r.gross_revenue > 0 ? (r.net_revenue / r.gross_revenue * 100) : 0;
+      var marginColor = margin >= 70 ? '#81c995' : margin >= 50 ? '#f0a030' : '#e57373';
+      return '<tr><td>' + r.date + '</td><td>' + (PLATFORM_NAMES[r.platform]||r.platform) + '</td><td>' + (r.orders||0) + '</td><td>' + fu(r.gross_revenue) + '</td><td>' + fu(r.commission_amount) + '</td><td>' + fu(r.net_revenue) + '</td><td style="color:'+marginColor+'">' + fp(margin) + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,0.2);padding:24px;">No delivery data for this period</td></tr>';
+
+  } catch(e) {
+    document.getElementById('platform_grid').innerHTML = '<div class="platform-card" style="grid-column:1/-1;text-align:center;padding:32px;"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.2);">Failed to load — ' + e.message + '</div></div>';
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

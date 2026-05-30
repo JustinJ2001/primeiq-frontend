@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Labor — PrimeIQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('rd_token'),c=localStorage.getItem('rd_client_id');if(!t||!c)window.location.replace('/login');})()</script>
+<style>
+:root{--bg:#faf8f4;--card:#fff;--border:rgba(40,25,5,0.1);--gold:#b8860b;--dark:#1a1208;--muted:#8a7a5a;--green:#2d7a4f;--green-bg:#edf7f2;--red:#c0392b;--amber:#c07000;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--dark);color:#f5ead6;min-height:100vh;}
+.header{background:var(--dark);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);}
+.logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8b84b;}
+.logo em{font-style:italic;color:#f5ead6;}
+.nav a{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);text-decoration:none;margin-left:16px;letter-spacing:0.06em;}
+.nav a:hover{color:#e8b84b;}
+.main{max-width:960px;margin:0 auto;padding:32px 20px 80px;}
+.page-title{font-family:'Playfair Display',serif;font-size:28px;color:#f5ead6;margin-bottom:4px;}
+.page-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:24px;letter-spacing:0.08em;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px;}
+.stat-val{font-family:'Playfair Display',serif;font-size:24px;}
+.stat-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px;}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;margin-bottom:16px;}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px;}
+table{width:100%;border-collapse:collapse;}
+th{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);}
+tr:last-child td{border:none;}
+.ot-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(192,57,43,0.15);color:#e57373;}
+.ok-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(45,122,79,0.12);color:#81c995;}
+.role-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);}
+.progress-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+@media(max-width:600px){.stat-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="logo"><em>Prime</em>IQ</div></div>
+  <div class="nav">
+    <a href="/dashboard">← Dashboard</a>
+    <a href="/settings">Settings</a>
+    <a href="#" onclick="['rd_token','rd_client_id','rd_refresh','rd_setup_complete'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});window.location.href='/login'">Sign Out</a>
+  </div>
+</div>
+<div class="main">
+  <div class="page-title">Labor & Scheduling</div>
+  <div class="page-sub">Current week · Actual vs scheduled hours · Overtime alerts</div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-label">Total Hours</div><div class="stat-val" id="s_hours" style="color:#f5ead6;">—</div><div class="stat-sub">this week</div></div>
+    <div class="stat"><div class="stat-label">Total Wages</div><div class="stat-val" id="s_wages" style="color:#f5ead6;">—</div><div class="stat-sub">this week</div></div>
+    <div class="stat"><div class="stat-label">Overtime Risk</div><div class="stat-val" id="s_ot" style="color:#e57373;">—</div><div class="stat-sub">employees near 40hrs</div></div>
+    <div class="stat"><div class="stat-label">Avg Hourly Rate</div><div class="stat-val" id="s_rate" style="color:#f5ead6;">—</div><div class="stat-sub">wages ÷ hours</div></div>
+  </div>
+
+  <div class="card" id="ot_alert_card" style="display:none;border-color:rgba(192,57,43,0.3);background:rgba(192,57,43,0.05);">
+    <div class="card-title" style="color:#e57373;">⚠ Overtime Alert</div>
+    <div id="ot_alert_content" style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">By Role</div>
+    <div id="role_breakdown" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Employee Detail</div>
+    <table>
+      <thead><tr><th>Employee</th><th>Role</th><th>Scheduled</th><th>Actual</th><th>Wages</th><th>Status</th></tr></thead>
+      <tbody id="labor_table"><tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:32px;">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = 'https://restaurant-api-68re.onrender.com';
+function lsGet(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(e){return null;} }
+function fu(n){ return '$'+Math.round(n||0).toLocaleString(); }
+function fh(n){ return (n||0).toFixed(1)+'h'; }
+
+async function loadLabor() {
+  var token = lsGet('rd_token');
+  try {
+    var res = await fetch(API + '/api/labor', { headers: { 'Authorization': 'Bearer ' + token } });
+    var data = await res.json();
+    var records = data.records || [];
+
+    var totalHours = records.reduce(function(s,r){ return s+(r.actual_hours||0); }, 0);
+    var totalWages = records.reduce(function(s,r){ return s+(r.total_wages||0); }, 0);
+    var otRisk = records.filter(function(r){ return (r.actual_hours||0) >= 35; }).length;
+
+    document.getElementById('s_hours').textContent = fh(totalHours);
+    document.getElementById('s_wages').textContent = fu(totalWages);
+    document.getElementById('s_ot').textContent = otRisk;
+    document.getElementById('s_rate').textContent = totalHours > 0 ? fu(totalWages/totalHours)+'/hr' : '—';
+
+    // OT alert
+    var otWorkers = records.filter(function(r){ return (r.actual_hours||0) >= 35; });
+    if (otWorkers.length > 0) {
+      document.getElementById('ot_alert_card').style.display = 'block';
+      document.getElementById('ot_alert_content').innerHTML = otWorkers.map(function(r){
+        var hrs = r.actual_hours || 0;
+        var remaining = 40 - hrs;
+        return '<strong>' + r.employee_name + '</strong> — ' + fh(hrs) + ' worked' + (remaining > 0 ? ', ' + fh(remaining) + ' until overtime' : ' — <strong>already in overtime</strong>') + '<div class="progress-bar"><div class="progress-fill" style="width:'+Math.min(hrs/40*100,100)+'%;background:'+(hrs>=40?'#e57373':'#c07000')+'"></div></div>';
+      }).join('<br style="margin-bottom:10px">');
+    }
+
+    // By role
+    var roles = {};
+    records.forEach(function(r){
+      var role = r.role || 'FOH';
+      if (!roles[role]) roles[role] = { hours: 0, wages: 0, count: 0 };
+      roles[role].hours += r.actual_hours || 0;
+      roles[role].wages += r.total_wages || 0;
+      roles[role].count++;
+    });
+    document.getElementById('role_breakdown').innerHTML = Object.keys(roles).map(function(role){
+      var d = roles[role];
+      return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px;">' +
+        '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">' + role + '</div>' +
+        '<div style="font-family:Playfair Display,serif;font-size:20px;color:#f5ead6;margin-bottom:4px;">' + fh(d.hours) + '</div>' +
+        '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.3);">' + fu(d.wages) + ' · ' + d.count + ' employees</div>' +
+        '</div>';
+    }).join('');
+
+    // Table
+    records.sort(function(a,b){ return (b.actual_hours||0)-(a.actual_hours||0); });
+    document.getElementById('labor_table').innerHTML = records.map(function(r){
+      var hrs = r.actual_hours || 0;
+      var sched = r.scheduled_hours || 0;
+      var ot = hrs >= 40;
+      var near = hrs >= 35 && !ot;
+      var statusBadge = ot ? '<span class="ot-badge">Overtime</span>' : near ? '<span class="ot-badge" style="background:rgba(192,112,0,0.15);color:#f0a030;">Near OT</span>' : '<span class="ok-badge">OK</span>';
+      return '<tr><td><strong>' + (r.employee_name||'—') + '</strong></td><td><span class="role-badge">' + (r.role||'—') + '</span></td><td>' + (sched>0?fh(sched):'—') + '</td><td>' + fh(hrs) + '</td><td>' + fu(r.total_wages) + '</td><td>' + statusBadge + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:24px;">No labor data — upload a payroll CSV in Settings</td></tr>';
+
+  } catch(e) {
+    document.getElementById('labor_table').innerHTML = '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:24px;">Failed to load — ' + e.message + '</td></tr>';
+  }
+}
+
+loadLabor();
+</script>
+</body>
+</html>

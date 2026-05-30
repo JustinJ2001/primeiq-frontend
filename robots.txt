@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /guide
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /login
+
+Sitemap: https://primeiq.io/sitemap.xml

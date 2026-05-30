@@ -1,10 +1,70 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/onboarding", "destination": "/onboarding.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" },
-    { "source": "/settings", "destination": "/settings.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/onboarding",
+      "dest": "/onboarding.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/restaurant-dashboard-demo.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/settings",
+      "dest": "/settings.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/guide",
+      "dest": "/guide.html"
+    },
+    {
+      "src": "/refer",
+      "dest": "/refer.html"
+    },
+    {
+      "src": "/privacy",
+      "dest": "/privacy.html"
+    },
+    {
+      "src": "/terms",
+      "dest": "/terms.html"
+    },
+    {
+      "src": "/hourly",
+      "dest": "/hourly.html"
+    },
+    {
+      "src": "/labor",
+      "dest": "/labor.html"
+    },
+    {
+      "src": "/delivery",
+      "dest": "/delivery.html"
+    },
+    {
+      "src": "/voids",
+      "dest": "/voids.html"
+    },
+    {
+      "src": "/menu",
+      "dest": "/menu.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/404.html",
+      "status": 404
+    }
   ]
 }

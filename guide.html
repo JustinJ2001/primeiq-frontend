@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeIQ — How to Use Your Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f4;--card:#fff;--border:rgba(40,25,5,0.1);--gold:#b8860b;--dark:#1a1208;--muted:#8a7a5a;--green:#2d7a4f;--green-bg:#edf7f2;--red:#c0392b;--amber:#c07000;--amber-bg:#fef6e8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);line-height:1.7;}
+.header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:#e8b84b;}
+.logo em{font-style:italic;color:#f5ead6;}
+.logo-sub{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px;}
+.hero{background:var(--dark);padding:60px 40px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);}
+.hero h1{font-family:'Playfair Display',serif;font-size:36px;color:#f5ead6;margin-bottom:12px;}
+.hero p{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;max-width:500px;margin:0 auto;}
+.toc{max-width:800px;margin:40px auto;padding:0 20px;}
+.toc-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.toc-item{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:12px 16px;text-decoration:none;color:var(--dark);display:flex;align-items:center;gap:10px;transition:border-color 0.15s;}
+.toc-item:hover{border-color:var(--gold);}
+.toc-icon{font-size:18px;}
+.toc-label{font-size:13px;font-weight:700;}
+.toc-desc{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px;}
+.main{max-width:800px;margin:0 auto;padding:20px 20px 80px;}
+.section{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:32px;margin-bottom:24px;scroll-margin-top:80px;}
+.section-icon{font-size:28px;margin-bottom:12px;}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.section-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark);margin-bottom:8px;}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.metric{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.metric-name{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.metric-desc{font-size:13px;color:var(--dark);line-height:1.5;}
+.metric-tip{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);margin-top:6px;}
+.tip-box{background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;padding:14px 16px;margin-top:16px;}
+.tip-box-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
+.tip-box p{font-size:13px;color:var(--dark);line-height:1.6;}
+.good-box{background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;padding:14px 16px;margin-top:16px;}
+.good-box-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+.good-box p{font-size:13px;color:var(--dark);line-height:1.6;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.benchmark-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.benchmark-row:last-child{border:none;}
+.benchmark-label{color:var(--muted);}
+.benchmark-val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;}
+.benchmark-val.good{color:var(--green);}
+.benchmark-val.warn{color:var(--amber);}
+.benchmark-val.bad{color:var(--red);}
+.step{display:flex;gap:16px;margin-bottom:16px;align-items:flex-start;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--gold);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-content{font-size:13px;color:var(--dark);line-height:1.6;}
+.step-content strong{color:var(--dark);}
+.cta{text-align:center;padding:40px 20px;background:var(--dark);margin-top:40px;}
+.cta h2{font-family:'Playfair Display',serif;font-size:24px;color:#f5ead6;margin-bottom:10px;}
+.cta p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:20px;}
+.cta a{display:inline-block;padding:13px 32px;background:var(--gold);color:#fff;border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-decoration:none;text-transform:uppercase;}
+@media(max-width:600px){.metric-grid{grid-template-columns:1fr;}.toc-grid{grid-template-columns:1fr;}.section{padding:20px;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo"><em>Prime</em>IQ</div>
+    <div class="logo-sub">Restaurant Analytics</div>
+  </div>
+  <a href="/dashboard" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);text-decoration:none;">← Back to Dashboard</a>
+</div>
+
+<div class="hero">
+  <h1>How to use your dashboard</h1>
+  <p>Everything you need to know — what each number means, what to do about it, and what good looks like.</p>
+</div>
+
+<div class="toc">
+  <div class="toc-title">Jump to a section</div>
+  <div class="toc-grid">
+    <a href="#overview" class="toc-item"><span class="toc-icon">◈</span><div><div class="toc-label">Dashboard Overview</div><div class="toc-desc">Your key numbers at a glance</div></div></a>
+    <a href="#costs" class="toc-item"><span class="toc-icon">▦</span><div><div class="toc-label">Cost Breakdown</div><div class="toc-desc">Food cost, labor, prime cost</div></div></a>
+    <a href="#daily" class="toc-item"><span class="toc-icon">◷</span><div><div class="toc-label">Daily Sales</div><div class="toc-desc">Revenue trends day by day</div></div></a>
+    <a href="#hourly" class="toc-item"><span class="toc-icon">⏱</span><div><div class="toc-label">Sales by Hour</div><div class="toc-desc">When to staff up and cut</div></div></a>
+    <a href="#labor" class="toc-item"><span class="toc-icon">⊞</span><div><div class="toc-label">Labor & Scheduling</div><div class="toc-desc">Actual vs scheduled hours</div></div></a>
+    <a href="#delivery" class="toc-item"><span class="toc-icon">🛵</span><div><div class="toc-label">Delivery & Online</div><div class="toc-desc">Net revenue after commissions</div></div></a>
+    <a href="#breakeven" class="toc-item"><span class="toc-icon">⊕</span><div><div class="toc-label">Break-even</div><div class="toc-desc">Covers needed before profit</div></div></a>
+    <a href="#voids" class="toc-item"><span class="toc-icon">⚠</span><div><div class="toc-label">Voids & Comps</div><div class="toc-desc">What's leaving through the back door</div></div></a>
+    <a href="#pl" class="toc-item"><span class="toc-icon">↗</span><div><div class="toc-label">P&L Statement</div><div class="toc-desc">Your full income statement</div></div></a>
+    <a href="#benchmarks" class="toc-item"><span class="toc-icon">◎</span><div><div class="toc-label">Industry Benchmarks</div><div class="toc-desc">How you compare to similar restaurants</div></div></a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- OVERVIEW -->
+  <div class="section" id="overview">
+    <div class="section-icon">◈</div>
+    <div class="section-label">Overview</div>
+    <div class="section-title">Dashboard Overview</div>
+    <div class="section-sub">The first page you see every morning. It shows your most important numbers from the previous day and week across all locations.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Total Revenue</div>
+        <div class="metric-desc">Gross sales across all locations for the selected period. Use the period selector (Today / Week / Month) to change the view.</div>
+        <div class="metric-tip">Compare to same period last week using the % change indicator</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Prime Cost %</div>
+        <div class="metric-desc">Food cost + labor cost combined as a percentage of revenue. This is your single most important number.</div>
+        <div class="metric-tip">Target: under 62% for full service, under 55% for fast casual</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Food Cost %</div>
+        <div class="metric-desc">What you spent on ingredients as a percentage of revenue. Updated daily from your POS and inventory data.</div>
+        <div class="metric-tip">Target: 28–34% depending on concept</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Labor Cost %</div>
+        <div class="metric-desc">Total wages paid as a percentage of revenue. Includes FOH, BOH, and management.</div>
+        <div class="metric-tip">Target: 28–35% depending on service style</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-box-label">How to read this page</div>
+      <p>Green means you're within target range. Amber means you're close to the edge. Red means you're over. The target ranges are based on what you entered during setup — adjust them anytime in Settings.</p>
+    </div>
+  </div>
+
+  <!-- COST BREAKDOWN -->
+  <div class="section" id="costs">
+    <div class="section-icon">▦</div>
+    <div class="section-label">Operations</div>
+    <div class="section-title">Cost Breakdown</div>
+    <div class="section-sub">A full breakdown of every cost category as a percentage of revenue. Use this page to find where money is leaking.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Food Cost</div>
+        <div class="metric-desc">Ingredient spend divided by revenue. If this is trending up, check your portion sizes, waste, and supplier pricing.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Labor Cost</div>
+        <div class="metric-desc">Total wages divided by revenue. High labor on slow nights is the most common fix — compare to Sales by Hour.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Fixed Costs</div>
+        <div class="metric-desc">Rent, utilities, insurance, and software — costs that don't change with volume. Shown as a monthly total.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Prime Cost</div>
+        <div class="metric-desc">Food + labor. The number most operators track daily. Every 1% improvement goes straight to profit.</div>
+      </div>
+    </div>
+    <div class="good-box">
+      <div class="good-box-label">Industry benchmarks</div>
+      <p>Full service: food 30–34%, labor 30–35%, prime 62–65%<br>Fast casual: food 28–32%, labor 25–30%, prime 55–60%<br>Fine dining: food 28–35%, labor 30–40%, prime 60–68%</p>
+    </div>
+  </div>
+
+  <!-- DAILY SALES -->
+  <div class="section" id="daily">
+    <div class="section-icon">◷</div>
+    <div class="section-label">Overview</div>
+    <div class="section-title">Daily Sales</div>
+    <div class="section-sub">Revenue charted day by day. Use this to spot patterns — which days consistently underperform, and whether you're trending up or down week over week.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Daily Revenue</div>
+        <div class="metric-desc">Gross sales for each day. Click any bar to see a breakdown by location.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Cover Count</div>
+        <div class="metric-desc">Number of guests served. Compare with revenue to track average check trends.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Average Check</div>
+        <div class="metric-desc">Revenue divided by covers. A falling average check can mean fewer add-ons or a menu mix shift.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Week-over-Week</div>
+        <div class="metric-desc">How this week compares to the same days last week. The most useful comparison for restaurants.</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-box-label">What to look for</div>
+      <p>If one day consistently underperforms, consider a prix fixe or happy hour promotion for that day. If your average check is falling, look at whether your team is suggesting add-ons and specials.</p>
+    </div>
+  </div>
+
+  <!-- HOURLY -->
+  <div class="section" id="hourly">
+    <div class="section-icon">⏱</div>
+    <div class="section-label">Overview</div>
+    <div class="section-title">Sales by Hour</div>
+    <div class="section-sub">Revenue broken down by hour of the day. The most actionable page in the dashboard — it tells you exactly when to schedule staff and when to cut.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Revenue by Hour</div>
+        <div class="metric-desc">How much you made each hour. Peaks tell you your busiest windows. Valleys tell you when you're overstaffed.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Covers by Hour</div>
+        <div class="metric-desc">Number of guests per hour. Use this to determine FOH staffing ratios (1 server per 4–6 covers is typical).</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Staffing Guide</div>
+        <div class="metric-desc">Suggested FOH and BOH headcount by hour based on your historical volume. Adjust in Settings.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Revenue per Labor Hour</div>
+        <div class="metric-desc">How much revenue each labor hour generated. Lower numbers mean you were overstaffed for that window.</div>
+      </div>
+    </div>
+    <div class="good-box">
+      <div class="good-box-label">How to use this in practice</div>
+      <p>Print the staffing guide and give it to your floor manager every Monday. If revenue per labor hour is consistently low between 2pm–5pm, consider cutting that shift or running it leaner.</p>
+    </div>
+  </div>
+
+  <!-- LABOR -->
+  <div class="section" id="labor">
+    <div class="section-icon">⊞</div>
+    <div class="section-label">Operations</div>
+    <div class="section-title">Labor & Scheduling</div>
+    <div class="section-sub">Actual hours worked versus scheduled hours, broken down by employee and role. Overtime alerts fire automatically when someone goes over 40 hours.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Scheduled vs Actual</div>
+        <div class="metric-desc">How many hours were scheduled vs how many were actually worked. Large gaps mean your scheduling needs tightening.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Overtime Alert</div>
+        <div class="metric-desc">Flags any employee approaching or over 40 hours for the week. Acts early enough to adjust the schedule.</div>
+        <div class="metric-tip">Overtime costs 1.5× — catching it Wednesday saves real money</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Labor by Role</div>
+        <div class="metric-desc">Hours and wages broken down by FOH, BOH, and management. Helps you see where your labor dollars are going.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Labor Cost per Cover</div>
+        <div class="metric-desc">How much labor went into each guest served. Compare across locations to find efficiency gaps.</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-box-label">Tip</div>
+      <p>Check this page every Wednesday. If anyone is already at 32+ hours and you have a busy weekend ahead, you can adjust the schedule before overtime kicks in.</p>
+    </div>
+  </div>
+
+  <!-- DELIVERY -->
+  <div class="section" id="delivery">
+    <div class="section-icon">🛵</div>
+    <div class="section-label">Finance</div>
+    <div class="section-title">Delivery & Online Orders</div>
+    <div class="section-sub">What you actually made from DoorDash, Uber Eats, and Grubhub — after their commission comes out. Most operators are surprised how little they net.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Gross Revenue</div>
+        <div class="metric-desc">What customers paid on the platform before commission.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Commission</div>
+        <div class="metric-desc">What the platform kept. DoorDash typically 20–30%, Uber Eats 15–30%, Grubhub 15–25%.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Net Revenue</div>
+        <div class="metric-desc">What actually hit your account after commission. This is the number that matters.</div>
+        <div class="metric-tip">If net margin on delivery orders is under 10%, delivery may be losing you money</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">By Platform</div>
+        <div class="metric-desc">Side-by-side comparison of each platform's volume and net revenue. Use this to decide where to focus.</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-box-label">Important</div>
+      <p>Delivery orders have higher food costs (larger portions, packaging) and the same labor costs as dine-in, but you're giving up 20–30% to the platform. A $40 delivery order might net you $28 — less than the same order dine-in at $40 with no commission.</p>
+    </div>
+  </div>
+
+  <!-- BREAK-EVEN -->
+  <div class="section" id="breakeven">
+    <div class="section-icon">⊕</div>
+    <div class="section-label">Finance</div>
+    <div class="section-title">Break-Even Calculator</div>
+    <div class="section-sub">How many covers you need to serve before you start making money. Share this number with your floor manager every morning.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Break-Even Covers</div>
+        <div class="metric-desc">The number of guests you need to cover your fixed costs and variable costs for the day. Every cover after this is profit.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Break-Even Revenue</div>
+        <div class="metric-desc">The revenue number you need to hit before you start profiting. Calculated using your fixed costs and prime cost %.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Today's Pace</div>
+        <div class="metric-desc">Based on your Sales by Hour data, whether you're on track to hit break-even by close.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Contribution Margin</div>
+        <div class="metric-desc">How much each cover contributes toward covering your fixed costs after variable costs are subtracted.</div>
+      </div>
+    </div>
+    <div class="good-box">
+      <div class="good-box-label">How to use this</div>
+      <p>Every morning, tell your floor manager: "We need X covers to break even today." It reframes the shift as a concrete target rather than just showing up and hoping for a good night.</p>
+    </div>
+  </div>
+
+  <!-- VOIDS & COMPS -->
+  <div class="section" id="voids">
+    <div class="section-icon">⚠</div>
+    <div class="section-label">Finance</div>
+    <div class="section-title">Voids & Comps</div>
+    <div class="section-sub">Every voided transaction and comp logged automatically from your POS. High void rates are often a sign of theft, training issues, or system problems.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Void Rate</div>
+        <div class="metric-desc">Voids as a percentage of total transactions. Industry average is 1–2%. Above 4% warrants investigation.</div>
+        <div class="metric-tip">Alert fires automatically when rate exceeds your threshold</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Comp Rate</div>
+        <div class="metric-desc">Comps as a percentage of revenue. Some comps are intentional (manager discretion), others aren't.</div>
+        <div class="metric-tip">Target: under 1% of revenue</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">By Employee</div>
+        <div class="metric-desc">Which employees are voiding or comping the most. An outlier here is a red flag.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">By Item</div>
+        <div class="metric-desc">Which menu items are voided most. High voids on one item can mean a training issue or a bad item.</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-box-label">What to look for</div>
+      <p>A server who voids 3× more than colleagues, voids that happen after payment (possible theft), or a sudden spike on a particular item. PrimeIQ alerts you automatically — you just need to follow up.</p>
+    </div>
+  </div>
+
+  <!-- P&L -->
+  <div class="section" id="pl">
+    <div class="section-icon">↗</div>
+    <div class="section-label">Finance</div>
+    <div class="section-title">P&L Statement</div>
+    <div class="section-sub">Your full income statement — revenue, cost of goods, labor, fixed costs, and net profit — formatted the way your accountant expects it.</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-name">Gross Revenue</div>
+        <div class="metric-desc">Total sales before any deductions.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Cost of Goods Sold</div>
+        <div class="metric-desc">Food and beverage cost for the period.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Gross Profit</div>
+        <div class="metric-desc">Revenue minus food cost. This covers labor and fixed costs.</div>
+      </div>
+      <div class="metric">
+        <div class="metric-name">Net Operating Profit</div>
+        <div class="metric-desc">What's left after food, labor, and fixed costs. This is what you actually made.</div>
+      </div>
+    </div>
+    <div class="good-box">
+      <div class="good-box-label">Export for your accountant</div>
+      <p>Use the Export button to download your P&L as a CSV. It's formatted to match standard restaurant P&L templates — your accountant can import it directly.</p>
+    </div>
+  </div>
+
+  <!-- BENCHMARKS -->
+  <div class="section" id="benchmarks">
+    <div class="section-icon">◎</div>
+    <div class="section-label">Finance</div>
+    <div class="section-title">Industry Benchmarks</div>
+    <div class="section-sub">How your numbers compare to restaurants of similar size and concept. Based on data from the National Restaurant Association and Toast's annual industry report.</div>
+    <div class="benchmark-row"><span class="benchmark-label">Food cost — full service</span><span class="benchmark-val good">28–34%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Food cost — fast casual</span><span class="benchmark-val good">25–32%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Labor cost — full service</span><span class="benchmark-val good">30–35%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Labor cost — fast casual</span><span class="benchmark-val good">25–30%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Prime cost — full service</span><span class="benchmark-val warn">60–65%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Prime cost — fast casual</span><span class="benchmark-val good">52–60%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Void rate</span><span class="benchmark-val good">Under 2%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Comp rate</span><span class="benchmark-val good">Under 1%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Net profit margin</span><span class="benchmark-val warn">3–9%</span></div>
+    <div class="benchmark-row"><span class="benchmark-label">Revenue per labor hour</span><span class="benchmark-val good">$35–$55</span></div>
+    <div class="tip-box" style="margin-top:20px">
+      <div class="tip-box-label">About these benchmarks</div>
+      <p>These are industry averages — your targets may differ based on your market, concept, and lease structure. The targets you set during onboarding (in Settings) are what PrimeIQ uses to flag your numbers as good, warning, or over.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="cta">
+  <h2>Questions?</h2>
+  <p>Reply to any email from justin@primeiq.io and I'll get back to you same day.</p>
+  <a href="/dashboard">Back to Dashboard →</a>
+</div>
+
+<script>
+// Page view tracking
+(function() {
+  try {
+    var clientId = (function(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(e){return null;} })('rd_client_id');
+    fetch('https://restaurant-api-68re.onrender.com/api/usage/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: clientId || 'anonymous', page: window.location.pathname })
+    }).catch(function(){});
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

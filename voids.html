@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voids & Comps — PrimeIQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('rd_token'),c=localStorage.getItem('rd_client_id');if(!t||!c)window.location.replace('/login');})()</script>
+<style>
+:root{--gold:#b8860b;--dark:#1a1208;--green:#2d7a4f;--red:#c0392b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--dark);color:#f5ead6;min-height:100vh;}
+.header{background:var(--dark);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);}
+.logo{font-family:'Playfair Display',serif;font-size:18px;color:#e8b84b;}
+.logo em{font-style:italic;}
+.nav a{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);text-decoration:none;margin-left:16px;}
+.nav a:hover{color:#e8b84b;}
+.main{max-width:960px;margin:0 auto;padding:32px 20px 80px;}
+.page-title{font-family:'Playfair Display',serif;font-size:28px;color:#f5ead6;margin-bottom:4px;}
+.page-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:24px;}
+.period-row{display:flex;gap:8px;margin-bottom:20px;}
+.period-btn{padding:7px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:transparent;font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;}
+.period-btn.active{background:rgba(184,134,11,0.15);border-color:var(--gold);color:var(--gold);}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px;}
+.stat-val{font-family:'Playfair Display',serif;font-size:24px;}
+.stat-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px;}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;margin-bottom:16px;}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px;}
+table{width:100%;border-collapse:collapse;}
+th{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);}
+tr:last-child td{border:none;}
+.void-badge{padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(192,57,43,0.15);color:#e57373;}
+.comp-badge{padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(192,112,0,0.15);color:#f0a030;}
+.alert-box{background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:10px;padding:16px;margin-bottom:16px;}
+@media(max-width:600px){.stat-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div><div class="logo"><em>Prime</em>IQ</div></div>
+  <div class="nav"><a href="/dashboard">← Dashboard</a><a href="/settings">Settings</a></div>
+</div>
+<div class="main">
+  <div class="page-title">Voids & Comps</div>
+  <div class="page-sub">Every voided transaction and comp logged from your POS · Alerts fire above 2%</div>
+
+  <div class="period-row">
+    <button class="period-btn active" onclick="setPeriod('week',this)">This Week</button>
+    <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
+    <button class="period-btn" onclick="setPeriod('quarter',this)">This Quarter</button>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-label">Total Voids</div><div class="stat-val" id="s_voids" style="color:#e57373;">—</div><div class="stat-sub" id="s_void_pct">of revenue</div></div>
+    <div class="stat"><div class="stat-label">Total Comps</div><div class="stat-val" id="s_comps" style="color:#f0a030;">—</div><div class="stat-sub" id="s_comp_pct">of revenue</div></div>
+    <div class="stat"><div class="stat-label">Void Rate</div><div class="stat-val" id="s_void_rate">—</div><div class="stat-sub">target under 2%</div></div>
+    <div class="stat"><div class="stat-label">Highest Single</div><div class="stat-val" id="s_highest" style="color:#f5ead6;">—</div><div class="stat-sub">single void/comp</div></div>
+  </div>
+
+  <div class="alert-box" id="void_alert" style="display:none">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#e57373;margin-bottom:6px;">⚠ Void Rate Alert</div>
+    <div id="void_alert_msg" style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Records</div>
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Amount</th><th>Employee</th><th>Reason</th></tr></thead>
+      <tbody id="voids_table"><tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:32px;">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = 'https://restaurant-api-68re.onrender.com';
+function lsGet(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(e){return null;} }
+function fu(n){ return '$'+Math.round(n||0).toLocaleString(); }
+function fp(n){ return (n||0).toFixed(2)+'%'; }
+var currentPeriod = 'week';
+
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  loadData();
+}
+
+async function loadData() {
+  var token = lsGet('rd_token');
+  try {
+    var res = await fetch(API + '/api/voids?period=' + currentPeriod, { headers: { 'Authorization': 'Bearer ' + token } });
+    var data = await res.json();
+    var records = data.records || [];
+
+    var totalVoids = records.filter(function(r){ return r.type==='void'||!r.type; }).reduce(function(s,r){ return s+(r.amount||0); }, 0);
+    var totalComps = records.filter(function(r){ return r.type==='comp'; }).reduce(function(s,r){ return s+(r.amount||0); }, 0);
+    var highest = records.reduce(function(m,r){ return (r.amount||0) > m ? (r.amount||0) : m; }, 0);
+    var totalAmount = totalVoids + totalComps;
+
+    document.getElementById('s_voids').textContent = fu(totalVoids);
+    document.getElementById('s_comps').textContent = fu(totalComps);
+    document.getElementById('s_highest').textContent = fu(highest);
+    document.getElementById('s_void_rate').textContent = '—'; // Would need revenue to calculate
+
+    if (records.length === 0) {
+      document.getElementById('voids_table').innerHTML = '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:24px;">No void/comp data — connect your POS or upload a CSV in Settings</td></tr>';
+      return;
+    }
+
+    document.getElementById('voids_table').innerHTML = records.map(function(r){
+      var type = r.type === 'comp' ? '<span class="comp-badge">Comp</span>' : '<span class="void-badge">Void</span>';
+      return '<tr><td>' + (r.date||'—') + '</td><td>' + type + '</td><td>' + (r.item_name||'—') + '</td><td>' + fu(r.amount) + '</td><td>' + (r.employee_name||'—') + '</td><td style="color:rgba(255,255,255,0.4)">' + (r.reason||'—') + '</td></tr>';
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('voids_table').innerHTML = '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:24px;">Failed to load — ' + e.message + '</td></tr>';
+  }
+}
+loadData();
+</script>
+</body>
+</html>

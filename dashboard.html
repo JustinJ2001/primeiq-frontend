@@ -818,16 +818,64 @@ body::before {
 // Instant redirect before any rendering - prevents flash
 (function() {
   var params = new URLSearchParams(window.location.search);
-  if (params.get('demo') === '1') return;
+  if (params.get('demo') === '1') { document.body.style.visibility='visible'; return; }
   var token = localStorage.getItem('rd_token');
   var clientId = localStorage.getItem('rd_client_id');
   var setupDone = localStorage.getItem('rd_setup_complete');
   if (!token) { window.location.replace('/login'); return; }
   if (!clientId || setupDone !== 'true') { window.location.replace('/onboarding'); return; }
+  document.body.style.visibility='visible';
 })();
 </script>
+<script>
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  if(p.get('demo')==='1') { document.getElementById('demo_banner').style.display='flex'; document.body.style.visibility='visible'; return; }
+  var token = localStorage.getItem('rd_token');
+  var clientId = localStorage.getItem('rd_client_id');
+  var done = localStorage.getItem('rd_setup_complete');
+  if(!token || !clientId || done !== 'true') {
+    window.location.replace(!token ? '/login' : '/onboarding');
+  }
+})();
+</script>
+<script>
+// Lightweight frontend error tracking — sends to API
+window.addEventListener('error', function(e) {
+  try {
+    var clientId = (function(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(ex){return null;} })('rd_client_id');
+    fetch('https://restaurant-api-68re.onrender.com/api/usage/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId || 'anonymous',
+        page: 'error:' + window.location.pathname,
+        error: (e.message || '').slice(0, 200),
+        file: (e.filename || '').slice(0, 100),
+        line: e.lineno
+      })
+    }).catch(function(){});
+  } catch(ex) {}
+});
+</script>
 </head>
-<body>
+<body style="visibility:hidden">
+<div id="date_picker_panel" style="display:none;position:fixed;top:60px;right:20px;background:#fff;border:1.5px solid rgba(40,25,5,0.12);border-radius:10px;padding:16px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.1);min-width:260px;">
+  <div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#8a7a5a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Custom Date Range</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <div style="flex:1;"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:#8a7a5a;margin-bottom:4px;">FROM</div><input type="date" id="date_from" style="width:100%;padding:7px 10px;border:1px solid rgba(40,25,5,0.12);border-radius:6px;font-size:12px;outline:none;"></div>
+    <div style="flex:1;"><div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:#8a7a5a;margin-bottom:4px;">TO</div><input type="date" id="date_to" style="width:100%;padding:7px 10px;border:1px solid rgba(40,25,5,0.12);border-radius:6px;font-size:12px;outline:none;"></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="applyDateFilter()" style="flex:1;padding:8px;border-radius:6px;border:none;background:#b8860b;color:#fff;font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:0.06em;">Apply</button>
+    <button onclick="clearCustomDate()" style="padding:8px 14px;border-radius:6px;border:1px solid rgba(40,25,5,0.12);background:#fff;font-family:IBM Plex Mono,monospace;font-size:9px;cursor:pointer;color:#8a7a5a;">Clear</button>
+  </div>
+</div>
+<div id="demo_banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#b8860b;padding:10px 20px;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:center;gap:16px;">
+  <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:#fff;letter-spacing:0.06em;">You are viewing demo data</span>
+  <a href="/onboarding" style="padding:6px 14px;background:#fff;color:#b8860b;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;font-weight:700;">Start Free Trial →</a>
+  <a href="/login" style="padding:6px 14px;border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;">Sign In</a>
+</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -858,6 +906,12 @@ body::before {
     <div class="nav-item" data-page="benchmark"><span class="nav-icon">◎</span> Industry Benchmarks</div>
   </nav>
   <div class="sidebar-footer">
+      <div style="display:flex;gap:8px;margin-bottom:12px;padding:0 8px;">
+        <a href="/refer" style="flex:1;text-align:center;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);text-decoration:none;letter-spacing:0.06em;" onmouseover="this.style.borderColor='rgba(184,134,11,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">Refer</a>
+        <a href="/settings" style="flex:1;text-align:center;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);text-decoration:none;letter-spacing:0.06em;" onmouseover="this.style.borderColor='rgba(184,134,11,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">Settings</a>
+        <a href="/guide" style="flex:1;text-align:center;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);text-decoration:none;letter-spacing:0.06em;" onmouseover="this.style.borderColor='rgba(184,134,11,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">Guide</a>
+        <a href="#" onclick="signOutDashboard()" style="flex:1;text-align:center;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);text-decoration:none;letter-spacing:0.06em;" onmouseover="this.style.borderColor='rgba(192,57,43,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">Sign Out</a>
+      </div>
     <div class="restaurant-badge">
       <div class="restaurant-avatar" id="sidebarAvatar">T</div>
       <div>
@@ -1246,6 +1300,143 @@ function hideLoadingOverlay() {
 }
 
 // ── MAIN DATA LOADER ──────────────────────────────────────────────────────────
+
+function printPL() {
+  var content = document.querySelector('.main-content') || document.body;
+  var printWin = window.open('', '_blank', 'width=800,height=600');
+  printWin.document.write('<!DOCTYPE html><html><head><title>PrimeIQ P&L</title>');
+  printWin.document.write('<style>body{font-family:Georgia,serif;padding:32px;color:#1a1208;}table{width:100%;border-collapse:collapse;}td,th{padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;}th{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#8a7a5a;font-family:Courier New,monospace;}h1{font-size:24px;margin-bottom:4px;}h2{font-size:16px;margin:20px 0 8px;}.logo{font-size:18px;color:#b8860b;margin-bottom:32px;}</style>');
+  printWin.document.write('</head><body>');
+  printWin.document.write('<div class="logo">PrimeIQ</div>');
+  printWin.document.write('<h1>P&L Statement</h1>');
+  printWin.document.write('<p style="color:#8a7a5a;font-family:Courier New,monospace;font-size:10px;margin-bottom:24px;">Generated ' + new Date().toLocaleDateString() + '</p>');
+  // Copy tables from current view
+  var tables = document.querySelectorAll('table');
+  tables.forEach(function(t) {
+    printWin.document.write(t.outerHTML);
+    printWin.document.write('<br>');
+  });
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+  printWin.print();
+}
+
+function signOutDashboard() {
+  var keys = ['rd_token','rd_client_id','rd_refresh','rd_setup_complete','rd_onboarding','rd_onboard_state','rd_locations_draft','rd_categories','rd_referred_by','rd_s1_name','rd_s1_email','rd_pilot'];
+  keys.forEach(function(k){ try{localStorage.removeItem(k);}catch(e){} });
+  window.location.href = '/login';
+}
+
+
+// Auto-refresh Supabase token using refresh token
+async function refreshToken() {
+  var refresh = (function(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(e){return null;} })('rd_refresh');
+  if (!refresh) return false;
+  try {
+    var res = await fetch('https://rkxhrdecrqtqoorjyfel.supabase.co/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw' },
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+    var data = await res.json();
+    if (data.access_token) {
+      try { localStorage.setItem('rd_token', data.access_token); } catch(e) {}
+      try { localStorage.setItem('rd_refresh', data.refresh_token); } catch(e) {}
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Wrap apiFetch to auto-retry with refreshed token on 401
+var _apiFetchBase = apiFetch;
+apiFetch = async function(path, method, body) {
+  try {
+    return await _apiFetchBase(path, method, body);
+  } catch(e) {
+    if (e.message && (e.message.includes('401') || e.message.toLowerCase().includes('unauthorized'))) {
+      var refreshed = await refreshToken();
+      if (refreshed) return await _apiFetchBase(path, method, body);
+      // Token expired and can't refresh — redirect to login
+      window.location.href = '/login';
+    }
+    throw e;
+  }
+};
+
+
+function exportTableToCSV(filename) {
+  // Find the visible table or build from current data
+  var rows = [];
+  var tables = document.querySelectorAll('table');
+  var bestTable = null;
+  var maxRows = 0;
+  tables.forEach(function(t) {
+    if (t.querySelectorAll('tr').length > maxRows) {
+      maxRows = t.querySelectorAll('tr').length;
+      bestTable = t;
+    }
+  });
+
+  if (bestTable) {
+    bestTable.querySelectorAll('tr').forEach(function(row) {
+      var cols = [];
+      row.querySelectorAll('th, td').forEach(function(col) {
+        var text = col.innerText.replace(/,/g, ';').replace(/\n/g, ' ').trim();
+        cols.push('"' + text + '"');
+      });
+      if (cols.length) rows.push(cols.join(','));
+    });
+  } else {
+    rows.push('"No data available"');
+  }
+
+  var csv = rows.join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename || ('primeiq-export-' + new Date().toISOString().slice(0,10) + '.csv');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportCurrentView() {
+  var page = document.querySelector('.page-title, h2, .section-title');
+  var name = page ? page.innerText.trim().toLowerCase().replace(/\s+/g,'-') : 'dashboard';
+  exportTableToCSV('primeiq-' + name + '-' + new Date().toISOString().slice(0,10) + '.csv');
+}
+
+
+function applyDateFilter() {
+  var from = document.getElementById('date_from');
+  var to = document.getElementById('date_to');
+  var locFilter = document.getElementById('loc_filter');
+  if (from && to && from.value && to.value) {
+    window._customDateFrom = from.value;
+    window._customDateTo = to.value;
+    window._selectedLocation = locFilter ? locFilter.value : null;
+    loadDashboardData();
+    var panel = document.getElementById('date_picker_panel');
+    if (panel) panel.style.display = 'none';
+  }
+}
+
+function toggleDatePicker() {
+  var panel = document.getElementById('date_picker_panel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function clearCustomDate() {
+  window._customDateFrom = null;
+  window._customDateTo = null;
+  var panel = document.getElementById('date_picker_panel');
+  if (panel) panel.style.display = 'none';
+  loadDashboardData();
+}
+
 async function loadDashboardData() {
   // Track usage
   var clientId = localStorage.getItem('rd_client_id');
@@ -4155,6 +4346,7 @@ function showPageTooltip() {
 // Always render immediately with demo data so dashboard is never blank
 navigate('overview');
 // Then try to load real data in background if logged in
+document.body.style.visibility="visible";
 loadDashboardData();
 </script>
 <div style="text-align:center;padding:24px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#b0a090">

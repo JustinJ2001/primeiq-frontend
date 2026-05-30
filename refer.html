@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refer a Restaurant — PrimeIQ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script>
+(function(){
+  var t = localStorage.getItem('rd_token');
+  var c = localStorage.getItem('rd_client_id');
+  if (!t || !c) window.location.replace('/login');
+})();
+</script>
+<style>
+:root{--bg:#faf8f4;--card:#fff;--border:rgba(40,25,5,0.1);--gold:#b8860b;--dark:#1a1208;--muted:#8a7a5a;--green:#2d7a4f;--green-bg:#edf7f2;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:#e8b84b;margin-bottom:4px;}
+.logo em{font-style:italic;color:#f5ead6;}
+.logo-sub{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:36px;text-align:center;}
+.card{background:#fff;border-radius:14px;padding:36px;width:100%;max-width:480px;}
+.card-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark);margin-bottom:8px;}
+.card-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
+.link-box{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.link-text{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dark);word-break:break-all;}
+.copy-btn{padding:8px 16px;border-radius:7px;border:none;background:var(--gold);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:9px;cursor:pointer;white-space:nowrap;letter-spacing:0.06em;flex-shrink:0;}
+.copy-btn:active{background:#9a7009;}
+.benefit{background:var(--green-bg);border:1px solid rgba(45,122,79,0.15);border-radius:8px;padding:14px 16px;margin-bottom:20px;}
+.benefit-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+.benefit p{font-size:13px;color:var(--dark);line-height:1.6;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.share-row{display:flex;gap:10px;}
+.share-btn{flex:1;padding:11px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;letter-spacing:0.06em;transition:all 0.15s;}
+.share-btn:hover{border-color:var(--gold);color:var(--dark);}
+.back-link{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);text-decoration:none;margin-top:20px;display:block;text-align:center;}
+.back-link:hover{color:rgba(255,255,255,0.6);}
+.copied{color:var(--green) !important;background:var(--green-bg) !important;}
+</style>
+</head>
+<body>
+<div class="logo"><em>Prime</em>IQ</div>
+<div class="logo-sub">Restaurant Analytics</div>
+<div class="card">
+  <div class="card-title">Refer a restaurant</div>
+  <div class="card-sub">Know another operator who could use better numbers? Send them your link. If they sign up, we'll credit your account one month free.</div>
+
+  <div class="benefit">
+    <div class="benefit-label">Your referral benefit</div>
+    <p>1 month free ($500 credit) for every restaurant that signs up and stays for 30 days. No limit on referrals.</p>
+  </div>
+
+  <div id="link_box" class="link-box" style="display:none">
+    <span class="link-text" id="ref_link">Generating your link...</span>
+    <button class="copy-btn" id="copy_btn" onclick="copyLink()">Copy</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="share-row">
+    <button class="share-btn" onclick="shareEmail()">📧 Email</button>
+    <button class="share-btn" onclick="shareText()">💬 Text</button>
+    <button class="share-btn" onclick="shareNative()">↗ Share</button>
+  </div>
+</div>
+<a href="/dashboard" class="back-link">← Back to Dashboard</a>
+
+<script>
+var refCode = '';
+
+(function() {
+  var clientId = localStorage.getItem('rd_client_id') || '';
+  // Use first 8 chars of client ID as referral code
+  refCode = clientId.replace(/-/g,'').slice(0,8).toUpperCase();
+  var link = 'https://primeiq.io/onboarding?ref=' + refCode;
+  document.getElementById('ref_link').textContent = link;
+  document.getElementById('link_box').style.display = 'flex';
+})();
+
+function getLink() {
+  return 'https://primeiq.io/onboarding?ref=' + refCode;
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(getLink()).then(function() {
+    var btn = document.getElementById('copy_btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(function() {
+    // Fallback
+    var input = document.createElement('input');
+    input.value = getLink();
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+  });
+}
+
+function shareEmail() {
+  var subject = encodeURIComponent('Restaurant analytics that actually makes sense');
+  var body = encodeURIComponent("I have been using PrimeIQ to track food cost, labor, and prime cost automatically every day. Thought you might find it useful:\n\n" + getLink() + "\n\nFirst month is $500 — cancel anytime.");
+  window.open('mailto:?subject=' + subject + '&body=' + body);
+}
+
+function shareText() {
+  var msg = encodeURIComponent('Been using PrimeIQ for restaurant analytics — tracks food cost, labor, prime cost automatically. Check it out: ' + getLink());
+  window.open('sms:?body=' + msg);
+}
+
+function shareNative() {
+  if (navigator.share) {
+    navigator.share({ title: 'PrimeIQ Restaurant Analytics', text: 'Restaurant analytics that actually makes sense.', url: getLink() });
+  } else {
+    copyLink();
+  }
+}
+</script>
+</body>
+</html>

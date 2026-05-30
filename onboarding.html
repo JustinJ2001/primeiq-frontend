@@ -106,6 +106,25 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 @keyframes spin{to{transform:rotate(360deg);}}
 .section-divider{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
 </style>
+<script>
+// Lightweight frontend error tracking — sends to API
+window.addEventListener('error', function(e) {
+  try {
+    var clientId = (function(k){ try{ var v=localStorage.getItem(k); return(!v||v==='undefined'||v==='null')?null:v; }catch(ex){return null;} })('rd_client_id');
+    fetch('https://restaurant-api-68re.onrender.com/api/usage/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId || 'anonymous',
+        page: 'error:' + window.location.pathname,
+        error: (e.message || '').slice(0, 200),
+        file: (e.filename || '').slice(0, 100),
+        line: e.lineno
+      })
+    }).catch(function(){});
+  } catch(ex) {}
+});
+</script>
 </head>
 <body>
 <div class="header">
@@ -201,6 +220,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
     <div id="loc_forms"></div>
     <div id="pos_loc_selector"></div>
     <button class="add-loc" onclick="addLocation()">+ Add Another Location</button>
+    <div id="loc_saved_indicator" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);text-align:right;margin-top:6px;opacity:0;transition:opacity 0.3s">✓ Draft saved</div>
     <button class="btn-gold" id="s2_btn" onclick="saveLocations()" style="margin-top:20px">Save & Continue →</button>
     
   </div>
@@ -727,11 +747,14 @@ function goToStep(n) {
   // Issue R: save state on every navigation so refresh resumes at correct step
   lsSet('rd_onboard_state', JSON.stringify(state));
   window.history.pushState({ step: n }, '', '/onboarding');
-  // Issue 53: track funnel step
-  var clientId = state.clientId || lsGet('rd_client_id');
-  if (clientId) {
-    apiFetch('/api/usage/ping', 'POST', { client_id: clientId, page: 'onboarding_step_' + n }).catch(function(){});
-  }
+  // Issue 53: track funnel step (debounced — don't hammer API)
+  clearTimeout(window._pingTimer);
+  window._pingTimer = setTimeout(function() {
+    var clientId = state.clientId || lsGet('rd_client_id');
+    if (clientId) {
+      apiFetch('/api/usage/ping', 'POST', { client_id: clientId, page: 'onboarding_step_' + n }).catch(function(){});
+    }
+  }, 1000);
   renderStep(n);
 }
 
@@ -970,6 +993,9 @@ function renderLocationForms() {
           <input class="f-input" type="number" placeholder="800" value="${loc.marketing || ''}" oninput="updateLocation(${i},'marketing',this.value)"></div>
         <div class="f-group"><label class="f-label">Software</label>
           <input class="f-input" type="number" placeholder="310" value="${loc.software || ''}" oninput="updateLocation(${i},'software',this.value)"></div>
+        <div class="f-group"><label class="f-label">Seats / Covers</label>
+          <input class="f-input" type="number" placeholder="60" value="${loc.seats || ''}" oninput="updateLocation(${i},'seats',this.value)">
+          <div class="f-hint">Used for break-even calculator</div></div>
       </div>
       <div class="section-divider">Cost Targets</div>
       <div class="f-row3">
@@ -987,7 +1013,7 @@ function renderLocationForms() {
 }
 
 function addLocation() {
-  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', supplies:'', marketing:'', software:'', foodTarget:31, laborTarget:34 });
+  state.locations.push({ name:'', address:'', rent:'', utilities:'', insurance:'', supplies:'', marketing:'', software:'', foodTarget:31, laborTarget:34, seats:'' });
   renderLocationForms();
 }
 
@@ -1281,9 +1307,16 @@ function skipPayroll() {
 function renderReviewStep() {
   const posCount = Object.keys(state.connectedPOS).length;
   const delCount = Object.values(state.connectedDelivery).reduce((s, d) => s + (d.providers?.length || 0), 0);
+  // Build fixed costs summary
+  var totalFixedCosts = state.locations.reduce(function(sum, loc) {
+    return sum + (parseFloat(loc.rent)||0) + (parseFloat(loc.utilities)||0) + (parseFloat(loc.insurance)||0) + (parseFloat(loc.supplies)||0) + (parseFloat(loc.marketing)||0) + (parseFloat(loc.software)||0);
+  }, 0);
+  var locNames = state.locations.map(function(l){ return l.name; }).filter(Boolean).join(', ');
+
   document.getElementById('review_content').innerHTML = `
     <div class="summary-row"><span class="summary-label">Restaurant</span><span class="summary-val">${state.restaurantName || lsGet('rd_s1_name') || '—'}</span></div>
-    <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}</span></div>
+    <div class="summary-row"><span class="summary-label">Locations</span><span class="summary-val">${state.locations.length} location${state.locations.length > 1 ? 's' : ''}${locNames ? ' · ' + locNames : ''}</span></div>
+    <div class="summary-row"><span class="summary-label">Monthly Fixed Costs</span><span class="summary-val">${totalFixedCosts > 0 ? '$' + totalFixedCosts.toLocaleString() + '/mo' : '—'}</span></div>
     <div class="summary-row"><span class="summary-label">POS Connected</span><span class="summary-val ${posCount > 0 ? 'good' : 'warn'}">${posCount > 0 ? posCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Delivery Platforms</span><span class="summary-val ${delCount > 0 ? 'good' : 'warn'}">${delCount > 0 ? delCount + ' connected' : 'Not yet — connect in Settings'}</span></div>
     <div class="summary-row"><span class="summary-label">Payroll</span><span class="summary-val ${state.connectedPayroll ? 'good' : 'warn'}">${state.connectedPayroll ? state.connectedPayroll + ' connected' : 'Not yet — connect in Settings'}</span></div>
@@ -1311,7 +1344,11 @@ async function startCheckout() {
         lsRemove('rd_onboarding');
         lsSet('rd_setup_complete', 'true');
         await apiFetch('/api/clients/' + clientId + '/complete', 'POST', {}).catch(function(){});
-        window.location.href = '/dashboard';
+        // Show success screen briefly before redirecting
+        document.querySelectorAll('.panel').forEach(function(p){ p.style.display='none'; });
+        document.getElementById('panel_success').style.display = 'block';
+        document.querySelectorAll('.prog-step').forEach(function(s){ s.classList.remove('active'); s.classList.add('done'); var n=s.querySelector('.prog-num'); if(n) n.textContent='✓'; });
+        setTimeout(function(){ window.location.href = '/dashboard'; }, 2500);
         return;
       }
     const res = await apiFetch('/api/create-checkout-session', 'POST', { user_id: state.userId, email: state.email, price_id: CONFIG.priceId });
