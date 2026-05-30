@@ -1762,8 +1762,13 @@ async function doGenericUpload(type, previewId, alertId) {
       if (locSel) { var opt = locSel.options[locSel.selectedIndex]; locName = opt ? opt.text : ''; }
     } catch(e) {}
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:var(--green-bg,#e8f5ee);border-radius:8px;color:var(--green,#2d7a4f);font-size:12px">✓ ' + validation.row_count + ' rows saved' + (locName ? ' for ' + locName : '') + '</div>'
-      + (state.locations.length > 1 ? '<div style="margin-top:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Have another location? Change the location dropdown above and upload again.</div>' : '');
+      + (state.locations.length > 1 ? '<div style="margin-top:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">Have another location? Change the dropdown above and upload again.</div>' : '');
     showAlert(alertId, 'Data uploaded successfully.' + (state.locations.length > 1 ? ' Change the location dropdown to upload for your other location.' : ''), 'success');
+    // Reset all file inputs so browser allows selecting a new file for the next location
+    document.querySelectorAll('input[type="file"]').forEach(function(el){ try{ el.value = ''; }catch(e){} });
+    // Clear pending CSV so a fresh file must be selected
+    var types = ['sales','delivery','labor'];
+    types.forEach(function(t){ window['_pendingCSV_' + t] = null; });
   } catch(e) {
     var errMsg = e.message || 'Upload failed. Please try again.';
     if (previewEl) previewEl.innerHTML = '<div style="padding:12px;background:#fdf0ee;border-radius:8px;color:#c0392b;font-size:12px">Upload failed: ' + errMsg + '</div>';
