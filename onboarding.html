@@ -232,7 +232,6 @@ window.addEventListener('error', function(e) {
     <div class="panel-sub">Add each restaurant · You can edit these anytime from Settings</div>
     <div id="s2_alert" class="alert"></div>
     <div id="loc_forms"></div>
-    <div id="pos_loc_selector"></div>
     <button class="add-loc" onclick="addLocation()">+ Add Another Location</button>
     <div id="loc_saved_indicator" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);text-align:right;margin-top:6px;opacity:0;transition:opacity 0.3s">✓ Draft saved</div>
     <button class="btn-gold" id="s2_btn" onclick="saveLocations()" style="margin-top:20px">Save & Continue →</button>
@@ -290,6 +289,7 @@ window.addEventListener('error', function(e) {
         <div class="csv-upload-label">Click to upload TouchBistro CSV</div>
       </div>
     </div>
+    <div id="pos_loc_selector" style="margin-bottom:12px"></div>
     <div class="conn-detail pos-detail" id="pos_detail_csv">
       <div class="conn-detail-title">Upload Sales Data — Any POS</div>
       <div class="conn-detail-sub">Select your POS below for step-by-step export instructions</div>
@@ -1169,7 +1169,7 @@ function renderPOSStep() {
               + '<div id="pos_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
               + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
               + '📄 Upload CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ','sales')">'
+              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'sales\')">'
               + '</label>'
               + '</div>';
           }).join('');
@@ -1288,7 +1288,7 @@ function renderDeliveryStep() {
               + '<div id="del_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
               + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
               + '📄 Upload delivery CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ','delivery')">'
+              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'delivery\')">'
               + '</label>'
               + '</div>';
           }).join('');
@@ -1372,7 +1372,7 @@ function renderPayrollStep() {
               + '<div id="pay_upload_status_' + li + '" style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted);margin-bottom:8px">No file uploaded yet</div>'
               + '<label style="display:inline-block;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
               + '📄 Upload labor CSV for ' + l.name
-              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ','labor')">'
+              + '<input type="file" accept=".csv" style="display:none" onchange="handlePerLocCSV(this,' + li + ',\'labor\')">'
               + '</label>'
               + '</div>';
           }).join('');
