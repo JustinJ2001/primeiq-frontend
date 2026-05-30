@@ -181,7 +181,7 @@ window.addEventListener('error', function(e) {
     <div id="s1_alert" class="alert"></div>
     <div class="card">
       <div class="f-group"><label class="f-label">Restaurant Group Name</label>
-        <input class="f-input" id="s1_name" name="organization" placeholder="e.g. Planet Taco" autocomplete="organization" oninput="lsSet('rd_s1_name',this.value)"></div>
+        <input class="f-input" id="s1_name" name="organization" placeholder="e.g. The Local Group, Mamá's Kitchen" autocomplete="organization" oninput="lsSet('rd_s1_name',this.value)"></div>
       <div class="f-group"><label class="f-label">Your Email</label>
         <input class="f-input" id="s1_email" name="email" type="email" placeholder="owner@yourrestaurant.com" autocomplete="email" oninput="lsSet('rd_s1_email',this.value)"></div>
       <div class="f-row">
@@ -1018,8 +1018,7 @@ function renderLocationForms() {
           <input class="f-input" type="number" placeholder="800" value="${loc.marketing || ''}" oninput="updateLocation(${i},'marketing',this.value)"></div>
         <div class="f-group"><label class="f-label">Software</label>
           <input class="f-input" type="number" placeholder="310" value="${loc.software || ''}" oninput="updateLocation(${i},'software',this.value)"></div>
-        <div class="f-group"><label class="f-label">Seats / Covers</label>
-          <input class="f-input" type="number" placeholder="60" value="${loc.seats || ''}" oninput="updateLocation(${i},'seats',this.value)">
+
           <div class="f-hint">Used for break-even calculator</div></div>
       </div>
       <div class="section-divider">Cost Targets</div>
