@@ -1884,6 +1884,13 @@ function updateCompletenessBar() {
   var token = state.token || localStorage.getItem('rd_token');
   if (!clientId || !token) return;
 
+  // Show bar immediately with loading state
+  var bar = document.getElementById('setupBar');
+  if (bar) bar.classList.add('visible');
+  var setupItems = document.getElementById('setupItems');
+  var setupProgress = document.getElementById('setupProgress');
+  if (setupItems) setupItems.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(255,255,255,0.3);padding:4px 0">Checking setup...</div>';
+
   fetch('https://restaurant-api-68re.onrender.com/api/onboarding/completeness?client_id=' + clientId, {
     headers: { 'Authorization': 'Bearer ' + token }
   }).then(function(r){ return r.json(); }).then(function(data) {
@@ -1937,6 +1944,52 @@ function updateCompletenessBar() {
     bar.classList.remove('all-done');
 
   }).catch(function() {});
+}
+
+// ── PAGE LEVEL PROMPTS ──────────────────────────────────────
+function needsSquare() { return !state.pos || state.pos === 'Demo'; }
+function needsLabor()  { return !state.laborSource || state.laborSource !== 'square_labor_api'; }
+function needsFood()   { return !state.foodCostSource || state.foodCostSource !== 'invoices'; }
+function needsFixed()  { return !state.locations || !state.locations[0] || !state.locations[0].rent; }
+
+function promptBanner(type) {
+  var configs = {
+    square: {
+      color: '#e05a5a', bg: 'rgba(224,90,90,0.1)', border: 'rgba(224,90,90,0.25)',
+      icon: '⚠', label: 'SQUARE NOT CONNECTED',
+      msg: 'This page needs your Square data. Connect Square to see real revenue, covers, and payment data.',
+      cta: 'Connect Square', href: '/settings', external: false
+    },
+    labor: {
+      color: '#e05a5a', bg: 'rgba(224,90,90,0.08)', border: 'rgba(224,90,90,0.2)',
+      icon: '✗', label: 'LABOR NOT TRACKING',
+      msg: 'Showing estimated labor cost based on your target. Enable Square timecards so employees clock in — labor cost will track automatically every day.',
+      cta: 'Enable timecards in Square', href: 'https://squareup.com/dashboard/employees/timecards', external: true
+    },
+    food: {
+      color: '#c9943a', bg: 'rgba(184,134,11,0.08)', border: 'rgba(184,134,11,0.2)',
+      icon: '!', label: 'FOOD COST IS ESTIMATED',
+      msg: 'Showing your food cost target, not actual spend. Forward supplier invoices to your PrimeIQ address and food cost will track automatically from every Sysco, US Foods, and supplier delivery.',
+      cta: 'Set up invoice forwarding', href: '/settings', external: false
+    },
+    fixed: {
+      color: '#c9943a', bg: 'rgba(184,134,11,0.08)', border: 'rgba(184,134,11,0.2)',
+      icon: '!', label: 'FIXED COSTS NOT SET',
+      msg: 'Enter your rent, utilities, and other fixed costs so PrimeIQ can calculate your real break-even and net margin.',
+      cta: 'Add fixed costs', href: '/settings', external: false
+    }
+  };
+  var c = configs[type];
+  if (!c) return '';
+  var target = c.external ? ' target="_blank"' : '';
+  return '<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid ' + c.border + '">'
+    + '<div style="background:' + c.bg + ';padding:16px 20px;display:flex;align-items:flex-start;gap:16px">'
+    + '<div style="width:36px;height:36px;border-radius:50%;background:' + c.bg + ';border:2px solid ' + c.border + ';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:' + c.color + '">' + c.icon + '</div>'
+    + '<div style="flex:1">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.14em;color:' + c.color + ';margin-bottom:6px">' + c.label + '</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:12px">' + c.msg + '</div>'
+    + '<a href="' + c.href + '"' + target + ' style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:' + c.color + ';color:#fff;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.08em;text-decoration:none;text-transform:uppercase">' + c.cta + ' →</a>'
+    + '</div></div></div>';
 }
 
 function dismissSetupBar() {
@@ -2298,7 +2351,8 @@ function renderOverview() {
     const lp = l.foodCost[p]+l.laborCost[p];
     const lpc = primeCls(lp), lfc = foodCls(l.foodCost[p]), llc = laborCls(l.laborCost[p]);
     const primeWidth = Math.min(lp/80*100, 100);
-    return `
+      var p_square = needsSquare() ? promptBanner('square') : '';
+  return p_square + `
     <div class="loc-card">
       <div class="loc-header">
         <div>
@@ -2676,7 +2730,9 @@ function renderDaily() {
   var goodClass = pctChg !== null && parseFloat(pctChg)>=0 ? 'good' : 'warn';
   var gapVal = vals[bestIdx] - vals[worstIdx];
 
-  return '<div class="kpi-strip">'
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  return _pSq + '<div class="kpi-strip">'
     + '<div class="kpi-card '+goodClass+'"><div class="kpi-label">Current '+xLabel.charAt(0).toUpperCase()+xLabel.slice(1)+'</div>'
     +   '<div class="kpi-value">'+fmtDollar(vals[currentIdx])+'</div>'
     +   pctTag+'<div class="kpi-sub">vs prior '+xLabel+'</div></div>'
@@ -2756,10 +2812,9 @@ function totalFixed(l, p) {
 function renderCosts() {
   const p = activePeriod;
   const rev = totalRevenue(p);
-  var foodPrompt = '';
-  if (!state.foodCostSource || state.foodCostSource !== 'invoices') {
-    foodPrompt = '<div style="margin-bottom:16px;padding:14px 18px;background:rgba(184,134,11,0.08);border:1px solid rgba(184,134,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#c9943a;letter-spacing:0.1em;margin-bottom:4px">FOOD COST IS ESTIMATED</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Showing your food cost target, not actual spend. Forward supplier invoices to track real food cost.</div></div><a href="/settings" style="flex-shrink:0;padding:8px 16px;background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.25);border-radius:8px;color:#c9943a;font-family:IBM Plex Mono,monospace;font-size:9px;text-decoration:none;white-space:nowrap">Set up invoices →</a></div>';
-  }
+  var foodPrompt = needsFood() ? promptBanner('food') : '';
+  var squarePromptC = needsSquare() ? promptBanner('square') : '';
+  var fixedPromptC = needsFixed() ? promptBanner('fixed') : '';
 
   const locRows = state.locations.map(l => {
     const prime = l.foodCost[p]+l.laborCost[p];
@@ -2785,7 +2840,7 @@ function renderCosts() {
     </tr>`;
   }).join('');
 
-  return foodPrompt + `
+  return squarePromptC + fixedPromptC + foodPrompt + `
     <div class="kpi-strip">
       <div class="kpi-card ${foodCls(avgFoodCost(p))}">
         <div class="kpi-label">Food Cost</div>
@@ -2870,11 +2925,9 @@ function renderCosts() {
 
 function renderLabor() {
   const p = activePeriod;
-  var laborPrompt = '';
-  if (!state.laborSource || state.laborSource !== 'square_labor_api') {
-    laborPrompt = '<div style="margin-bottom:16px;padding:14px 18px;background:rgba(224,90,90,0.08);border:1px solid rgba(224,90,90,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#e05a5a;letter-spacing:0.1em;margin-bottom:4px">LABOR NOT TRACKING</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Labor cost is showing target estimates, not real data. Make sure employees are clocking in on your Square POS.</div></div><a href="https://squareup.com/dashboard/employees/timecards" target="_blank" style="flex-shrink:0;padding:8px 16px;background:rgba(224,90,90,0.15);border:1px solid rgba(224,90,90,0.3);border-radius:8px;color:#e05a5a;font-family:IBM Plex Mono,monospace;font-size:9px;text-decoration:none;white-space:nowrap">Enable timecards →</a></div>';
-  }
-  return laborPrompt + `
+  var laborPrompt = needsLabor() ? promptBanner('labor') : '';
+  var squarePromptL = needsSquare() ? promptBanner('square') : '';
+  return squarePromptL + laborPrompt + `
     <div class="kpi-strip">
       <div class="kpi-card ${laborCls(avgLaborCost(p))}">
         <div class="kpi-label">Blended Labor Cost</div>
@@ -3015,7 +3068,9 @@ function renderMenu() {
     ? '<div style="padding:8px 20px;background:rgba(184,134,11,0.08);border-bottom:1px solid rgba(184,134,11,0.15);font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold)">SAMPLE DATA — Menu items will reflect your actual POS menu once connected</div>'
     : '';
 
-  return '<div class="kpi-strip">'
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  return _pSq + '<div class="kpi-strip">'
     + '<div class="kpi-card good"><div class="kpi-label">Top Seller</div><div class="kpi-value" style="font-size:18px">'+topItem.name+'</div>'
     +   '<span class="kpi-tag good">'+topItem.pct+'% of orders</span><div class="kpi-sub">By order volume</div></div>'
     + '<div class="kpi-card good"><div class="kpi-label">Best Margin Item</div><div class="kpi-value" style="font-size:18px">'+topMargin.name+'</div>'
@@ -3325,7 +3380,10 @@ function renderWeekly() {
     ? '<div class="alert-row"><div class="alert-ico bad">🚨</div><div><div class="alert-body-title">Reduce prime cost at ' + (state.locations.find(l=>l.foodCost[p]+l.laborCost[p]>state.primeTarget)||{name:''}).name + '</div><div class="alert-body-desc">Prime cost is ' + fmtPct(prime) + ' vs ' + state.primeTarget + '% target. Review scheduling mid-week — cut 1 FOH shift Tue &amp; Wed to save ~$' + Math.round(rev*0.012).toLocaleString() + ' next week.</div></div></div>'
     : '<div class="alert-row"><div class="alert-ico good">✓</div><div><div class="alert-body-title">Prime cost on target this week</div><div class="alert-body-desc">Food and labor are both within range. Keep doing what you are doing.</div></div></div>';
 
-  return `
+    var p_square = needsSquare() ? promptBanner('square') : '';
+  var p_labor = needsLabor() ? promptBanner('labor') : '';
+  var p_food = needsFood() ? promptBanner('food') : '';
+  return p_square + p_labor + p_food + `
     <div style="background:linear-gradient(135deg,rgba(184,134,11,0.08),rgba(45,122,79,0.05));border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--text)">Weekly Operations Report</div>
@@ -3399,7 +3457,8 @@ function renderVoids() {
     const comps2 = l.comps&&l.comps[p]||0;
     const leak = voids2+comps2;
     const lp = leak/l.revenue[p]*100;
-    return `<tr>
+      var p_square = needsSquare() ? promptBanner('square') : '';
+  return p_square + `<tr>
       <td class="ct-label" style="font-weight:600;color:var(--text)">${l.name}</td>
       <td style="color:var(--text)">${fmtDollar(l.revenue[p])}</td>
       <td class="ct-warn">${fmtDollar(voids2)}</td>
@@ -3502,7 +3561,9 @@ function renderBreakeven() {
 
   const barRows = locData.map(d => {
     const pct = Math.min(d.actualDailyCovers / (d.beDailyCovers * 1.5) * 100, 100);
-    return `
+      var p_square = needsSquare() ? promptBanner('square') : '';
+  var p_fixed = needsFixed() ? promptBanner('fixed') : '';
+  return p_square + p_fixed + `
       <div style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;font-weight:600;color:var(--text)">${d.l.name}</span>
@@ -3676,7 +3737,9 @@ function renderHourly() {
       + '</tr>';
   }).join('');
 
-  return '<div class="kpi-strip">'
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  return _pSq + '<div class="kpi-strip">'
     + '<div class="kpi-card good"><div class="kpi-label">Peak Hour</div><div class="kpi-value">'+hours[peakIdx]+'</div>'
     +   '<span class="kpi-tag good">'+fmtDollar(scaled[peakIdx])+' &middot; '+covers[peakIdx]+' covers</span>'
     +   '<div class="kpi-sub">Your busiest hour</div></div>'
@@ -3756,7 +3819,8 @@ function renderPayments() {
   const barRows = Object.keys(mix).map(k => {
     const feeAmt = Math.round(rev*mix[k]/100*fees[k]/100);
     const feeCls = fees[k]>2 ? 'var(--red)' : fees[k]>0 ? 'var(--amber)' : 'var(--green)';
-    return `<div style="margin-bottom:14px">
+      var p_square = needsSquare() ? promptBanner('square') : '';
+  return p_square + `<div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <div style="font-size:12px;font-weight:600;color:var(--text)">${labels[k]}</div>
         <div style="display:flex;gap:16px;align-items:center">
@@ -4512,7 +4576,9 @@ function renderForecast() {
       + '</tr>';
   }).join('');
 
-  return '<div class="kpi-strip">'
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  var _pSq = needsSquare() ? promptBanner('square') : '';
+  return _pSq + '<div class="kpi-strip">'
     + '<div class="kpi-card ' + (parseFloat(vsLast)>=0?'good':'bad') + '"><div class="kpi-label">Forecasted Week</div><div class="kpi-value">' + fmtDollar(forecastTotal) + '</div><span class="kpi-tag ' + (parseFloat(vsLast)>=0?'good':'bad') + '">' + (parseFloat(vsLast)>=0?'↑':'↓') + Math.abs(vsLast) + '% vs last week</span><div class="kpi-sub">7-day projected total</div></div>'
     + '<div class="kpi-card neutral"><div class="kpi-label">Peak Day</div><div class="kpi-value">' + peakDay.dayFull + '</div><span class="kpi-tag good">' + fmtDollar(peakDay.predicted) + ' projected</span><div class="kpi-sub">Schedule max staff</div></div>'
     + '<div class="kpi-card neutral"><div class="kpi-label">Slow Day</div><div class="kpi-value">' + slowDay.dayFull + '</div><span class="kpi-tag warn">' + fmtDollar(slowDay.predicted) + ' projected</span><div class="kpi-sub">Reduce staffing</div></div>'
@@ -4563,24 +4629,7 @@ function renderForecast() {
 }
 
 
-function updateCompletenessBar() {
-  var dc = state.dataCompleteness || {};
-  var sources = ['sales','labor','delivery','fixed'];
-  sources.forEach(function(s) {
-    var dot = document.getElementById('dot_' + s);
-    var label = document.getElementById('label_' + s);
-    var key = s === 'fixed' ? 'fixedCosts' : s;
-    if (dot && label) {
-      if (dc[key]) {
-        dot.className = 'completeness-dot on';
-        label.style.color = 'var(--green)';
-      } else {
-        dot.className = 'completeness-dot off';
-        label.style.color = 'var(--muted)';
-      }
-    }
-  });
-}
+/* updateCompletenessBar defined above */
 
 function updateSidebarName(name) {
   var el = document.getElementById('sidebarName');
