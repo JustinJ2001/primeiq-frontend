@@ -2320,8 +2320,7 @@ function renderOverview() {
     const lp = l.foodCost[p]+l.laborCost[p];
     const lpc = primeCls(lp), lfc = foodCls(l.foodCost[p]), llc = laborCls(l.laborCost[p]);
     const primeWidth = Math.min(lp/80*100, 100);
-      var p_square = needsSquare() ? promptBanner('square') : '';
-  return p_square + `
+      return `
     <div class="loc-card">
       <div class="loc-header">
         <div>
@@ -2390,7 +2389,8 @@ function renderOverview() {
     </div>`;
   }).join('');
 
-  return `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  return _psquare + `
     ${alerts.some(a=>a.type==='bad') ? `
     <div class="alert-banner">
       <div class="alert-banner-icon">🚨</div>
@@ -2699,9 +2699,7 @@ function renderDaily() {
   var goodClass = pctChg !== null && parseFloat(pctChg)>=0 ? 'good' : 'warn';
   var gapVal = vals[bestIdx] - vals[worstIdx];
 
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  return _pSq + '<div class="kpi-strip">'
+  return '<div class="kpi-strip">'
     + '<div class="kpi-card '+goodClass+'"><div class="kpi-label">Current '+xLabel.charAt(0).toUpperCase()+xLabel.slice(1)+'</div>'
     +   '<div class="kpi-value">'+fmtDollar(vals[currentIdx])+'</div>'
     +   pctTag+'<div class="kpi-sub">vs prior '+xLabel+'</div></div>'
@@ -2781,9 +2779,6 @@ function totalFixed(l, p) {
 function renderCosts() {
   const p = activePeriod;
   const rev = totalRevenue(p);
-  var foodPrompt = needsFood() ? promptBanner('food') : '';
-  var squarePromptC = needsSquare() ? promptBanner('square') : '';
-  var fixedPromptC = needsFixed() ? promptBanner('fixed') : '';
 
   const locRows = state.locations.map(l => {
     const prime = l.foodCost[p]+l.laborCost[p];
@@ -2809,7 +2804,10 @@ function renderCosts() {
     </tr>`;
   }).join('');
 
-  return squarePromptC + fixedPromptC + foodPrompt + `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  var _pfood = needsFood()   ? promptBanner('food')   : '';
+  var _pfixed = needsFixed()  ? promptBanner('fixed')  : '';
+  return _psquare + _pfood + _pfixed + `
     <div class="kpi-strip">
       <div class="kpi-card ${foodCls(avgFoodCost(p))}">
         <div class="kpi-label">Food Cost</div>
@@ -2894,9 +2892,9 @@ function renderCosts() {
 
 function renderLabor() {
   const p = activePeriod;
-  var laborPrompt = needsLabor() ? promptBanner('labor') : '';
-  var squarePromptL = needsSquare() ? promptBanner('square') : '';
-  return squarePromptL + laborPrompt + `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  var _plabor = needsLabor()  ? promptBanner('labor')  : '';
+  return _psquare + _plabor + `
     <div class="kpi-strip">
       <div class="kpi-card ${laborCls(avgLaborCost(p))}">
         <div class="kpi-label">Blended Labor Cost</div>
@@ -3037,9 +3035,7 @@ function renderMenu() {
     ? '<div style="padding:8px 20px;background:rgba(184,134,11,0.08);border-bottom:1px solid rgba(184,134,11,0.15);font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold)">SAMPLE DATA — Menu items will reflect your actual POS menu once connected</div>'
     : '';
 
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  return _pSq + '<div class="kpi-strip">'
+  return '<div class="kpi-strip">'
     + '<div class="kpi-card good"><div class="kpi-label">Top Seller</div><div class="kpi-value" style="font-size:18px">'+topItem.name+'</div>'
     +   '<span class="kpi-tag good">'+topItem.pct+'% of orders</span><div class="kpi-sub">By order volume</div></div>'
     + '<div class="kpi-card good"><div class="kpi-label">Best Margin Item</div><div class="kpi-value" style="font-size:18px">'+topMargin.name+'</div>'
@@ -3349,10 +3345,10 @@ function renderWeekly() {
     ? '<div class="alert-row"><div class="alert-ico bad">🚨</div><div><div class="alert-body-title">Reduce prime cost at ' + (state.locations.find(l=>l.foodCost[p]+l.laborCost[p]>state.primeTarget)||{name:''}).name + '</div><div class="alert-body-desc">Prime cost is ' + fmtPct(prime) + ' vs ' + state.primeTarget + '% target. Review scheduling mid-week — cut 1 FOH shift Tue &amp; Wed to save ~$' + Math.round(rev*0.012).toLocaleString() + ' next week.</div></div></div>'
     : '<div class="alert-row"><div class="alert-ico good">✓</div><div><div class="alert-body-title">Prime cost on target this week</div><div class="alert-body-desc">Food and labor are both within range. Keep doing what you are doing.</div></div></div>';
 
-    var p_square = needsSquare() ? promptBanner('square') : '';
-  var p_labor = needsLabor() ? promptBanner('labor') : '';
-  var p_food = needsFood() ? promptBanner('food') : '';
-  return p_square + p_labor + p_food + `
+  var _pwsq = needsSquare() ? promptBanner('square') : '';
+  var _pwlb = needsLabor()  ? promptBanner('labor')  : '';
+  var _pwfd = needsFood()   ? promptBanner('food')   : '';
+    return _pwsq + _pwlb + _pwfd + `
     <div style="background:linear-gradient(135deg,rgba(184,134,11,0.08),rgba(45,122,79,0.05));border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--text)">Weekly Operations Report</div>
@@ -3426,8 +3422,7 @@ function renderVoids() {
     const comps2 = l.comps&&l.comps[p]||0;
     const leak = voids2+comps2;
     const lp = leak/l.revenue[p]*100;
-      var p_square = needsSquare() ? promptBanner('square') : '';
-  return p_square + `<tr>
+      return `<tr>
       <td class="ct-label" style="font-weight:600;color:var(--text)">${l.name}</td>
       <td style="color:var(--text)">${fmtDollar(l.revenue[p])}</td>
       <td class="ct-warn">${fmtDollar(voids2)}</td>
@@ -3439,7 +3434,8 @@ function renderVoids() {
     </tr>`;
   }).join('');
 
-  return `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  return _psquare + `
     <div class="kpi-strip">
       <div class="kpi-card ${leakPct>4?'bad':'warn'}">
         <div class="kpi-label">Total Voids + Comps</div>
@@ -3530,9 +3526,7 @@ function renderBreakeven() {
 
   const barRows = locData.map(d => {
     const pct = Math.min(d.actualDailyCovers / (d.beDailyCovers * 1.5) * 100, 100);
-      var p_square = needsSquare() ? promptBanner('square') : '';
-  var p_fixed = needsFixed() ? promptBanner('fixed') : '';
-  return p_square + p_fixed + `
+      return p_square + p_fixed + `
       <div style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;font-weight:600;color:var(--text)">${d.l.name}</span>
@@ -3559,7 +3553,9 @@ function renderBreakeven() {
       <td class="${d.safe?'ct-good':'ct-bad'}">${d.safe?'+':''}${d.actualDailyCovers-d.beDailyCovers} covers</td>
     </tr>`).join('');
 
-  return `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  var _pfixed = needsFixed()  ? promptBanner('fixed')  : '';
+  return _psquare + _pfixed + `
     <div class="kpi-strip">${kpiCards}</div>
     <div class="card" style="margin-bottom:14px">
       <div class="card-header">
@@ -3706,9 +3702,7 @@ function renderHourly() {
       + '</tr>';
   }).join('');
 
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  return _pSq + '<div class="kpi-strip">'
+  return '<div class="kpi-strip">'
     + '<div class="kpi-card good"><div class="kpi-label">Peak Hour</div><div class="kpi-value">'+hours[peakIdx]+'</div>'
     +   '<span class="kpi-tag good">'+fmtDollar(scaled[peakIdx])+' &middot; '+covers[peakIdx]+' covers</span>'
     +   '<div class="kpi-sub">Your busiest hour</div></div>'
@@ -3788,8 +3782,7 @@ function renderPayments() {
   const barRows = Object.keys(mix).map(k => {
     const feeAmt = Math.round(rev*mix[k]/100*fees[k]/100);
     const feeCls = fees[k]>2 ? 'var(--red)' : fees[k]>0 ? 'var(--amber)' : 'var(--green)';
-      var p_square = needsSquare() ? promptBanner('square') : '';
-  return p_square + `<div style="margin-bottom:14px">
+      return `<div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <div style="font-size:12px;font-weight:600;color:var(--text)">${labels[k]}</div>
         <div style="display:flex;gap:16px;align-items:center">
@@ -3820,7 +3813,8 @@ function renderPayments() {
     </tr>`;
   }).join('');
 
-  return `
+  var _psquare = needsSquare() ? promptBanner('square') : '';
+  return _psquare + `
     <div class="kpi-strip">
       <div class="kpi-card bad"><div class="kpi-label">Total Processing Fees</div><div class="kpi-value">${fmtDollar(Math.round(totalFees))}</div><span class="kpi-tag bad">${fmtPct(totalFees/rev*100)} of revenue</span><div class="kpi-sub">${periodLabel[p]} · All card types</div></div>
       <div class="kpi-card warn"><div class="kpi-label">Amex Cost</div><div class="kpi-value">${fmtDollar(Math.round(amexFees))}</div><span class="kpi-tag bad">3.5% rate · Highest fee</span><div class="kpi-sub">${mix.amex}% of transactions</div></div>
@@ -4545,9 +4539,7 @@ function renderForecast() {
       + '</tr>';
   }).join('');
 
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  var _pSq = needsSquare() ? promptBanner('square') : '';
-  return _pSq + '<div class="kpi-strip">'
+  return '<div class="kpi-strip">'
     + '<div class="kpi-card ' + (parseFloat(vsLast)>=0?'good':'bad') + '"><div class="kpi-label">Forecasted Week</div><div class="kpi-value">' + fmtDollar(forecastTotal) + '</div><span class="kpi-tag ' + (parseFloat(vsLast)>=0?'good':'bad') + '">' + (parseFloat(vsLast)>=0?'↑':'↓') + Math.abs(vsLast) + '% vs last week</span><div class="kpi-sub">7-day projected total</div></div>'
     + '<div class="kpi-card neutral"><div class="kpi-label">Peak Day</div><div class="kpi-value">' + peakDay.dayFull + '</div><span class="kpi-tag good">' + fmtDollar(peakDay.predicted) + ' projected</span><div class="kpi-sub">Schedule max staff</div></div>'
     + '<div class="kpi-card neutral"><div class="kpi-label">Slow Day</div><div class="kpi-value">' + slowDay.dayFull + '</div><span class="kpi-tag warn">' + fmtDollar(slowDay.predicted) + ' projected</span><div class="kpi-sub">Reduce staffing</div></div>'
