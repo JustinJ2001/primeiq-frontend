@@ -155,7 +155,9 @@ window.addEventListener('error', function(e) {
   <div class="prog-conn" id="conn3"></div>
   <div class="prog-step" id="prog4"><div class="prog-num">4</div><div class="prog-label">Payroll</div></div>
   <div class="prog-conn" id="conn4"></div>
-  <div class="prog-step" id="prog5"><div class="prog-num">5</div><div class="prog-label">Subscribe</div></div>
+  <div class="prog-step" id="prog5"><div class="prog-num">5</div><div class="prog-label">Food Cost</div></div>
+  <div class="prog-conn" id="conn5"></div>
+  <div class="prog-step" id="prog6"><div class="prog-num">6</div><div class="prog-label">Subscribe</div></div>
 </div>
 <div id="page_loader" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s">
   <div style="text-align:center">
@@ -237,173 +239,179 @@ window.addEventListener('error', function(e) {
   </div>
   <!-- STEP 3: POS -->
   <div class="panel" id="panel3">
-    <div class="panel-title">Connect your POS</div>
-    <div class="panel-sub">We pull daily sales, covers, payment mix, voids and comps automatically</div>
+    <div class="panel-title">Connect Square</div>
+    <div class="panel-sub">PrimeIQ works exclusively with Square · Revenue, labor, and payments sync automatically</div>
     <div id="pos_alert" class="alert"></div>
-    <div class="connect-grid" id="pos_grid"></div>
-    <div class="conn-detail pos-detail" id="pos_detail_toast">
-      <div class="conn-detail-title">Connect Toast POS</div>
-      <div class="conn-detail-sub">You'll be redirected to Toast to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('toast')">🔗 Connect with Toast →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_square">
-      <div class="conn-detail-title">Connect Square</div>
-      <div class="conn-detail-sub">You'll be redirected to Square to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('square')">🔗 Connect with Square →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_clover">
-      <div class="conn-detail-title">Connect Clover</div>
-      <div class="conn-detail-sub">You'll be redirected to Clover to authorize · 30 seconds</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('clover')">🔗 Connect with Clover →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_lightspeed">
-      <div class="conn-detail-title">Connect Lightspeed</div>
-      <div class="conn-detail-sub">You'll be redirected to Lightspeed to authorize</div>
-      <button class="oauth-btn" onclick="connectPOSOAuth('lightspeed')">🔗 Connect with Lightspeed →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_revel">
-      <div class="conn-detail-title">Connect Revel</div>
-      <div class="conn-detail-sub">Enter your Revel API credentials from your Revel dashboard</div>
-      <div class="f-group"><label class="f-label">Revel API URL</label><input class="f-input" id="revel_url" placeholder="https://yourstore.revelup.com"></div>
-      <div class="f-row">
-        <div class="f-group"><label class="f-label">API Key</label><input class="f-input" id="revel_key"></div>
-        <div class="f-group"><label class="f-label">API Secret</label><input class="f-input" id="revel_secret" type="password"></div>
+
+    <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+        <div style="width:52px;height:52px;border-radius:12px;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" rx="6" fill="#000"/><text x="14" y="21" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">S</text></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700">Square POS</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">Revenue · Labor · Payments · All automatic</div>
+        </div>
       </div>
-      <button class="btn-gold" onclick="connectAPIKey('revel')">Connect Revel →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_spoton">
-      <div class="conn-detail-title">Connect SpotOn</div>
-      <div class="conn-detail-sub">API credentials from your SpotOn dashboard</div>
-      <div class="f-group"><label class="f-label">API Key</label><input class="f-input" id="spoton_key"></div>
-      <div class="f-group"><label class="f-label">Location ID</label><input class="f-input" id="spoton_loc"></div>
-      <button class="btn-gold" onclick="connectAPIKey('spoton')">Connect SpotOn →</button>
-    </div>
-    <div class="conn-detail pos-detail" id="pos_detail_touchbistro">
-      <div class="conn-detail-title">TouchBistro — CSV Export</div>
-      <div class="conn-detail-sub">Export your daily sales report as CSV and upload here. We parse it automatically.</div>
-      <div class="csv-upload" onclick="document.getElementById('tb_csv').click()">
-        <input type="file" id="tb_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload TouchBistro CSV</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Daily revenue synced automatically
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Labor cost from Square timecards
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Payment mix, covers, voids tracked
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Employee clock-ins for overtime alerts
+        </div>
+      </div>
+
+      <div id="pos_detail_square">
+        <button class="oauth-btn" onclick="connectPOSOAuth('square')" style="width:100%;padding:14px;border-radius:10px;background:#000;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;border:none;cursor:pointer;text-transform:uppercase">
+          Connect with Square →
+        </button>
       </div>
     </div>
-    <div id="pos_loc_selector" style="margin-bottom:12px"></div>
-    <div class="conn-detail pos-detail" id="pos_detail_csv">
-      <div class="conn-detail-title">Upload Sales Data — Any POS</div>
-      <div class="conn-detail-sub">Select your POS below for step-by-step export instructions</div>
-      <div style="margin:14px 0">
-        <label class="f-label">My POS system is</label>
-        <select id="csv_pos_type" onchange="showCSVInstructions(); toggleCSVUploadZone()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select your POS →</option>
-          <option value="toast">Toast</option>
-          <option value="square">Square</option>
-          <option value="clover">Clover</option>
-          <option value="lightspeed">Lightspeed</option>
-          <option value="spoton">SpotOn</option>
-          <option value="revel">Revel</option>
-          <option value="aloha">Aloha / NCR</option>
-          <option value="micros">Oracle MICROS</option>
-          <option value="other">Other / Not sure</option>
-        </select>
+
+    <div style="padding:14px;background:#f5f0e8;border-radius:10px;border-left:3px solid var(--gold);margin-bottom:16px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Required</div>
+      <div style="font-size:12px;color:var(--dark);line-height:1.7">
+        Make sure your employees are clocking in and out on your Square POS. This is how we track labor cost automatically. If timecards aren't enabled, we'll walk you through setting them up in the next step.
       </div>
-      <div id="csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="csv_pos_name"></span></div>
-        <ol id="csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.8"></ol>
-        <div id="csv_columns_note" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
-      </div>
-      <div id="csv_loc_selector" style="margin-bottom:12px"></div>
-      <div id="csv_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your POS system above before uploading</div>
-      <div id="csv_upload_section" style="display:none">
-      <div class="csv-upload" id="csv_drop_zone" onclick="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');return;}document.getElementById('pos_csv').click()" ondragover="event.preventDefault();if(!document.getElementById('csv_pos_type').value){event.preventDefault();return;}this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');return;}handleCSVDrop(event,'sales')">
-        <input type="file" id="pos_csv" accept=".csv,.xlsx,.xls" onchange="if(!document.getElementById('csv_pos_type').value){showAlert('pos_alert','Please select your POS system above first.','error');this.value='';return;}previewGenericCSV(this.files[0],'sales','csv_preview','pos_alert')">
-        <div style="font-size:32px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Drag & drop your CSV here, or click to browse</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">Accepts .csv files · Your data stays private</div>
-      </div>
-      <div id="csv_preview" style="margin-top:12px"></div>
-      </div><!-- end csv_upload_section -->
     </div>
+
     <div style="margin-top:16px;display:flex;gap:10px">
       <button class="btn-gold" onclick="goToStep(4)" style="flex:1">Continue →</button>
       <button class="btn-outline" onclick="goToStep(2)" style="flex:0 0 100px">← Back</button>
     </div>
     <span class="skip-link" onclick="skipPOS()">Skip — connect from Settings later</span>
   </div>
+
+  <!-- STEP 5: PAYROLL -->
   <!-- STEP 5: PAYROLL -->
   <div class="panel" id="panel4">
-    <div class="panel-title">Connect payroll or scheduling</div>
-    <div class="panel-sub">We track actual vs scheduled hours, overtime alerts, and labor cost per day</div>
+    <div class="panel-title">Square timecards & labor</div>
+    <div class="panel-sub">Labor cost tracks automatically when employees clock in on Square</div>
     <div id="pay_alert" class="alert"></div>
-    <div class="connect-grid" id="payroll_grid"></div>
-    <div class="conn-detail pay-detail" id="pay_detail_homebase">
-      <div class="conn-detail-title">Connect Homebase</div>
-      <div class="conn-detail-sub">Most common in NYC restaurants · Handles scheduling and payroll</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('homebase')">🔗 Connect with Homebase →</button>
+
+    <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Employee hours pulled from Square timecards daily
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Labor cost % calculated automatically against revenue
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> Overtime alerts when employees approach 40 hours
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dark)">
+          <span style="color:var(--green);font-weight:700">✓</span> No CSV uploads. No payroll software needed.
+        </div>
+      </div>
+
+      <div style="padding:14px;background:#f0faf5;border:1px solid rgba(45,122,79,0.2);border-radius:10px;margin-bottom:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">How it works</div>
+        <div style="font-size:12px;color:var(--dark);line-height:1.8">
+          Your employees clock in and out on your Square POS terminal. PrimeIQ reads those hours automatically every night and calculates your labor cost as a percentage of that day's revenue.<br><br>
+          Make sure <strong>Team Management</strong> is enabled in your Square dashboard and employees have hourly rates set.
+        </div>
+      </div>
+
+      <a href="https://squareup.com/dashboard/employees/timecards" target="_blank" style="display:block;text-align:center;padding:12px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);text-decoration:none;letter-spacing:0.08em;text-transform:uppercase">
+        Open Square timecards settings →
+      </a>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_gusto">
-      <div class="conn-detail-title">Connect Gusto</div>
-      <div class="conn-detail-sub">You'll be redirected to Gusto to authorize payroll access</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('gusto')">🔗 Connect with Gusto →</button>
+
+    <div style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:10px;margin-bottom:16px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">⚠ Required for labor tracking</div>
+      <div style="font-size:12px;color:var(--dark);line-height:1.7">
+        Employees must be clocking in on the Square POS — not on paper or another system. If they're not clocking in on Square yet, set that up before your first day with PrimeIQ.
+      </div>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_7shifts">
-      <div class="conn-detail-title">Connect 7shifts</div>
-      <div class="conn-detail-sub">Restaurant scheduling · Very common in NYC</div>
-      <button class="oauth-btn" onclick="connectPayrollOAuth('7shifts')">🔗 Connect with 7shifts →</button>
+
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Continue → Food Cost Setup</button>
+      <button class="btn-outline" onclick="goToStep(3)" style="flex:0 0 100px">← Back</button>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_square_payroll">
-      <div class="conn-detail-title">Square Payroll</div>
-      <div class="alert show info" style="margin-top:8px">Already connected via Square POS. Labor data is flowing automatically.</div>
+    <span class="skip-link" onclick="skipPayroll()">Got it — continue</span>
+  </div>
+
+    <!-- STEP 5: FOOD COST / INVOICE EMAIL -->
+  <div class="panel" id="panel5">
+    <div class="panel-title">Set up food cost tracking</div>
+    <div class="panel-sub">Forward supplier invoices automatically · Takes 2 minutes</div>
+    <div id="invoice_alert" class="alert"></div>
+
+    <!-- Timecard check -->
+    <div class="card" id="timecard_check_card">
+      <div class="card-title">✓ Labor tracking via Square</div>
+      <div class="card-sub">Checking your Square timecard setup...</div>
+      <div id="timecard_status" style="padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">Checking...</div>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_toast_payroll">
-      <div class="conn-detail-title">Toast Payroll</div>
-      <div class="alert show info" style="margin-top:8px">Already connected via Toast POS. Labor data is flowing automatically.</div>
+
+    <!-- Invoice email address -->
+    <div class="card">
+      <div class="card-title">Your invoice forwarding address</div>
+      <div class="card-sub">Forward supplier invoices here — we parse the total automatically</div>
+      <div id="invoice_address_display" style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:0.04em;margin-bottom:14px;word-break:break-all">
+        Loading your address...
+      </div>
+      <button class="btn-outline" onclick="copyInvoiceAddress()" style="width:100%;margin-bottom:10px">📋 Copy address</button>
+      <button class="btn-outline" onclick="sendInvoiceSetupEmail()" style="width:100%">📧 Email me setup instructions</button>
     </div>
-    <div class="conn-detail pay-detail" id="pay_detail_adp">
-      <div class="conn-detail-title">Connect ADP</div>
-      <div class="conn-detail-sub">API credentials from your ADP administrator portal</div>
-      <div class="f-group"><label class="f-label">ADP Client ID</label><input class="f-input" id="adp_client_id"></div>
-      <div class="f-group"><label class="f-label">ADP Client Secret</label><input class="f-input" id="adp_secret" type="password"></div>
-      <button class="btn-gold" onclick="connectAPIKey('adp')">Connect ADP →</button>
-    </div>
-    <div class="conn-detail pay-detail" id="pay_detail_csv">
-      <div class="conn-detail-title">Upload Labor Report CSV</div>
-      <div class="conn-detail-sub">Export weekly hours from your system. Columns: Employee, Role, Week, Scheduled Hours, Actual Hours, Total Pay.</div>
-      <div style="margin:14px 0">
-        <label class="f-label">Payroll System</label>
-        <select id="pay_csv_source" onchange="showPayrollCSVInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:6px;background:var(--bg)">
-          <option value="">Select system →</option>
-          <option value="gusto">Gusto</option>
-          <option value="adp">ADP</option>
-          <option value="paychex">Paychex</option>
-          <option value="homebase">Homebase</option>
-          <option value="7shifts">7shifts</option>
-          <option value="toast_payroll">Toast Payroll</option>
+
+    <!-- Email forwarding instructions -->
+    <div class="card">
+      <div class="card-title">How to set up forwarding</div>
+      <div class="card-sub">One-time setup · Takes 2 minutes · Never touch it again</div>
+      <div style="margin-bottom:14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Your email provider</div>
+        <select id="email_provider" onchange="showForwardingInstructions()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg)">
+          <option value="">Select your email →</option>
+          <option value="gmail">Gmail</option>
+          <option value="outlook">Outlook / Microsoft 365</option>
+          <option value="apple">Apple Mail / iCloud</option>
           <option value="other">Other</option>
         </select>
       </div>
-      <div id="pay_csv_instructions" style="display:none;margin-bottom:14px;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">How to export from <span id="pay_csv_source_name"></span></div>
-        <ol id="pay_csv_steps" style="padding-left:16px;font-size:12px;color:var(--dark);line-height:1.9"></ol>
+      <div id="forwarding_instructions" style="display:none;padding:14px;background:#f5f0e8;border-radius:8px;border-left:3px solid var(--gold)">
+        <div id="forwarding_steps"></div>
       </div>
-      <div id="pay_loc_selector" style="margin-bottom:12px"></div>
-      <div id="pay_select_prompt" style="padding:14px;background:#fef6e8;border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--amber);margin-bottom:10px">← Select your payroll system above before uploading</div>
-      <div id="pay_upload_section" style="display:none">
-      <div class="csv-upload" onclick="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}document.getElementById('labor_csv').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="if(!document.getElementById('pay_csv_source').value){showAlert('pay_alert','Please select your payroll system above first.','error');return;}handlePayrollCSVDrop(event)">
-        <input type="file" id="labor_csv" accept=".csv" onchange="previewGenericCSV(this.files[0],'labor','payroll_csv_preview','pay_alert')">
-        <div style="font-size:28px;margin-bottom:8px">📄</div>
-        <div class="csv-upload-label">Click to upload labor CSV</div>
-      </div>
-      <div id="payroll_csv_preview" style="margin-top:10px"></div>
-      </div><!-- end pay_upload_section -->
     </div>
+
+    <!-- Test -->
+    <div class="card">
+      <div class="card-title">Test it (optional but recommended)</div>
+      <div class="card-sub">Forward any supplier invoice now to confirm it works</div>
+      <div id="test_invoice_status" style="display:none" class="alert show info">Waiting for a test invoice...</div>
+      <button class="btn-outline" onclick="testInvoiceForwarding()" style="width:100%">Send me a test to confirm setup</button>
+    </div>
+
+    <!-- What gets tracked -->
+    <div class="card" style="background:#f5f0e8">
+      <div class="card-title">What gets tracked automatically</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);line-height:2">
+        ✓ Sysco, US Foods, PFG and major distributors<br>
+        ✓ Any supplier that emails you invoices<br>
+        ✓ PDF attachments parsed automatically<br>
+        ~ Local vendors → upload manually in dashboard<br>
+        ~ Cash purchases → enter manually in dashboard
+      </div>
+    </div>
+
     <div style="margin-top:16px;display:flex;gap:10px">
-      <button class="btn-gold" onclick="goToStep(5)" style="flex:1">Review & Subscribe →</button>
+      <button class="btn-gold" onclick="goToStep(6)" style="flex:1">Review & Subscribe →</button>
       <button class="btn-outline" onclick="goToStep(4)" style="flex:0 0 100px">← Back</button>
     </div>
-    <span class="skip-link" onclick="skipPayroll()">Skip — connect from Settings later</span>
+    <span class="skip-link" onclick="goToStep(6)">Skip — set up from Settings later</span>
   </div>
+
   <!-- STEP 6: REVIEW + SUBSCRIBE -->
-  <div class="panel" id="panel5">
+  <div class="panel" id="panel6">
     <div class="panel-title">Review and subscribe</div>
     <div class="panel-sub">One flat price · Cancel anytime · Your data is always yours</div>
     <div id="review_alert" class="alert"></div>
@@ -436,7 +444,7 @@ window.addEventListener('error', function(e) {
         Secure payment via Stripe · Cancel from your billing portal · No hidden fees
       </div>
     </div>
-    <button class="btn-outline" onclick="goToStep(4)">← Back</button>
+    <button class="btn-outline" onclick="goToStep(5)">← Back</button>
   </div>
   <!-- SUCCESS -->
   <div id="panel_success" style="display:none;text-align:center;padding:60px 20px">
@@ -1715,6 +1723,151 @@ async function doGenericUpload(type, previewId, alertId) {
     showAlert(alertId || 'pos_alert', errMsg, 'error');
   }
 }
+
+// ── INVOICE EMAIL STEP ────────────────────────────────────────
+var invoiceAddress = '';
+
+async function initInvoiceStep() {
+  // 1. Check timecards
+  var token = state.token || lsGet('rd_token');
+  var clientId = state.clientId || lsGet('rd_client_id');
+  if (!token || !clientId) return;
+
+  // Check wage rates
+  try {
+    var wageCheck = await apiFetch('/api/onboarding/check-wages');
+    var wageCard = document.getElementById('timecard_check_card');
+    if (wageCheck && wageCheck.missing_wages > 0) {
+      var warnDiv = document.createElement('div');
+      warnDiv.style.cssText = 'margin-top:8px;padding:10px 12px;background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber)';
+      warnDiv.innerHTML = '⚠ ' + wageCheck.missing_wages + ' employee(s) missing hourly rates: ' + (wageCheck.employees_missing||[]).join(', ') + '. <a href="https://squareup.com/dashboard/employees" target="_blank" style="color:var(--gold)">Set rates in Square →</a>';
+      if (wageCard) wageCard.appendChild(warnDiv);
+    }
+  } catch(e) {}
+
+  // Check timecards
+  try {
+    var tc = await apiFetch('/api/onboarding/check-timecards');
+    var tcEl = document.getElementById('timecard_status');
+    var tcCard = document.getElementById('timecard_check_card');
+    if (tc && tc.enabled && tc.has_data) {
+      if (tcCard) tcCard.style.borderColor = 'var(--green)';
+      if (tcEl) tcEl.innerHTML = '<span style="color:var(--green)">✓ Timecards enabled — employee hours flowing automatically</span>';
+    } else if (tc && tc.enabled && !tc.has_data) {
+      if (tcEl) tcEl.innerHTML = '<span style="color:var(--amber)">⚠ Timecards enabled but no recent clock-ins found. Make sure employees are clocking in on the Square POS.</span>';
+    } else {
+      if (tcCard) tcCard.style.borderColor = 'var(--red)';
+      if (tcEl) tcEl.innerHTML = '<span style="color:var(--red)">✗ Timecards not enabled. <a href="https://squareup.com/dashboard/employees/timecards" target="_blank" style="color:var(--gold)">Enable in Square →</a> then come back.</span>';
+    }
+  } catch(e) {
+    var tcEl = document.getElementById('timecard_status');
+    if (tcEl) tcEl.textContent = 'Could not check — Square may still be syncing.';
+  }
+
+  // 2. Get invoice address
+  try {
+    var addr = await apiFetch('/api/clients/' + clientId + '/invoice-address');
+    if (addr && addr.invoice_address) {
+      invoiceAddress = addr.invoice_address;
+      var addrEl = document.getElementById('invoice_address_display');
+      if (addrEl) addrEl.textContent = invoiceAddress;
+    }
+  } catch(e) {
+    var addrEl = document.getElementById('invoice_address_display');
+    if (addrEl) addrEl.textContent = 'Could not load — check Settings after setup.';
+  }
+}
+
+function copyInvoiceAddress() {
+  if (!invoiceAddress) return;
+  navigator.clipboard.writeText(invoiceAddress).then(function() {
+    showAlert('invoice_alert', 'Copied! Now set up forwarding in your email app.', 'success');
+  }).catch(function() {
+    showAlert('invoice_alert', 'Your address: ' + invoiceAddress, 'info');
+  });
+}
+
+async function sendInvoiceSetupEmail() {
+  var token = state.token || lsGet('rd_token');
+  try {
+    await apiFetch('/api/onboarding/test-invoice-email', { method: 'POST' });
+    showAlert('invoice_alert', 'Setup instructions sent to ' + (state.email || 'your email') + '. Check your inbox.', 'success');
+  } catch(e) {
+    showAlert('invoice_alert', 'Could not send — check your email in Settings.', 'error');
+  }
+}
+
+function showForwardingInstructions() {
+  var provider = document.getElementById('email_provider').value;
+  var container = document.getElementById('forwarding_instructions');
+  var steps = document.getElementById('forwarding_steps');
+  if (!provider || !steps) return;
+
+  var instructions = {
+    gmail: [
+      'Open Gmail → click the gear icon → "See all settings"',
+      'Click the "Forwarding and POP/IMAP" tab',
+      'Click "Add a forwarding address"',
+      'Enter: <strong>' + (invoiceAddress || 'your-address@costs.primeiq.io') + '</strong>',
+      'Click Next → Proceed → OK',
+      'Check your Gmail inbox for a confirmation email → click the link',
+      'Back in Settings → select "Forward a copy of incoming mail" → Save',
+      'Optional: create a filter so only supplier emails forward (from:sysco.com OR from:usfoods.com)'
+    ],
+    outlook: [
+      'Open Outlook → Settings (gear icon) → View all Outlook settings',
+      'Go to Mail → Forwarding',
+      'Toggle "Enable forwarding" ON',
+      'Enter: <strong>' + (invoiceAddress || 'your-address@costs.primeiq.io') + '</strong>',
+      'Click Save',
+      'Optional: create a rule to only forward emails with "invoice" in the subject'
+    ],
+    apple: [
+      'Open Mail app on Mac → Mail menu → Settings (Preferences)',
+      'Click your email account → click "Forwarding"',
+      'Check "Forward my email to:" and enter: <strong>' + (invoiceAddress || 'your-address@costs.primeiq.io') + '</strong>',
+      'Click OK',
+      'Alternatively: create a Rule (Mail → Settings → Rules → Add Rule) to forward invoices automatically'
+    ],
+    other: [
+      'Look for "Forwarding" or "Email Rules" in your email settings',
+      'Add this address as a forwarding destination: <strong>' + (invoiceAddress || 'your-address@costs.primeiq.io') + '</strong>',
+      'If you need help, email us at support@primeiq.io and we will walk you through it'
+    ]
+  };
+
+  var list = instructions[provider] || [];
+  steps.innerHTML = '<ol style="padding-left:18px;font-size:12px;color:var(--dark);line-height:2">' +
+    list.map(function(s){ return '<li>' + s + '</li>'; }).join('') +
+    '</ol>';
+  container.style.display = 'block';
+}
+
+async function testInvoiceForwarding() {
+  var statusEl = document.getElementById('test_invoice_status');
+  if (statusEl) statusEl.style.display = 'block';
+  showAlert('invoice_alert', 'Instructions sent to your email. Forward any supplier invoice and check back in 2 minutes.', 'info');
+  await sendInvoiceSetupEmail();
+}
+
+// Hook into renderStep to init invoice step
+var _origRenderStep = typeof renderStep === 'function' ? renderStep : null;
+document.addEventListener('DOMContentLoaded', function() {
+  // Patch goToStep to init invoice step when navigating there
+  var _origGoTo = window.goToStep;
+  window.goToStep = function(n) {
+    _origGoTo && _origGoTo(n);
+    if (n === 5) {
+      setTimeout(initInvoiceStep, 300);
+    }
+    // Ensure step 6 progress bar updates correctly
+    if (n === 6) {
+      var prog6 = document.getElementById('prog6');
+      if (prog6) prog6.classList.add('active');
+    }
+  };
+});
+
 </script>
 </body>
 </html>
