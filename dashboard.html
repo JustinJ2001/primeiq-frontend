@@ -1960,6 +1960,58 @@ function renderSetupBar(data) {
   bar.classList.remove('all-done');
 }
 
+// ── SETUP PROMPT HELPERS ─────────────────────────────────────
+function needsSquare() {
+  return !state.pos || state.pos === 'Demo' || !state.locations || state.locations.length === 0;
+}
+function needsLabor() {
+  return !state.laborSource || state.laborSource !== 'square_labor_api';
+}
+function needsFood() {
+  return !state.foodCostSource || state.foodCostSource !== 'invoices';
+}
+function needsFixed() {
+  return !state.locations || !state.locations[0] || !(state.locations[0].rent > 0);
+}
+function promptBanner(type) {
+  var configs = {
+    square: {
+      color: '#e05a5a', border: 'rgba(224,90,90,0.3)',
+      icon: '✗', label: 'SQUARE NOT CONNECTED',
+      msg: 'This page needs your Square data. Connect Square in Settings — takes 2 minutes and revenue, covers, and payments sync automatically every day.',
+      cta: 'Connect Square', href: '/settings', external: false
+    },
+    labor: {
+      color: '#e05a5a', border: 'rgba(224,90,90,0.3)',
+      icon: '✗', label: 'LABOR NOT TRACKING',
+      msg: 'Labor cost is showing your target estimate, not real data. Enable timecards in Square so employees clock in — labor cost tracks automatically every single day.',
+      cta: 'Enable Square timecards', href: 'https://squareup.com/dashboard/employees/timecards', external: true
+    },
+    food: {
+      color: '#c9943a', border: 'rgba(201,148,58,0.3)',
+      icon: '✗', label: 'FOOD COST IS ESTIMATED',
+      msg: 'Showing your food cost target, not actual spend. Set up invoice forwarding in Settings — forward your Sysco and supplier invoices and food cost tracks itself automatically.',
+      cta: 'Set up invoice forwarding', href: '/settings', external: false
+    },
+    fixed: {
+      color: '#c9943a', border: 'rgba(201,148,58,0.3)',
+      icon: '✗', label: 'FIXED COSTS NOT ENTERED',
+      msg: 'Enter your rent, utilities, and other fixed monthly costs in Settings so PrimeIQ can calculate your real break-even and net margin.',
+      cta: 'Add fixed costs', href: '/settings', external: false
+    }
+  };
+  var c = configs[type];
+  if (!c) return '';
+  var target = c.external ? ' target="_blank"' : '';
+  return '<div style="margin-bottom:20px;background:#1a1208;border:1px solid ' + c.border + ';border-left:4px solid ' + c.color + ';border-radius:10px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px">'
+    + '<div style="font-size:22px;flex-shrink:0;margin-top:2px">' + c.icon + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.14em;color:' + c.color + ';margin-bottom:8px;text-transform:uppercase">' + c.label + '</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.75;margin-bottom:14px">' + c.msg + '</div>'
+    + '<a href="' + c.href + '"' + target + ' style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:' + c.color + ';color:#fff;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:0.06em;text-decoration:none;font-weight:600;text-transform:uppercase">' + c.cta + ' →</a>'
+    + '</div></div>';
+}
+
 function dismissSetupBar() {
   sessionStorage.setItem('setup_dismissed', '1');
   var bar = document.getElementById('setupBar');

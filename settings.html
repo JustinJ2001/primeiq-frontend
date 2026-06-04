@@ -195,6 +195,83 @@ window.addEventListener('error', function(e) {
     </div>
   </div>
 
+  <!-- EMPLOYEE ROSTER -->
+  <div class="section">
+    <div class="section-title">Labor Tracking</div>
+    <div class="section-sub">Employees synced from Square timecards · Verify wage rates are set</div>
+    <div id="employee_alert" class="alert"></div>
+    <div id="employee_roster">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);padding:10px 0">Loading employee roster...</div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button onclick="syncEmployees()" style="padding:9px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);cursor:pointer" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">↻ Sync from Square</button>
+      <button onclick="openAddSalariedEmployee()" style="padding:9px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);cursor:pointer" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">+ Add salaried employee</button>
+    </div>
+  </div>
+
+  <!-- FOOD COST / INVOICE TRACKING -->
+  <div class="section">
+    <div class="section-title">Food Cost Tracking</div>
+    <div class="section-sub">Automatic invoice parsing — forward supplier emails and we track food cost for you</div>
+    <div id="invoice_alert" class="alert"></div>
+
+    <!-- Invoice address -->
+    <div style="margin-bottom:20px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Your invoice forwarding address</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div id="invoice_address" style="flex:1;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);letter-spacing:0.04em">Loading...</div>
+        <button onclick="copyInvoiceAddress()" style="padding:10px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">📋 Copy</button>
+        <button onclick="sendInvoiceInstructions()" style="padding:10px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dark);cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">📧 Email me setup</button>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px">Forward any supplier invoice to this address — we parse the total automatically</div>
+    </div>
+
+    <!-- Pending review -->
+    <div id="pending_invoices_section" style="display:none;margin-bottom:20px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Invoices needing review</div>
+      <div id="pending_invoices_list"></div>
+    </div>
+
+    <!-- Recent invoices -->
+    <div id="recent_invoices_section" style="margin-bottom:20px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Recent invoices tracked</div>
+      <div id="recent_invoices_list" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">Loading...</div>
+    </div>
+
+    <!-- Manual entry -->
+    <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Add cost manually (cash purchases, local vendors)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px">Vendor name</label>
+          <input id="manual_vendor" placeholder="e.g. Local Produce Farm" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div>
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px">Amount ($)</label>
+          <input id="manual_amount" type="number" placeholder="0.00" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px">Date</label>
+          <input id="manual_date" type="date" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div>
+          <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px">Category</label>
+          <select id="manual_category" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg)">
+            <option value="food">Food & Beverage</option>
+            <option value="beverage">Alcohol / Beverage</option>
+            <option value="linen">Linen / Laundry</option>
+            <option value="cleaning">Cleaning / Sanitation</option>
+            <option value="supplies">Supplies</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="addManualCost()" style="padding:10px 20px;border-radius:9px;background:var(--dark);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.1em;border:none;cursor:pointer;text-transform:uppercase">+ Add cost</button>
+    </div>
+  </div>
+
   <!-- UPLOAD DATA -->
   <div class="section">
     <div class="section-title">Upload Data</div>
@@ -247,6 +324,7 @@ window.addEventListener('error', function(e) {
 
 <script>
 const API = 'https://restaurant-api-68re.onrender.com';
+const API_BASE = API;
 const SUPABASE_URL = 'https://rkxhrdecrqtqoorjyfel.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGhyZGVjcnF0cW9vcmp5ZmVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU1OTIsImV4cCI6MjA5NDczMTU5Mn0.yGHgPoXlHPb3i_qUpsicob7nd8rdZvtSCnqnDamosBw';
 
@@ -445,6 +523,277 @@ function connectSquare() {
   // Save state so onboarding callback knows to redirect back to settings
   localStorage.setItem('rd_square_return', 'settings');
   window.location.href = url;
+}
+
+var invoiceAddress = '';
+
+async function loadEmployeeRoster() {
+  var token = state.token || localStorage.getItem('rd_token');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if (!token || !clientId) return;
+
+  var roster = document.getElementById('employee_roster');
+  if (!roster) return;
+
+  try {
+    var resp = await fetch(API_BASE + '/api/labor?period=week', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var data = await resp.json();
+    var employees = data.employees || [];
+
+    if (employees.length === 0) {
+      roster.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);padding:10px 0">'
+        + 'No employees synced yet. Make sure Square timecards are enabled and click Sync from Square.</div>';
+      return;
+    }
+
+    // Check for missing wages
+    var missingWages = employees.filter(function(e){ return !e.hourly_rate && e.employment_type === 'hourly'; });
+    if (missingWages.length > 0) {
+      showAlert('employee_alert',
+        '⚠ ' + missingWages.length + ' employee(s) missing hourly rates. '
+        + 'Set rates in Square: squareup.com/dashboard/employees', 'warn');
+    }
+
+    roster.innerHTML = '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+      + employees.map(function(emp, i) {
+        var bg = i % 2 === 0 ? 'var(--bg)' : 'var(--card)';
+        var rateDisplay = emp.employment_type === 'salaried'
+          ? '$' + (emp.weekly_salary||0).toLocaleString() + '/wk salary'
+          : emp.hourly_rate
+            ? '$' + emp.hourly_rate + '/hr'
+            : '<span style="color:var(--red)">⚠ Rate missing</span>';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:' + bg + ';border-bottom:1px solid var(--border2)">'
+          + '<div>'
+          + '<div style="font-size:13px;font-weight:700">' + (emp.name || 'Unknown') + '</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
+          + (emp.role || 'Staff') + ' · ' + (emp.is_active ? 'Active' : 'Inactive') + '</div>'
+          + '</div>'
+          + '<div style="text-align:right">'
+          + '<div style="font-size:13px;font-weight:600">' + rateDisplay + '</div>'
+          + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">' + (emp.employment_type || 'hourly') + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+      + '</div>';
+
+    // Summary
+    var totalHourly = employees.filter(function(e){ return e.employment_type !== 'salaried' && e.is_active; }).length;
+    var totalSalaried = employees.filter(function(e){ return e.employment_type === 'salaried' && e.is_active; }).length;
+    roster.innerHTML += '<div style="margin-top:10px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">'
+      + totalHourly + ' hourly · ' + totalSalaried + ' salaried · '
+      + (data.summary && data.summary.data_source === 'square_labor_api' ? '<span style="color:var(--green)">● From Square timecards</span>' : 'No timecard data yet')
+      + '</div>';
+
+  } catch(e) {
+    if (roster) roster.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);padding:10px 0">Could not load employees. Sync from Square to populate.</div>';
+  }
+}
+
+async function syncEmployees() {
+  var token = state.token || localStorage.getItem('rd_token');
+  try {
+    showAlert('employee_alert', 'Syncing from Square...', 'info');
+    await fetch(API_BASE + '/api/labor/sync', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+    });
+    setTimeout(function() {
+      loadEmployeeRoster();
+      showAlert('employee_alert', 'Sync triggered. Refreshing in a moment...', 'success');
+    }, 3000);
+  } catch(e) {
+    showAlert('employee_alert', 'Sync error. Try again.', 'error');
+  }
+}
+
+function openAddSalariedEmployee() {
+  var name = prompt('Employee name:');
+  if (!name) return;
+  var salary = parseFloat(prompt('Weekly salary ($):'));
+  if (!salary || isNaN(salary)) return;
+  var role = prompt('Role (e.g. General Manager):') || 'Manager';
+
+  var token = state.token || localStorage.getItem('rd_token');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+
+  fetch(API_BASE + '/api/employees', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, role: role, employment_type: 'salaried', weekly_salary: salary, is_active: true })
+  }).then(function() {
+    showAlert('employee_alert', name + ' added as salaried employee.', 'success');
+    loadEmployeeRoster();
+  }).catch(function() {
+    showAlert('employee_alert', 'Error adding employee.', 'error');
+  });
+}
+
+async function loadInvoiceSection() {
+  var token = state.token || localStorage.getItem('rd_token');
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  if (!token || !clientId) return;
+
+  // Load invoice address
+  try {
+    var resp = await fetch(API_BASE + '/api/clients/' + clientId + '/invoice-address', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var data = await resp.json();
+    if (data.invoice_address) {
+      invoiceAddress = data.invoice_address;
+      var el = document.getElementById('invoice_address');
+      if (el) el.textContent = invoiceAddress;
+    }
+  } catch(e) {}
+
+  // Load variable costs (pending + recent)
+  try {
+    var vcResp = await fetch(API_BASE + '/api/variable-costs?period=month', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    var vcData = await vcResp.json();
+
+    // Pending review
+    if (vcData.pending_review && vcData.pending_review.length > 0) {
+      var pendingSection = document.getElementById('pending_invoices_section');
+      if (pendingSection) pendingSection.style.display = 'block';
+      var pendingList = document.getElementById('pending_invoices_list');
+      if (pendingList) {
+        pendingList.innerHTML = '';
+        vcData.pending_review.forEach(function(inv) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--amber-bg);border:1px solid rgba(192,112,0,0.2);border-radius:8px;margin-bottom:8px';
+          var info = document.createElement('div');
+          var vname = inv.vendor_name || 'Unknown vendor';
+          var vdate = (inv.invoice_date || '') + ' ' + (inv.category || '');
+          info.innerHTML = '<div style="font-size:13px;font-weight:700">' + vname + '</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--muted)">' + vdate + '</div>';
+          var controls = document.createElement('div');
+          controls.style.cssText = 'display:flex;align-items:center;gap:8px';
+          var amtEl = document.createElement('div');
+          amtEl.style.fontSize = '15px'; amtEl.style.fontWeight = '700';
+          amtEl.textContent = '$' + (inv.total_amount || 0).toLocaleString();
+          var yesBtn = document.createElement('button');
+          yesBtn.textContent = 'Yes';
+          yesBtn.style.cssText = 'padding:5px 10px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:8px;cursor:pointer';
+          var noBtn = document.createElement('button');
+          noBtn.textContent = 'No';
+          noBtn.style.cssText = 'padding:5px 10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:6px;font-family:IBM Plex Mono,monospace;font-size:8px;cursor:pointer';
+          (function(id) {
+            yesBtn.onclick = function() { confirmInvoice(id, 'confirm'); };
+            noBtn.onclick = function() { confirmInvoice(id, 'reject'); };
+          })(inv.id);
+          controls.appendChild(amtEl); controls.appendChild(yesBtn); controls.appendChild(noBtn);
+          row.appendChild(info); row.appendChild(controls);
+          pendingList.appendChild(row);
+        });
+      }
+    }
+
+    // Recent invoices
+    var recentList = document.getElementById('recent_invoices_list');
+    if (recentList && vcData.costs && vcData.costs.length > 0) {
+      recentList.innerHTML = '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+        + vcData.costs.slice(0,8).map(function(cost, i) {
+          var bg = i % 2 === 0 ? 'var(--bg)' : 'var(--card)';
+          var sourceBadge = cost.source === 'email_auto' || cost.source === 'email_confirmed'
+            ? '<span style="color:var(--green)">● Auto</span>'
+            : '<span style="color:var(--muted)">○ Manual</span>';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:' + bg + ';border-bottom:1px solid var(--border2)">'
+            + '<div><div style="font-size:12px;font-weight:600">' + (cost.vendor_name || 'Unknown') + '</div>'
+            + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted)">' + (cost.date || '') + ' · ' + (cost.category || '') + ' · ' + sourceBadge + '</div>'
+            + '</div><div style="font-size:14px;font-weight:700">$' + parseFloat(cost.amount || 0).toLocaleString() + '</div></div>';
+        }).join('')
+        + '</div>';
+      if (vcData.food_cost_pct) {
+        recentList.innerHTML += '<div style="margin-top:12px;padding:12px 14px;background:var(--green-bg);border:1px solid rgba(45,122,79,0.2);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--green)">Food cost this month: ' + vcData.food_cost_pct + '% · Coverage: ' + (vcData.coverage_pct || 0) + '% automatic</div>';
+      }
+    } else if (recentList) {
+      recentList.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px">No invoices tracked yet. Set up email forwarding above to start.</div>';
+    }
+  } catch(e) {
+    var recentList = document.getElementById('recent_invoices_list');
+    if (recentList) recentList.textContent = 'Could not load invoice data.';
+  }
+}
+
+function copyInvoiceAddress() {
+  if (!invoiceAddress) return;
+  navigator.clipboard.writeText(invoiceAddress).then(function() {
+    showAlert('invoice_alert', 'Copied to clipboard!', 'success');
+  }).catch(function() {
+    showAlert('invoice_alert', 'Your address: ' + invoiceAddress, 'info');
+  });
+}
+
+async function sendInvoiceInstructions() {
+  var token = state.token || localStorage.getItem('rd_token');
+  try {
+    await fetch(API_BASE + '/api/onboarding/test-invoice-email', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+    });
+    showAlert('invoice_alert', 'Setup instructions sent! Check your email, then forward any supplier invoice to your address. It will appear in Recent Invoices below once received.', 'success');
+    // Poll for new invoices after 30s to show confirmation
+    setTimeout(function() {
+      loadInvoiceSection();
+    }, 30000);
+  } catch(e) {
+    showAlert('invoice_alert', 'Error sending email. Try again.', 'error');
+  }
+}
+
+// Also add /api/employees POST endpoint call helper
+async function postEmployee(data) {
+  var token = state.token || localStorage.getItem('rd_token');
+  return fetch(API_BASE + '/api/employees', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+}
+
+async function confirmInvoice(logId, action) {
+  var token = state.token || localStorage.getItem('rd_token');
+  try {
+    var resp = await fetch(API_BASE + '/api/invoice/confirm', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ log_id: logId, action: action })
+    });
+    showAlert('invoice_alert', action === 'confirm' ? 'Invoice posted to food cost.' : 'Invoice ignored.', 'success');
+    setTimeout(loadInvoiceSection, 1000);
+  } catch(e) {
+    showAlert('invoice_alert', 'Error. Try again.', 'error');
+  }
+}
+
+async function addManualCost() {
+  var token = state.token || localStorage.getItem('rd_token');
+  var vendor = document.getElementById('manual_vendor').value.trim();
+  var amount = parseFloat(document.getElementById('manual_amount').value);
+  var dateVal = document.getElementById('manual_date').value;
+  var category = document.getElementById('manual_category').value;
+
+  if (!vendor) { showAlert('invoice_alert', 'Enter a vendor name.', 'error'); return; }
+  if (!amount || amount <= 0) { showAlert('invoice_alert', 'Enter an amount.', 'error'); return; }
+  if (!dateVal) { document.getElementById('manual_date').valueAsDate = new Date(); dateVal = document.getElementById('manual_date').value; }
+
+  try {
+    var resp = await fetch(API_BASE + '/api/variable-costs/manual', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendor_name: vendor, amount: amount, date: dateVal, category: category })
+    });
+    var data = await resp.json();
+    showAlert('invoice_alert', 'Added $' + amount.toLocaleString() + ' from ' + vendor + ' (' + (data.category || category) + ')', 'success');
+    document.getElementById('manual_vendor').value = '';
+    document.getElementById('manual_amount').value = '';
+    setTimeout(loadInvoiceSection, 800);
+  } catch(e) {
+    showAlert('invoice_alert', 'Error saving. Try again.', 'error');
+  }
 }
 
 async function renderIntegrations() {
