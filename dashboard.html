@@ -1916,11 +1916,11 @@ function renderSetupBar(data) {
   if (localStorage.getItem('setup_all_done')) return;
 
   var items = [
-    { key: 'square_connected',  label: 'Square',             fix: '/settings',    warn: true,  external: false },
-    { key: 'timecards_enabled', label: 'Timecards',          fix: 'https://squareup.com/dashboard/employees/timecards', warn: false, external: true },
-    { key: 'wages_set',         label: 'Wage rates',         fix: '/settings',    warn: false, external: false },
-    { key: 'invoice_setup',     label: 'Invoice forwarding', fix: '/settings',    warn: false, external: false },
-    { key: 'fixed_costs_set',   label: 'Fixed costs',        fix: '/settings',    warn: false, external: false },
+    { key: 'square_connected',  label: 'Square',             fix: '/settings',    external: false },
+    { key: 'timecards_enabled', label: 'Timecards',          fix: 'https://squareup.com/dashboard/employees/timecards', external: true },
+    { key: 'wages_set',         label: 'Wage rates',         fix: '/settings',    external: false },
+    { key: 'invoice_setup',     label: 'Invoice forwarding', fix: '/settings',    external: false },
+    { key: 'fixed_costs_set',   label: 'Fixed costs',        fix: '/settings',    external: false },
   ];
 
   var doneCount = 0;
@@ -1932,10 +1932,8 @@ function renderSetupBar(data) {
       doneCount++;
       html += '<div class="setup-item si-done"><span class="si-icon">✓</span>' + item.label + '</div>';
     } else {
-      var cls = item.warn ? 'si-warn' : 'si-todo';
-      var icon = item.warn ? '✗' : '!';
       var target = item.external ? ' target="_blank"' : '';
-      html += '<a href="' + item.fix + '"' + target + ' style="text-decoration:none"><div class="setup-item ' + cls + '"><span class="si-icon">' + icon + '</span>' + item.label + '</div></a>';
+      html += '<a href="' + item.fix + '"' + target + ' style="text-decoration:none"><div class="setup-item si-warn"><span class="si-icon">✗</span>' + item.label + '</div></a>';
     }
   });
 
