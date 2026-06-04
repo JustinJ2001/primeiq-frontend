@@ -937,13 +937,15 @@ body::before {
 }
 .setup-progress {
   font-family: IBM Plex Mono, monospace;
-  font-size: 9px;
-  color: rgba(255,255,255,0.3);
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 .setup-progress span {
   color: #2dba7e;
-  font-weight: 600;
+  font-weight: 800;
 }
 .setup-dismiss {
   background: none;
@@ -3578,7 +3580,7 @@ function renderBreakeven() {
 
   const barRows = locData.map(d => {
     const pct = Math.min(d.actualDailyCovers / (d.beDailyCovers * 1.5) * 100, 100);
-      return p_square + p_fixed + `
+      return `
       <div style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="font-size:12px;font-weight:600;color:var(--text)">${d.l.name}</span>
