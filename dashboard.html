@@ -855,28 +855,112 @@ body::before {
   .main { padding-bottom: 112px !important; }
 }
 
-.completeness-bar {
-  background: #1a1208;
-  border-bottom: 1px solid rgba(184,134,11,0.2);
-  padding: 10px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+
+
+/* ── SETUP CHECKLIST BAR ─────────────────────────────────── */
+#setupBar {
+  background: #111009;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 0 24px;
   position: sticky;
   top: 0;
-  z-index: 199;
+  z-index: 200;
+  display: none;
+}
+#setupBar.visible { display: block; }
+.setup-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-height: 48px;
   flex-wrap: wrap;
 }
-.completeness-bar.done { display: none !important; }
-.cb-title { font-family: IBM Plex Mono, monospace; font-size: 9px; color: #e8b84b; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
-.cb-items { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
-.cb-item { display: flex; align-items: center; gap: 5px; font-family: IBM Plex Mono, monospace; font-size: 9px; letter-spacing: 0.04em; white-space: nowrap; }
-.cb-item.done { color: rgba(255,255,255,0.35); text-decoration: line-through; }
-.cb-item.todo { color: #e8b84b; }
-.cb-item.warn { color: #e05a5a; }
-.cb-fix { font-family: IBM Plex Mono, monospace; font-size: 8px; padding: 3px 10px; border-radius: 5px; background: rgba(184,134,11,0.15); color: #e8b84b; border: 1px solid rgba(184,134,11,0.3); cursor: pointer; text-decoration: none; white-space: nowrap; }
-.cb-fix:hover { background: rgba(184,134,11,0.25); }
-.cb-dismiss { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+.setup-bar-label {
+  font-family: IBM Plex Mono, monospace;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-right: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.setup-items {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+.setup-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: IBM Plex Mono, monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.setup-item.si-done {
+  background: rgba(45,186,126,0.1);
+  border: 1px solid rgba(45,186,126,0.2);
+  color: #2dba7e;
+}
+.setup-item.si-warn {
+  background: rgba(224,90,90,0.1);
+  border: 1px solid rgba(224,90,90,0.25);
+  color: #e05a5a;
+  cursor: pointer;
+}
+.setup-item.si-warn:hover {
+  background: rgba(224,90,90,0.18);
+}
+.setup-item.si-todo {
+  background: rgba(184,134,11,0.08);
+  border: 1px solid rgba(184,134,11,0.2);
+  color: #c9943a;
+  cursor: pointer;
+}
+.setup-item.si-todo:hover {
+  background: rgba(184,134,11,0.15);
+}
+.si-icon { font-size: 11px; flex-shrink: 0; }
+.setup-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+.setup-progress {
+  font-family: IBM Plex Mono, monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  white-space: nowrap;
+}
+.setup-progress span {
+  color: #2dba7e;
+  font-weight: 600;
+}
+.setup-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.2);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  transition: color 0.15s;
+}
+.setup-dismiss:hover { color: rgba(255,255,255,0.5); }
+
+/* All done celebration */
+#setupBar.all-done {
+  background: linear-gradient(90deg, rgba(45,186,126,0.08) 0%, rgba(17,16,9,1) 60%);
+  border-bottom-color: rgba(45,186,126,0.15);
+}
 </style>
 <script>
 // Instant redirect before any rendering - prevents flash
@@ -1094,13 +1178,15 @@ window.addEventListener('error', function(e) {
     </div>
   </div>
   <div id="freshnessBanner" style="display:none"></div>
-  <div class="completeness-bar" id="completenessBar">
-    <span style="color:var(--muted);letter-spacing:0.08em">TRACKING:</span>
-    <div class="completeness-item"><div class="completeness-dot on" id="dot_sales"></div><span id="label_sales" style="color:var(--green)">Sales</span></div>
-    <div class="completeness-item"><div class="completeness-dot off" id="dot_labor"></div><span id="label_labor" style="color:var(--muted)">Labor</span></div>
-    <div class="completeness-item"><div class="completeness-dot off" id="dot_delivery"></div><span id="label_delivery" style="color:var(--muted)">Delivery</span></div>
-    <div class="completeness-item"><div class="completeness-dot off" id="dot_fixed"></div><span id="label_fixed" style="color:var(--muted)">Fixed Costs</span></div>
-    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Estimates based on tracked costs only</span>
+  <div id="setupBar">
+    <div class="setup-bar-inner">
+      <div class="setup-bar-label">Setup</div>
+      <div class="setup-items" id="setupItems"></div>
+      <div class="setup-bar-actions">
+        <div class="setup-progress" id="setupProgress"></div>
+        <button class="setup-dismiss" onclick="dismissSetupBar()" title="Dismiss">✕</button>
+      </div>
+    </div>
   </div>
   <div class="content" id="mainContent"></div>
 </main>
@@ -1789,82 +1875,74 @@ function renderLaborCard() {
 }
 
 function updateCompletenessBar() {
-  var bar = document.getElementById('completenessBar');
-  var items = document.getElementById('cbItems');
-  if (!bar || !items) return;
+  var bar = document.getElementById('setupBar');
+  if (!bar) return;
+  if (sessionStorage.getItem('setup_dismissed')) return;
+  if (localStorage.getItem('setup_all_done')) return;
 
-  // Don't show if dismissed this session
-  if (sessionStorage.getItem('cb_dismissed')) return;
-
-  var checks = [];
   var clientId = state.clientId || localStorage.getItem('rd_client_id');
   var token = state.token || localStorage.getItem('rd_token');
   if (!clientId || !token) return;
 
-  // Fetch completeness from API
   fetch('https://restaurant-api-68re.onrender.com/api/onboarding/completeness?client_id=' + clientId, {
     headers: { 'Authorization': 'Bearer ' + token }
   }).then(function(r){ return r.json(); }).then(function(data) {
     if (!data) return;
 
-    var allDone = true;
+    var items = [
+      { key: 'square_connected',  label: 'Square',            fix: '/settings',                                              warn: true  },
+      { key: 'timecards_enabled', label: 'Timecards',         fix: 'https://squareup.com/dashboard/employees/timecards',    warn: false, external: true },
+      { key: 'wages_set',         label: 'Wage rates',        fix: '/settings',                                              warn: false },
+      { key: 'invoice_setup',     label: 'Invoice forwarding',fix: '/settings',                                              warn: false },
+      { key: 'fixed_costs_set',   label: 'Fixed costs',       fix: '/settings',                                              warn: false },
+    ];
+
+    var doneCount = 0;
     var html = '';
 
-    // 1. Square connected
-    if (data.square_connected) {
-      html += '<div class="cb-item done">✓ Square</div>';
-    } else {
-      html += '<div class="cb-item warn">✗ Square not connected · <a class="cb-fix" href="/settings">Connect →</a></div>';
-      allDone = false;
-    }
+    items.forEach(function(item) {
+      var done = data[item.key];
+      if (done) {
+        doneCount++;
+        html += '<div class="setup-item si-done"><span class="si-icon">✓</span>' + item.label + '</div>';
+      } else {
+        var cls = item.warn ? 'si-warn' : 'si-todo';
+        var icon = item.warn ? '✗' : '!';
+        var target = item.external ? ' target="_blank"' : '';
+        html += '<a href="' + item.fix + '"' + target + ' style="text-decoration:none"><div class="setup-item ' + cls + '"><span class="si-icon">' + icon + '</span>' + item.label + '</div></a>';
+      }
+    });
 
-    // 2. Timecards enabled
-    if (data.timecards_enabled) {
-      html += '<div class="cb-item done">✓ Timecards</div>';
-    } else {
-      html += '<div class="cb-item todo">⚠ Timecards not set up · <a class="cb-fix" href="https://squareup.com/dashboard/employees/timecards" target="_blank">Enable in Square →</a></div>';
-      allDone = false;
-    }
+    var total = items.length;
+    var allDone = doneCount === total;
 
-    // 3. Wage rates
-    if (data.wages_set) {
-      html += '<div class="cb-item done">✓ Wage rates</div>';
-    } else {
-      html += '<div class="cb-item todo">⚠ Missing wage rates · <a class="cb-fix" href="/settings">Fix in Settings →</a></div>';
-      allDone = false;
-    }
-
-    // 4. Invoice forwarding
-    if (data.invoice_setup) {
-      html += '<div class="cb-item done">✓ Invoice forwarding</div>';
-    } else {
-      html += '<div class="cb-item todo">⚠ Invoice forwarding not set up · <a class="cb-fix" href="/settings">Set up →</a></div>';
-      allDone = false;
-    }
-
-    // 5. Fixed costs
-    if (data.fixed_costs_set) {
-      html += '<div class="cb-item done">✓ Fixed costs</div>';
-    } else {
-      html += '<div class="cb-item todo">⚠ Fixed costs not entered · <a class="cb-fix" href="/settings">Add →</a></div>';
-      allDone = false;
-    }
+    var setupItems = document.getElementById('setupItems');
+    var setupProgress = document.getElementById('setupProgress');
+    if (setupItems) setupItems.innerHTML = html;
+    if (setupProgress) setupProgress.innerHTML = '<span>' + doneCount + '</span>/' + total + ' complete';
 
     if (allDone) {
-      bar.classList.add('done');
+      bar.className = 'all-done visible';
+      if (setupItems) setupItems.innerHTML = '<div class="setup-item si-done"><span class="si-icon">✓</span>Square</div><div class="setup-item si-done"><span class="si-icon">✓</span>Timecards</div><div class="setup-item si-done"><span class="si-icon">✓</span>Wage rates</div><div class="setup-item si-done"><span class="si-icon">✓</span>Invoice forwarding</div><div class="setup-item si-done"><span class="si-icon">✓</span>Fixed costs</div>';
+      if (setupProgress) setupProgress.innerHTML = '<span style="color:#2dba7e">✓ Fully set up</span>';
+      // Auto-hide after 8 seconds when all done
+      setTimeout(function() {
+        bar.classList.remove('visible');
+        localStorage.setItem('setup_all_done', '1');
+      }, 8000);
       return;
     }
 
-    items.innerHTML = html;
-    bar.style.display = 'flex';
+    bar.classList.add('visible');
+    bar.classList.remove('all-done');
 
   }).catch(function() {});
 }
 
-function dismissCompleteness() {
-  sessionStorage.setItem('cb_dismissed', '1');
-  var bar = document.getElementById('completenessBar');
-  if (bar) bar.style.display = 'none';
+function dismissSetupBar() {
+  sessionStorage.setItem('setup_dismissed', '1');
+  var bar = document.getElementById('setupBar');
+  if (bar) bar.classList.remove('visible');
 }
 
 async function loadDashboardData() {
@@ -2678,6 +2756,10 @@ function totalFixed(l, p) {
 function renderCosts() {
   const p = activePeriod;
   const rev = totalRevenue(p);
+  var foodPrompt = '';
+  if (!state.foodCostSource || state.foodCostSource !== 'invoices') {
+    foodPrompt = '<div style="margin-bottom:16px;padding:14px 18px;background:rgba(184,134,11,0.08);border:1px solid rgba(184,134,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#c9943a;letter-spacing:0.1em;margin-bottom:4px">FOOD COST IS ESTIMATED</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Showing your food cost target, not actual spend. Forward supplier invoices to track real food cost.</div></div><a href="/settings" style="flex-shrink:0;padding:8px 16px;background:rgba(184,134,11,0.12);border:1px solid rgba(184,134,11,0.25);border-radius:8px;color:#c9943a;font-family:IBM Plex Mono,monospace;font-size:9px;text-decoration:none;white-space:nowrap">Set up invoices →</a></div>';
+  }
 
   const locRows = state.locations.map(l => {
     const prime = l.foodCost[p]+l.laborCost[p];
@@ -2703,7 +2785,7 @@ function renderCosts() {
     </tr>`;
   }).join('');
 
-  return `
+  return foodPrompt + `
     <div class="kpi-strip">
       <div class="kpi-card ${foodCls(avgFoodCost(p))}">
         <div class="kpi-label">Food Cost</div>
@@ -2788,7 +2870,11 @@ function renderCosts() {
 
 function renderLabor() {
   const p = activePeriod;
-  return `
+  var laborPrompt = '';
+  if (!state.laborSource || state.laborSource !== 'square_labor_api') {
+    laborPrompt = '<div style="margin-bottom:16px;padding:14px 18px;background:rgba(224,90,90,0.08);border:1px solid rgba(224,90,90,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:#e05a5a;letter-spacing:0.1em;margin-bottom:4px">LABOR NOT TRACKING</div><div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Labor cost is showing target estimates, not real data. Make sure employees are clocking in on your Square POS.</div></div><a href="https://squareup.com/dashboard/employees/timecards" target="_blank" style="flex-shrink:0;padding:8px 16px;background:rgba(224,90,90,0.15);border:1px solid rgba(224,90,90,0.3);border-radius:8px;color:#e05a5a;font-family:IBM Plex Mono,monospace;font-size:9px;text-decoration:none;white-space:nowrap">Enable timecards →</a></div>';
+  }
+  return laborPrompt + `
     <div class="kpi-strip">
       <div class="kpi-card ${laborCls(avgLaborCost(p))}">
         <div class="kpi-label">Blended Labor Cost</div>
