@@ -618,7 +618,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Case 2: token expired
   if (clientResp.status === 401) {
-    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete']);
+    try {
+      Object.keys(window.localStorage).forEach(function(k) { window.localStorage.removeItem(k); });
+      Object.keys(window.sessionStorage).forEach(function(k) { window.sessionStorage.removeItem(k); });
+    } catch(e) {}
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
@@ -628,7 +631,11 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Case 1: client deleted or never created
   if (clientResp.status === 404) {
-    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete']);
+    // Account deleted — clear ALL local state including Supabase session
+    try {
+      Object.keys(window.localStorage).forEach(function(k) { window.localStorage.removeItem(k); });
+      Object.keys(window.sessionStorage).forEach(function(k) { window.sessionStorage.removeItem(k); });
+    } catch(e) {}
     renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
