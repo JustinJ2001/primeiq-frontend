@@ -597,22 +597,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
     clearTimeout(abortTimer);
   } catch(networkErr) {
-    // Network error or timeout — try to resume from saved state instead of clearing
+    // Network error or timeout — clear everything and show step 1
+    // Never resume without confirming account exists in DB
+    try {
+      Object.keys(window.localStorage).forEach(function(k) { window.localStorage.removeItem(k); });
+      Object.keys(window.sessionStorage).forEach(function(k) { window.sessionStorage.removeItem(k); });
+    } catch(e) {}
+    renderStep(1);
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
-    var savedRaw = lsGet('rd_onboard_state');
-    if (savedRaw) {
-      try {
-        var parsed = JSON.parse(savedRaw);
-        delete parsed.token; delete parsed.clientId; delete parsed.userId;
-        if (parsed && typeof parsed === 'object') Object.assign(state, parsed);
-      } catch(e) {}
-    }
-    state.token = token;
-    state.clientId = clientId;
-    var validSteps = ['1b', 2, 3, 4, 5, 6];
-    var resumeStep = validSteps.indexOf(state.step) >= 0 ? state.step : 2;
-    renderStep(resumeStep);
     return;
   }
 
