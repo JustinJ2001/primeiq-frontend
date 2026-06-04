@@ -167,6 +167,17 @@ window.addEventListener('error', function(e) {
 </div>
 <script>
   // Show slow connection message after 5s
+  // Guaranteed fallback — loader ALWAYS hides after 10 seconds no matter what
+  setTimeout(function() {
+    var loader = document.getElementById('page_loader');
+    if (loader && loader.style.display !== 'none') {
+      loader.style.display = 'none';
+      // If no panel is active, show step 1
+      var anyActive = document.querySelector('.panel.active');
+      if (!anyActive) renderStep(1);
+    }
+  }, 10000);
+
   var loaderTimer = setTimeout(function(){
     var el = document.getElementById('loader_msg');
     if (el) el.textContent = 'First load may take up to 30 seconds...';
@@ -579,18 +590,29 @@ window.addEventListener('DOMContentLoaded', async () => {
   var clientResp;
   try {
     var abortCtrl = new AbortController();
-    var abortTimer = setTimeout(function(){ abortCtrl.abort(); }, 15000);
+    var abortTimer = setTimeout(function(){ abortCtrl.abort(); }, 8000);
     clientResp = await fetch(CONFIG.apiBase + '/api/clients/' + clientId, {
       headers: { 'Authorization': 'Bearer ' + token },
       signal: abortCtrl.signal
     });
     clearTimeout(abortTimer);
   } catch(networkErr) {
-    // Network error or timeout — clear stale state and show clean step 1
-    lsClear(['rd_token','rd_client_id','rd_onboard_state','rd_locations_draft','rd_onboarding','rd_setup_complete','rd_pilot']);
-    renderStep(1);
+    // Network error or timeout — try to resume from saved state instead of clearing
     clearTimeout(loaderTimer);
     document.getElementById('page_loader').style.display = 'none';
+    var savedRaw = lsGet('rd_onboard_state');
+    if (savedRaw) {
+      try {
+        var parsed = JSON.parse(savedRaw);
+        delete parsed.token; delete parsed.clientId; delete parsed.userId;
+        if (parsed && typeof parsed === 'object') Object.assign(state, parsed);
+      } catch(e) {}
+    }
+    state.token = token;
+    state.clientId = clientId;
+    var validSteps = ['1b', 2, 3, 4, 5, 6];
+    var resumeStep = validSteps.indexOf(state.step) >= 0 ? state.step : 2;
+    renderStep(resumeStep);
     return;
   }
 
