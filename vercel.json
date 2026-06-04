@@ -3,10 +3,6 @@
   "trailingSlash": false,
   "routes": [
     {
-      "src": "/faq",
-      "dest": "/faq.html"
-    },
-    {
       "handle": "filesystem"
     },
     {
