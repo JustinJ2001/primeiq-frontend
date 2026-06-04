@@ -855,6 +855,28 @@ body::before {
   .main { padding-bottom: 112px !important; }
 }
 
+.completeness-bar {
+  background: #1a1208;
+  border-bottom: 1px solid rgba(184,134,11,0.2);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 199;
+  flex-wrap: wrap;
+}
+.completeness-bar.done { display: none !important; }
+.cb-title { font-family: IBM Plex Mono, monospace; font-size: 9px; color: #e8b84b; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.cb-items { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
+.cb-item { display: flex; align-items: center; gap: 5px; font-family: IBM Plex Mono, monospace; font-size: 9px; letter-spacing: 0.04em; white-space: nowrap; }
+.cb-item.done { color: rgba(255,255,255,0.35); text-decoration: line-through; }
+.cb-item.todo { color: #e8b84b; }
+.cb-item.warn { color: #e05a5a; }
+.cb-fix { font-family: IBM Plex Mono, monospace; font-size: 8px; padding: 3px 10px; border-radius: 5px; background: rgba(184,134,11,0.15); color: #e8b84b; border: 1px solid rgba(184,134,11,0.3); cursor: pointer; text-decoration: none; white-space: nowrap; }
+.cb-fix:hover { background: rgba(184,134,11,0.25); }
+.cb-dismiss { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; flex-shrink: 0; }
 </style>
 <script>
 // Instant redirect before any rendering - prevents flash
@@ -1131,8 +1153,9 @@ function transformAPIData(apiData) {
     const rev = loc.revenue || 0;
     const prevRev = loc.revenue_prior || 0;
     const covers = loc.covers || 0;
-    const foodPct = loc.food_cost_pct || 31;
-    const laborPct = loc.labor_cost_pct || 34;
+    // Use real food cost from variable_costs API if available, else fall back to target
+    const foodPct = loc.food_cost_pct || state.realFoodCost || loc.food_cost_target || 31;
+    const laborPct = loc.labor_cost_pct || state.realLaborCost || loc.labor_cost_target || 34;
     const delRev = loc.delivery_revenue || 0;
     const delComm = loc.delivery_commission || 0;
     const pm = loc.payment_mix || {};
@@ -1658,6 +1681,192 @@ function clearCustomDate() {
 }
 
 
+function renderFoodCostCard() {
+  var el = document.getElementById('food-cost-tracking-card');
+  if (!el) return;
+  var vc = state.variableCosts;
+  if (!vc) {
+    el.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.4);padding:14px 0">'
+      + '○ Food cost tracking not set up · <a href="/settings" style="color:var(--gold)">Set up invoice forwarding →</a></div>';
+    return;
+  }
+  var html = '';
+  // Food cost % with source badge
+  if (vc.food_cost_pct) {
+    var locs = state.locations || [];
+    var target = locs.length > 0 ? (locs[0].food_cost_target || 31) : 31;
+    var diff = vc.food_cost_pct - target;
+    var color = Math.abs(diff) < 1 ? 'var(--green)' : diff > 0 ? 'var(--red)' : 'var(--green)';
+    html += '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">'
+      + '<div style="font-family:Playfair Display,serif;font-size:36px;font-weight:400;color:' + color + '">' + vc.food_cost_pct + '%</div>'
+      + '<div><div style="font-size:13px;color:rgba(255,255,255,0.7)">food cost this period</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-top:2px">● Live from invoices · ' + (vc.coverage_pct || 0) + '% automatic</div>'
+      + '</div></div>';
+  }
+  // By vendor breakdown
+  if (vc.by_category && vc.by_category.length > 0) {
+    var foodCat = vc.by_category.find(function(c){ return c.category === 'food'; });
+    var allCats = vc.by_category.sort(function(a,b){ return b.total - a.total; });
+    html += '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">By category</div>';
+    html += allCats.map(function(cat) {
+      var pct = vc.total_revenue > 0 ? (cat.total / vc.total_revenue * 100).toFixed(1) : 0;
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+        + '<div style="font-size:12px;color:rgba(255,255,255,0.7)">' + cat.category.charAt(0).toUpperCase() + cat.category.slice(1) + '</div>'
+        + '<div style="text-align:right"><div style="font-family:Playfair Display,serif;font-size:15px;color:#fff">$' + Math.round(cat.total).toLocaleString() + '</div>'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4)">' + pct + '% of revenue</div></div>'
+        + '</div>';
+    }).join('');
+  }
+  // Recent invoices
+  if (vc.costs && vc.costs.length > 0) {
+    html += '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;margin:14px 0 8px">Recent invoices</div>';
+    html += vc.costs.slice(0,5).map(function(c) {
+      var badge = c.source === 'manual' ? '○' : '●';
+      var badgeColor = c.source === 'manual' ? 'rgba(255,255,255,0.3)' : 'var(--green)';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+        + '<div><div style="font-size:12px;color:rgba(255,255,255,0.7)">' + (c.vendor_name || 'Unknown') + '</div>'
+        + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3)">' + (c.date || '') + ' <span style="color:' + badgeColor + '">' + badge + '</span></div>'
+        + '</div><div style="font-family:Playfair Display,serif;font-size:14px;color:#fff">$' + parseFloat(c.amount||0).toLocaleString() + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  // Pending review
+  if (vc.pending_review && vc.pending_review.length > 0) {
+    html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(192,112,0,0.15);border:1px solid rgba(192,112,0,0.3);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--gold)">'
+      + vc.pending_review.length + ' invoice' + (vc.pending_review.length > 1 ? 's' : '') + ' need your confirmation · <a href="/settings" style="color:var(--gold);text-decoration:underline">Review in Settings →</a>'
+      + '</div>';
+  }
+  if (!html) {
+    html = '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.4);padding:10px 0">'
+      + 'No invoices tracked yet · Forward supplier emails to start</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderLaborCard() {
+  var el = document.getElementById('labor-tracking-card');
+  if (!el) return;
+  var recs = state.laborRecords;
+  var emps = state.employees || [];
+  if (!recs || recs.length === 0) {
+    el.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:rgba(255,255,255,0.4);padding:14px 0">'
+      + '○ Labor tracking pending · Make sure employees are clocking in on Square POS</div>';
+    return;
+  }
+  var html = '';
+  // Summary
+  if (state.realLaborCostPct) {
+    var locs = state.locations || [];
+    var target = locs.length > 0 ? (locs[0].labor_cost_target || 34) : 34;
+    var diff = state.realLaborCostPct - target;
+    var color = Math.abs(diff) < 1 ? 'var(--green)' : diff > 0 ? 'var(--red)' : 'var(--green)';
+    html += '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">'
+      + '<div style="font-family:Playfair Display,serif;font-size:36px;font-weight:400;color:' + color + '">' + state.realLaborCostPct + '%</div>'
+      + '<div><div style="font-size:13px;color:rgba(255,255,255,0.7)">labor cost this period</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--green);margin-top:2px">● Live from Square timecards</div>'
+      + '</div></div>';
+  }
+  // Daily breakdown
+  html += '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Daily hours & wages</div>';
+  html += recs.slice(0,7).map(function(r) {
+    var d = new Date(r.date + 'T12:00:00');
+    var dayLabel = d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+    var otBadge = r.overtime_hours > 0 ? '<span style="color:var(--amber);margin-left:4px">OT</span>' : '';
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<div><div style="font-size:12px;color:rgba(255,255,255,0.7)">' + dayLabel + otBadge + '</div>'
+      + '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3)">' + (r.total_hours||0).toFixed(1) + ' hrs · ' + (r.employee_count||0) + ' staff</div>'
+      + '</div><div style="font-family:Playfair Display,serif;font-size:15px;color:#fff">$' + Math.round(r.total_wages||0).toLocaleString() + '</div>'
+      + '</div>';
+  }).join('');
+  // Overtime warning
+  var overtimeRecs = recs.filter(function(r){ return r.overtime_hours > 0; });
+  if (overtimeRecs.length > 0) {
+    var totalOT = overtimeRecs.reduce(function(s,r){ return s + (r.overtime_wages||0); }, 0);
+    html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(192,112,0,0.15);border:1px solid rgba(192,112,0,0.3);border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--amber)">'
+      + 'Overtime this period: $' + Math.round(totalOT).toLocaleString() + ' · Consider adjusting scheduling</div>';
+  }
+  el.innerHTML = html;
+}
+
+function updateCompletenessBar() {
+  var bar = document.getElementById('completenessBar');
+  var items = document.getElementById('cbItems');
+  if (!bar || !items) return;
+
+  // Don't show if dismissed this session
+  if (sessionStorage.getItem('cb_dismissed')) return;
+
+  var checks = [];
+  var clientId = state.clientId || localStorage.getItem('rd_client_id');
+  var token = state.token || localStorage.getItem('rd_token');
+  if (!clientId || !token) return;
+
+  // Fetch completeness from API
+  fetch('https://restaurant-api-68re.onrender.com/api/onboarding/completeness?client_id=' + clientId, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  }).then(function(r){ return r.json(); }).then(function(data) {
+    if (!data) return;
+
+    var allDone = true;
+    var html = '';
+
+    // 1. Square connected
+    if (data.square_connected) {
+      html += '<div class="cb-item done">✓ Square</div>';
+    } else {
+      html += '<div class="cb-item warn">✗ Square not connected · <a class="cb-fix" href="/settings">Connect →</a></div>';
+      allDone = false;
+    }
+
+    // 2. Timecards enabled
+    if (data.timecards_enabled) {
+      html += '<div class="cb-item done">✓ Timecards</div>';
+    } else {
+      html += '<div class="cb-item todo">⚠ Timecards not set up · <a class="cb-fix" href="https://squareup.com/dashboard/employees/timecards" target="_blank">Enable in Square →</a></div>';
+      allDone = false;
+    }
+
+    // 3. Wage rates
+    if (data.wages_set) {
+      html += '<div class="cb-item done">✓ Wage rates</div>';
+    } else {
+      html += '<div class="cb-item todo">⚠ Missing wage rates · <a class="cb-fix" href="/settings">Fix in Settings →</a></div>';
+      allDone = false;
+    }
+
+    // 4. Invoice forwarding
+    if (data.invoice_setup) {
+      html += '<div class="cb-item done">✓ Invoice forwarding</div>';
+    } else {
+      html += '<div class="cb-item todo">⚠ Invoice forwarding not set up · <a class="cb-fix" href="/settings">Set up →</a></div>';
+      allDone = false;
+    }
+
+    // 5. Fixed costs
+    if (data.fixed_costs_set) {
+      html += '<div class="cb-item done">✓ Fixed costs</div>';
+    } else {
+      html += '<div class="cb-item todo">⚠ Fixed costs not entered · <a class="cb-fix" href="/settings">Add →</a></div>';
+      allDone = false;
+    }
+
+    if (allDone) {
+      bar.classList.add('done');
+      return;
+    }
+
+    items.innerHTML = html;
+    bar.style.display = 'flex';
+
+  }).catch(function() {});
+}
+
+function dismissCompleteness() {
+  sessionStorage.setItem('cb_dismissed', '1');
+  var bar = document.getElementById('completenessBar');
+  if (bar) bar.style.display = 'none';
+}
+
 async function loadDashboardData() {
   // Track usage
   var clientId = localStorage.getItem('rd_client_id');
@@ -1700,13 +1909,52 @@ async function loadDashboardData() {
   try {
     const data = await apiFetch('/api/overview?period=week');
     if (data && data.error === 'no_locations') {
-      // Account exists but no locations saved — send back to settings to add one
       showNoLocationsBanner();
     } else if (data && data.locations && data.locations.length > 0) {
       state = transformAPIData(data);
       updateSidebarName(state.name);
       if(typeof updateFreshnessIndicator === 'function') updateFreshnessIndicator(data.client && data.client.last_synced_at);
+
+      // Fetch real food cost from invoice data
+      try {
+        const vcData = await apiFetch('/api/variable-costs?period=month');
+        if (vcData && vcData.food_cost_pct) {
+          state.realFoodCostPct = vcData.food_cost_pct;
+          state.variableCosts = vcData;
+          state.foodCostSource = 'invoices';
+          // Inject real food cost into location data
+          if (state.locations) {
+            state.locations.forEach(function(loc) {
+              if (!loc.food_cost_pct || loc.food_cost_pct === loc.food_cost_target) {
+                loc.food_cost_pct = vcData.food_cost_pct;
+              }
+            });
+          }
+        }
+      } catch(e) { /* No variable costs yet — use targets */ }
+
+      // Fetch real labor from Labor API
+      try {
+        const laborData = await apiFetch('/api/labor?period=week');
+        if (laborData && laborData.summary && laborData.summary.labor_cost_pct) {
+          state.realLaborCostPct = laborData.summary.labor_cost_pct;
+          state.laborSource = 'square_labor_api';
+          if (state.locations) {
+            state.locations.forEach(function(loc) {
+              loc.labor_cost_pct = state.realLaborCostPct;
+            });
+          }
+        }
+        if (laborData && laborData.records) {
+          state.laborRecords = laborData.records;
+        }
+        if (laborData && laborData.employees) {
+          state.employees = laborData.employees;
+        }
+      } catch(e) { /* No labor API data yet */ }
+
       navigate('overview');
+      setTimeout(function() { renderFoodCostCard(); renderLaborCard(); }, 100);
     } else {
       showNoDataBanner();
     }
@@ -1725,10 +1973,10 @@ function showProductUpdate() {
   if (unseen.length > 0) window._lastUpdateId = unseen[0].id;
   if (unseen.length === 0 || isDemoMode()) return;
   var banner = document.createElement('div');
-  banner.style.cssText = 'position:fixed;bottom:70px;right:20px;max-width:320px;background:var(--dark);border:1px solid rgba(184,134,11,0.3);border-radius:10px;padding:14px 16px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
-  banner.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px">UPDATES</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,0.85);line-height:1.5;margin-bottom:10px">' + unseen[0].msg + '</div>'
-    + '<button onclick="dismissUpdate(this)" style="padding:5px 12px;background:var(--gold);color:white;border:none;border-radius:5px;font-family:IBM Plex Mono,monospace;font-size:8px;cursor:pointer">Got it</button>';
+  banner.style.cssText = 'position:fixed;bottom:70px;right:20px;max-width:320px;background:#1a1208;border:1px solid rgba(184,134,11,0.3);border-radius:10px;padding:14px 16px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
+  banner.innerHTML = '<div style="font-family:IBM Plex Mono,monospace;font-size:8px;color:#e8b84b;letter-spacing:0.1em;margin-bottom:6px">WHATS NEW</div>'
+    + '<div style="font-size:12px;color:#f0ece4;line-height:1.6;margin-bottom:10px">' + unseen[0].msg + '</div>'
+    + '<button onclick="dismissUpdate(this)" style="padding:5px 12px;background:#b8860b;color:#fff;border:none;border-radius:5px;font-family:IBM Plex Mono,monospace;font-size:8px;cursor:pointer">Got it</button>';
   document.body.appendChild(banner);
 }
 
@@ -1911,9 +2159,27 @@ var fmtPct = n => n.toFixed(1)+'%';
 var periodLabel = { today:'Today', week:'This Week', month:'This Month', quarter:'This Quarter', ytd:'YTD' };
 
 function totalRevenue(period) { return state.locations.reduce((s,l) => s + l.revenue[period], 0); }
-function avgFoodCost(period)  { return state.locations.reduce((s,l) => s + l.foodCost[period], 0) / state.locations.length; }
-function avgLaborCost(period) { return state.locations.reduce((s,l) => s + l.laborCost[period], 0) / state.locations.length; }
+function avgFoodCost(period) {
+  // Use real food cost from invoices if available, else fall back to location targets
+  if (state.realFoodCostPct && state.foodCostSource === 'invoices') return state.realFoodCostPct;
+  return state.locations.reduce((s,l) => s + (l.foodCost && l.foodCost[period] || l.food_cost_target || 31), 0) / Math.max(state.locations.length, 1);
+}
+function avgLaborCost(period) {
+  // Use real labor cost from Square Labor API if available
+  if (state.realLaborCostPct && state.laborSource === 'square_labor_api') return state.realLaborCostPct;
+  return state.locations.reduce((s,l) => s + (l.laborCost && l.laborCost[period] || l.labor_cost_target || 34), 0) / Math.max(state.locations.length, 1);
+}
 function avgPrimeCost(period) { return avgFoodCost(period) + avgLaborCost(period); }
+function getFoodCostBadge() {
+  return state.foodCostSource === 'invoices'
+    ? '<span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--green);letter-spacing:0.06em">● LIVE from invoices</span>'
+    : '<span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.06em">○ Target estimate</span>';
+}
+function getLaborCostBadge() {
+  return state.laborSource === 'square_labor_api'
+    ? '<span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--green);letter-spacing:0.06em">● LIVE from Square timecards</span>'
+    : '<span style="font-family:IBM Plex Mono,monospace;font-size:8px;color:var(--muted);letter-spacing:0.06em">○ Target estimate</span>';
+}
 function totalCovers(period)  { return state.locations.reduce((s,l) => s + l.covers[period], 0); }
 function overallAvgCheck(period) { const tc = totalCovers(period); return tc > 0 ? totalRevenue(period)/tc : 0; }
 
@@ -2045,12 +2311,14 @@ function renderOverview() {
         <div class="kpi-value">${fmtPct(food)}</div>
         <span class="kpi-tag ${fc}">${food <= state.foodTarget ? '✓ On target' : '↑ ' + fmtPct(food-state.foodTarget) + ' over'}</span>
         <div class="kpi-sub">Target: ${state.foodTarget}% · Across all locations</div>
+        <div style="margin-top:4px">${getFoodCostBadge()}</div>
       </div>
       <div class="kpi-card ${lc}">
         <div class="kpi-label">Avg Labor Cost</div>
         <div class="kpi-value">${fmtPct(labor)}</div>
         <span class="kpi-tag ${lc}">${labor <= state.laborTarget ? '✓ On target' : '↑ ' + fmtPct(labor-state.laborTarget) + ' over'}</span>
         <div class="kpi-sub">Target: ${state.laborTarget}% · Across all locations</div>
+        <div style="margin-top:4px">${getLaborCostBadge()}</div>
       </div>
       <div class="kpi-card ${pc}">
         <div class="kpi-label">Prime Cost</div>
@@ -2442,12 +2710,14 @@ function renderCosts() {
         <div class="kpi-value">${fmtPct(avgFoodCost(p))}</div>
         <span class="kpi-tag ${foodCls(avgFoodCost(p))}">${avgFoodCost(p)<=state.foodTarget?'✓ On target':'Over by '+fmtPct(avgFoodCost(p)-state.foodTarget)}</span>
         <div class="kpi-sub">Target: ${state.foodTarget}% · ${fmtDollar(Math.round(rev*avgFoodCost(p)/100))}</div>
+        ${getFoodCostBadge()}
       </div>
       <div class="kpi-card ${laborCls(avgLaborCost(p))}">
         <div class="kpi-label">Labor Cost</div>
         <div class="kpi-value">${fmtPct(avgLaborCost(p))}</div>
         <span class="kpi-tag ${laborCls(avgLaborCost(p))}">${avgLaborCost(p)<=state.laborTarget?'✓ On target':'Over by '+fmtPct(avgLaborCost(p)-state.laborTarget)}</span>
         <div class="kpi-sub">Target: ${state.laborTarget}% · ${fmtDollar(Math.round(rev*avgLaborCost(p)/100))}</div>
+        ${getLaborCostBadge()}
       </div>
       <div class="kpi-card warn">
         <div class="kpi-label">Total Rent (all locations)</div>
@@ -2588,7 +2858,9 @@ function renderLabor() {
           <div style="font-size:10.5px;color:var(--text-dim)">Any hour worked over 40 is paid at 1.5x rate. Catching this Wednesday saves money for the rest of the week. Adjust shifts before it happens, not after.</div>
         </div>
       </div>
-    </div>`;
+    </div>
+    ${(state.laborRecords && state.laborRecords.length > 0) ? ('<div class="card" style="margin-top:14px"><div class="card-header"><div><div class="card-title">Daily Labor from Square Timecards</div><div class="card-sub">Live ● Hours and wages from employee clock-ins</div></div><div class="card-badge good">Live</div></div><table class="cost-table"><thead><tr><th>Date</th><th style="text-align:right">Hours</th><th style="text-align:right">Wages</th><th style="text-align:right">Labor %</th><th style="text-align:right">OT</th></tr></thead><tbody>' + state.laborRecords.slice(0,7).map(function(r) { var d = new Date(r.date + 'T12:00:00'); var dayStr = d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}); var otBadge = r.overtime_hours > 0 ? '<span style="color:var(--amber)">⚠ ' + parseFloat(r.overtime_hours).toFixed(1) + 'h OT</span>' : '—'; var lpct = r.labor_cost_pct ? parseFloat(r.labor_cost_pct).toFixed(1) + '%' : '—'; var cls = r.labor_cost_pct > 38 ? 'ct-bad' : r.labor_cost_pct > 34 ? 'ct-warn' : 'ct-good'; return '<tr><td class="ct-label">' + dayStr + '</td><td style="text-align:right;color:var(--text)">' + parseFloat(r.total_hours||0).toFixed(1) + 'h</td><td style="text-align:right;color:var(--cream)">$' + Math.round(r.total_wages||0).toLocaleString() + '</td><td class="' + cls + '" style="text-align:right">' + lpct + '</td><td style="text-align:right">' + otBadge + '</td></tr>'; }).join('') + '</tbody></table></div>') : '' }
+    `;
 }
 
 function isDemoMode() {
